@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FristList.Models;
+using FristList.Services;
 using FristList.Services.AbstractFactories;
 using FristList.Services.PostgreSql;
 using FristList.WebApi.Services;
@@ -43,6 +44,8 @@ namespace FristList.WebApi
             services.AddTransient(provider =>
                 provider.GetRequiredService<IRepositoryAbstractFactory>().CreateTaskRepository());
 
+            services.AddTransient<IActionManager, PostgreSqlActionManager>();
+            
             services.AddIdentityCore<AppUser>()
                 .AddDefaultTokenProviders();
 

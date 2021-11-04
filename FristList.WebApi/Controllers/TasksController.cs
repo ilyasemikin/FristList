@@ -38,6 +38,8 @@ namespace FristList.WebApi.Controllers
 
             if (categoryIds.Length != categories.Length)
                 return Problem();
+            if (categories.Any(c => c.UserId != user.Id))
+                return NotFound();
             
             var task = new Task
             {

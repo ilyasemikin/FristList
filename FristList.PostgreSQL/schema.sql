@@ -13,13 +13,81 @@ CREATE TABLE app_user (
     "TwoFactorEnable"       BOOLEAN NOT NULL
 );
 
+CREATE TABLE running_action (
+    "UserId"    INTEGER NOT NULL,
+    "StartTime" TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    
+    PRIMARY KEY ("UserId"),
+    FOREIGN KEY ("UserId") REFERENCES app_user("Id")
+);
+
 CREATE TABLE category (
     "Id"        SERIAL PRIMARY KEY,
     "Name"      VARCHAR(256),
     "UserId"    INTEGER NOT NULL,
-    
+
     FOREIGN KEY ("UserId") REFERENCES app_user("Id")
 );
+
+CREATE TABLE running_action_categories (
+    "UserId"        INTEGER NOT NULL,
+    "CategoryId"    INTEGER NOT NULL,
+    
+    PRIMARY KEY ("UserId", "CategoryId"),
+    FOREIGN KEY ("UserId") REFERENCES app_user("Id"),
+    FOREIGN KEY ("CategoryId") REFERENCES category("Id")
+);
+
+CREATE OR REPLACE FUNCTION save_running_action(action running_action) RETURNS VOID
+AS $$
+DECLARE
+    action_id INTEGER;
+BEGIN
+    INSERT INTO action ("StartTime", "EndTime", "UserId")
+        (SELECT "StartTime", NOW() AT TIME ZONE 'UTC', action."UserId" FROM running_action WHERE "UserId" = action."UserId")
+        RETURNING "Id" INTO action_id;
+
+    RAISE NOTICE 'INSERTED: %', action_id;
+
+    INSERT INTO action_categories ("ActionId", "CategoryId") 
+        SELECT action_id, "CategoryId" FROM running_action_categories WHERE "UserId" = action."UserId";
+END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION running_action_insert_trigger_handler() RETURNS TRIGGER
+AS $$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        IF NEW."UserId" IS NULL OR EXISTS(SELECT "Id" FROM app_user WHERE "Id" = NEW."UserId") IS FALSE THEN
+            RAISE EXCEPTION '"UserId" must be valid user';
+        END IF;
+        IF NEW."StartTime" IS NULL THEN
+            NEW."StartTime" := NOW() AT TIME ZONE 'UTC';
+        END IF;
+        IF EXISTS(SELECT "UserId" FROM running_action WHERE "UserId"=NEW."UserId") THEN
+            PERFORM save_running_action(NEW);
+            DELETE FROM running_action_categories WHERE "UserId" = NEW."UserId";
+            DELETE FROM running_action WHERE "UserId" = NEW."UserId";
+        END IF;
+    
+        RETURN NEW;
+    ELSIF TG_OP = 'DELETE' THEN
+        IF EXISTS(SELECT "UserId" FROM running_action WHERE "UserId"=OLD."UserId") THEN
+            PERFORM save_running_action(OLD);
+            DELETE FROM running_action_categories WHERE "UserId" = OLD."UserId";
+        END IF;
+
+        RETURN OLD;
+    END IF;
+
+    RETURN NULL;
+END
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS running_action_insert_trigger ON running_action;
+CREATE TRIGGER running_action_insert_trigger BEFORE INSERT OR DELETE ON running_action
+    FOR EACH ROW
+    EXECUTE PROCEDURE running_action_insert_trigger_handler();
 
 CREATE TABLE action (
     "Id"            SERIAL PRIMARY KEY,
@@ -40,21 +108,21 @@ CREATE TABLE action_categories (
     FOREIGN KEY ("CategoryId") REFERENCES category("Id") ON DELETE CASCADE
 );
 
-CREATE TABLE project (
-    "Id"            SERIAL PRIMARY KEY,
-    "Name"          TEXT NOT NULL,
-    "Description"   TEXT,
-    "UserId"        INTEGER NOT NULL,
-
-    FOREIGN KEY ("UserId") REFERENCES app_user("Id")
-);
-
 CREATE TABLE task (
     "Id"        SERIAL PRIMARY KEY,
     "Name"      TEXT,
     "UserId"    INTEGER NOT NULL,
     
     FOREIGN KEY ("UserId") REFERENCES app_user("Id")
+);
+
+CREATE TABLE task_actions (
+    "Id"            SERIAL PRIMARY KEY,
+    "TaskId"        INTEGER NOT NULL,
+    "ActionId"      INTEGER NOT NULL,
+    
+    FOREIGN KEY ("TaskId") REFERENCES task("Id"),
+    FOREIGN KEY ("ActionId") REFERENCES action("Id")
 );
 
 CREATE TABLE task_categories (
@@ -64,4 +132,23 @@ CREATE TABLE task_categories (
     PRIMARY KEY ("TaskId", "CategoryId"),
     FOREIGN KEY ("TaskId") REFERENCES task("Id"),
     FOREIGN KEY ("CategoryId") REFERENCES category("Id")
+);
+
+CREATE TABLE project (
+    "Id"            SERIAL PRIMARY KEY,
+    "Name"          TEXT NOT NULL,
+    "Description"   TEXT,
+    "UserId"        INTEGER NOT NULL,
+
+    FOREIGN KEY ("UserId") REFERENCES app_user("Id")
+);
+
+CREATE TABLE project_tasks (
+    "TaskId"        INTEGER NOT NULL,
+    "ProjectId"     INTEGER NOT NULL,
+    "OrderNumber"   INTEGER DEFAULT 0 NOT NULL,
+    
+    PRIMARY KEY ("TaskId"),
+    FOREIGN KEY ("TaskId") REFERENCES task("Id"),
+    FOREIGN KEY ("ProjectId") REFERENCES project("Id")
 );
