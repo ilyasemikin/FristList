@@ -130,5 +130,16 @@ namespace FristList.WebApi.Controllers
 
             return Ok(action);
         }
+
+        [HttpDelete("current")]
+        [Authorize]
+        public async Task<IActionResult> DeleteCurrentAction()
+        {
+            var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
+
+            if (await _actionManager.DeleteActionAsync(user))
+                return Ok();
+            return Problem();
+        }
     }
 }

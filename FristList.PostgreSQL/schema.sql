@@ -38,57 +38,6 @@ CREATE TABLE running_action_categories (
     FOREIGN KEY ("CategoryId") REFERENCES category("Id")
 );
 
-CREATE OR REPLACE FUNCTION save_running_action(action running_action) RETURNS VOID
-AS $$
-DECLARE
-    action_id INTEGER;
-BEGIN
-    INSERT INTO action ("StartTime", "EndTime", "UserId")
-        (SELECT "StartTime", NOW() AT TIME ZONE 'UTC', action."UserId" FROM running_action WHERE "UserId" = action."UserId")
-        RETURNING "Id" INTO action_id;
-
-    RAISE NOTICE 'INSERTED: %', action_id;
-
-    INSERT INTO action_categories ("ActionId", "CategoryId") 
-        SELECT action_id, "CategoryId" FROM running_action_categories WHERE "UserId" = action."UserId";
-END
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION running_action_insert_trigger_handler() RETURNS TRIGGER
-AS $$
-BEGIN
-    IF TG_OP = 'INSERT' THEN
-        IF NEW."UserId" IS NULL OR EXISTS(SELECT "Id" FROM app_user WHERE "Id" = NEW."UserId") IS FALSE THEN
-            RAISE EXCEPTION '"UserId" must be valid user';
-        END IF;
-        IF NEW."StartTime" IS NULL THEN
-            NEW."StartTime" := NOW() AT TIME ZONE 'UTC';
-        END IF;
-        IF EXISTS(SELECT "UserId" FROM running_action WHERE "UserId"=NEW."UserId") THEN
-            PERFORM save_running_action(NEW);
-            DELETE FROM running_action_categories WHERE "UserId" = NEW."UserId";
-            DELETE FROM running_action WHERE "UserId" = NEW."UserId";
-        END IF;
-    
-        RETURN NEW;
-    ELSIF TG_OP = 'DELETE' THEN
-        IF EXISTS(SELECT "UserId" FROM running_action WHERE "UserId"=OLD."UserId") THEN
-            PERFORM save_running_action(OLD);
-            DELETE FROM running_action_categories WHERE "UserId" = OLD."UserId";
-        END IF;
-
-        RETURN OLD;
-    END IF;
-
-    RETURN NULL;
-END
-$$ LANGUAGE plpgsql;
-
-DROP TRIGGER IF EXISTS running_action_insert_trigger ON running_action;
-CREATE TRIGGER running_action_insert_trigger BEFORE INSERT OR DELETE ON running_action
-    FOR EACH ROW
-    EXECUTE PROCEDURE running_action_insert_trigger_handler();
-
 CREATE TABLE action (
     "Id"            SERIAL PRIMARY KEY,
     "StartTime"     TIMESTAMP WITHOUT TIME ZONE NOT NULL,
@@ -144,11 +93,84 @@ CREATE TABLE project (
 );
 
 CREATE TABLE project_tasks (
-    "TaskId"        INTEGER NOT NULL,
-    "ProjectId"     INTEGER NOT NULL,
-    "OrderNumber"   INTEGER DEFAULT 0 NOT NULL,
+    "TaskId"            INTEGER NOT NULL,
+    "ProjectId"         INTEGER NOT NULL,
+    "IndexInProject"    INTEGER DEFAULT 0 NOT NULL,
     
     PRIMARY KEY ("TaskId"),
     FOREIGN KEY ("TaskId") REFERENCES task("Id"),
     FOREIGN KEY ("ProjectId") REFERENCES project("Id")
 );
+
+CREATE FUNCTION save_running_action(user_id INTEGER) RETURNS VOID
+AS $$
+DECLARE
+    action_id INTEGER;
+BEGIN
+    IF NOT EXISTS(SELECT "UserId" FROM "running_action" WHERE "UserId" = user_id) THEN
+        RETURN;
+    END IF;
+
+    INSERT INTO action ("StartTime", "EndTime", "UserId")
+        (SELECT "StartTime", NOW() AT TIME ZONE 'UTC', user_id FROM running_action WHERE "UserId" = user_id)
+        RETURNING "Id" INTO action_id;
+    
+    INSERT INTO action_categories ("ActionId", "CategoryId")
+    SELECT action_id, "CategoryId" FROM running_action_categories WHERE "UserId" = user_id;
+
+    DELETE FROM running_action_categories WHERE "UserId" = user_id;
+    DELETE FROM running_action WHERE "UserId" = user_id;
+END
+$$ LANGUAGE plpgsql;
+
+CREATE FUNCTION running_action_trigger_handler() RETURNS TRIGGER
+AS $$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        IF NEW."UserId" IS NULL OR EXISTS(SELECT "Id" FROM app_user WHERE "Id" = NEW."UserId") IS FALSE THEN
+            RAISE EXCEPTION '"UserId" must be valid user';
+        END IF;
+
+        IF NEW."StartTime" IS NULL THEN
+            NEW."StartTime" := NOW() AT TIME ZONE 'UTC';
+        END IF;
+
+        IF EXISTS(SELECT "UserId" FROM running_action WHERE "UserId"=NEW."UserId") THEN
+            PERFORM save_running_action(NEW."UserId");
+        END IF;
+
+        RETURN NEW;
+    ELSIF TG_OP = 'DELETE' THEN
+        IF EXISTS(SELECT "UserId" FROM running_action WHERE "UserId"=OLD."UserId") THEN
+            DELETE FROM running_action_categories WHERE "UserId" = OLD."UserId";
+        END IF;
+
+        RETURN OLD;
+    END IF;
+
+    RETURN NULL;
+END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION check_running_action_categories() RETURNS TRIGGER
+AS $$
+BEGIN
+    IF (SELECT "UserId" FROM category WHERE "Id" = NEW."CategoryId") != NEW."UserId" THEN
+        RAISE EXCEPTION 'Category cannot belong to another user';
+    END IF;
+
+    RETURN NEW;
+END
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER running_action_save_trigger BEFORE INSERT ON running_action
+    FOR EACH ROW
+    EXECUTE PROCEDURE running_action_trigger_handler();
+
+CREATE TRIGGER running_action_delete_trigger BEFORE DELETE ON running_action
+    FOR EACH ROW
+    EXECUTE PROCEDURE running_action_trigger_handler();
+
+CREATE CONSTRAINT TRIGGER check_running_action_categories AFTER INSERT OR UPDATE ON running_action_categories
+    FOR EACH ROW
+    EXECUTE PROCEDURE check_running_action_categories();

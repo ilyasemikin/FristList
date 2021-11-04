@@ -58,10 +58,10 @@ namespace FristList.Services.PostgreSql
 
             try
             {
-                var deleted = await connection.ExecuteAsync("DELETE FROM running_action WHERE \"UserId\"=@UserId",
+                var stopped = await connection.ExecuteAsync("SELECT save_running_action(@UserId)",
                     new { UserId = user.Id });
 
-                if (deleted == 0)
+                if (stopped == 0)
                     throw new InvalidOperationException("action not found");
             }
             catch (Exception e)
@@ -73,6 +73,15 @@ namespace FristList.Services.PostgreSql
             await transaction.CommitAsync();
 
             return true;
+        }
+
+        public async Task<bool> DeleteActionAsync(AppUser user)
+        {
+            await using var connection = new NpgsqlConnection(_connectionString);
+
+            var deleted = await connection.ExecuteAsync("DELETE FROM running_action WHERE \"UserId\"=@UserId",
+                new { UserId = user.Id });
+            return deleted > 0;
         }
 
         public async Task<RunningAction> GetRunningActionAsync(AppUser user)

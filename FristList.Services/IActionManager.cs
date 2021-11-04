@@ -9,6 +9,8 @@ namespace FristList.Services
         Task<bool> StartActionAsync(AppUser user, IEnumerable<Category> categories);
         Task<bool> StopActionAsync(AppUser user);
 
+        Task<bool> DeleteActionAsync(AppUser user);
+        
         Task<RunningAction> GetRunningActionAsync(AppUser user);
     }
 }
