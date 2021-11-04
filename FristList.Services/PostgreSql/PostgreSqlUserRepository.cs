@@ -127,7 +127,7 @@ namespace FristList.Services.PostgreSql
                 new { NormalizedUserName = normalizedUserName.ToUpper() });
         }
         
-        public async Task SetUserNameAsync(AppUser user, string userName, CancellationToken cancellationToken)
+        public async System.Threading.Tasks.Task SetUserNameAsync(AppUser user, string userName, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -138,7 +138,7 @@ namespace FristList.Services.PostgreSql
             user.UserName = userName;
         }
         
-        public async Task SetNormalizedUserNameAsync(AppUser user, string normalizedName, CancellationToken cancellationToken)
+        public async System.Threading.Tasks.Task SetNormalizedUserNameAsync(AppUser user, string normalizedName, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -150,15 +150,15 @@ namespace FristList.Services.PostgreSql
         }
 
         public Task<string> GetUserIdAsync(AppUser user, CancellationToken cancellationToken)
-            => Task.FromResult(user.Id.ToString());
+            => System.Threading.Tasks.Task.FromResult(user.Id.ToString());
 
         public Task<string> GetUserNameAsync(AppUser user, CancellationToken cancellationToken)
-            => Task.FromResult(user.UserName);
+            => System.Threading.Tasks.Task.FromResult(user.UserName);
         
         public Task<string> GetNormalizedUserNameAsync(AppUser user, CancellationToken cancellationToken)
-            => Task.FromResult(user.NormalizedUserName);
+            => System.Threading.Tasks.Task.FromResult(user.NormalizedUserName);
 
-        public async Task SetPasswordHashAsync(AppUser user, string passwordHash, CancellationToken cancellationToken)
+        public async System.Threading.Tasks.Task SetPasswordHashAsync(AppUser user, string passwordHash, CancellationToken cancellationToken)
         {
             await using var connection = new NpgsqlConnection(_connectionString);
 
@@ -169,10 +169,10 @@ namespace FristList.Services.PostgreSql
         }
 
         public Task<string> GetPasswordHashAsync(AppUser user, CancellationToken cancellationToken)
-            => Task.FromResult(user.PasswordHash);
+            => System.Threading.Tasks.Task.FromResult(user.PasswordHash);
 
         public Task<bool> HasPasswordAsync(AppUser user, CancellationToken cancellationToken)
-            => Task.FromResult(user.PasswordHash is not null);
+            => System.Threading.Tasks.Task.FromResult(user.PasswordHash is not null);
 
         public async Task<AppUser> FindByEmailAsync(string normalizedEmail, CancellationToken cancellationToken)
         {
@@ -184,7 +184,7 @@ namespace FristList.Services.PostgreSql
                 new { NormalizedEmail = normalizedEmail });
         }
         
-        public async Task SetEmailAsync(AppUser user, string email, CancellationToken cancellationToken)
+        public async System.Threading.Tasks.Task SetEmailAsync(AppUser user, string email, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -195,7 +195,7 @@ namespace FristList.Services.PostgreSql
             user.Email = email;
         }
         
-        public async Task SetNormalizedEmailAsync(AppUser user, string normalizedEmail, CancellationToken cancellationToken)
+        public async System.Threading.Tasks.Task SetNormalizedEmailAsync(AppUser user, string normalizedEmail, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -206,7 +206,7 @@ namespace FristList.Services.PostgreSql
             user.NormalizedEmail = normalizedEmail;
         }
         
-        public async Task SetEmailConfirmedAsync(AppUser user, bool confirmed, CancellationToken cancellationToken)
+        public async System.Threading.Tasks.Task SetEmailConfirmedAsync(AppUser user, bool confirmed, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -218,12 +218,12 @@ namespace FristList.Services.PostgreSql
         }
 
         public Task<string> GetEmailAsync(AppUser user, CancellationToken cancellationToken)
-            => Task.FromResult(user.Email);
+            => System.Threading.Tasks.Task.FromResult(user.Email);
 
         public Task<string> GetNormalizedEmailAsync(AppUser user, CancellationToken cancellationToken)
-            => Task.FromResult(user.NormalizedEmail);
+            => System.Threading.Tasks.Task.FromResult(user.NormalizedEmail);
 
         public Task<bool> GetEmailConfirmedAsync(AppUser user, CancellationToken cancellationToken)
-            => Task.FromResult(user.EmailConfirmed);
+            => System.Threading.Tasks.Task.FromResult(user.EmailConfirmed);
     }
 }

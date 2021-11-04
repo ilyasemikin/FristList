@@ -40,6 +40,8 @@ namespace FristList.WebApi
                 provider.GetRequiredService<IRepositoryAbstractFactory>().CreateActionRepository());
             services.AddTransient(provider =>
                 provider.GetRequiredService<IRepositoryAbstractFactory>().CreateCategoryRepository());
+            services.AddTransient(provider =>
+                provider.GetRequiredService<IRepositoryAbstractFactory>().CreateTaskRepository());
 
             services.AddIdentityCore<AppUser>()
                 .AddDefaultTokenProviders();

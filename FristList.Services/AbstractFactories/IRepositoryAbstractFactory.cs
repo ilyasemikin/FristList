@@ -8,5 +8,6 @@ namespace FristList.Services.AbstractFactories
         IUserStore<AppUser> CreateUserRepository();
         ICategoryRepository CreateCategoryRepository();
         IActionRepository CreateActionRepository();
+        ITaskRepository CreateTaskRepository();
     }
 }

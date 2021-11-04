@@ -66,28 +66,7 @@ namespace FristList.Services.PostgreSql
 
         public async Task<RepositoryResult> UpdateAsync(Action action)
         {
-            await using var connection = new NpgsqlConnection(_connectionString);
-            try
-            {
-                var updated = await connection.ExecuteAsync(
-                    "UPDATE action SET \"StartTime\"=@StartTime, \"EndTime\"=@EndTime, \"UserId\"=@UserId WHERE \"Id\"=@Id",
-                    new
-                    {
-                        Id = action.Id, StartTime = action.StartTime, EndTime = action.EndTime, UserId = action.UserId
-                    });
-
-                if (updated == 0)
-                    throw new InvalidOperationException("entity not updated");
-            }
-            catch (Exception e)
-            {
-                return RepositoryResult.Failed(new RepositoryResultError
-                {
-                    Description = e.Message
-                });
-            }
-            
-            return RepositoryResult.Success;
+            throw new NotImplementedException();
         }
 
         public async Task<RepositoryResult> DeleteAsync(Action action)
