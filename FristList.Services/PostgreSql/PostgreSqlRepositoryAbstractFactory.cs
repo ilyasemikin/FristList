@@ -16,6 +16,6 @@ namespace FristList.Services.PostgreSql
 
         public IUserStore<AppUser> CreateUserRepository() => new PostgreSqlUserRepository(_configuration);
         public ICategoryRepository CreateCategoryRepository() => new PostgreSqlCategoryRepository(_configuration);
-        public IActionRepository CreateActionRepository() => new PostgreSqlActionRepository(_configuration);
+        public IActionRepository CreateActionRepository() => new PostgreSqlActionRepository(_configuration, CreateCategoryRepository());
     }
 }

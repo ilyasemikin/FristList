@@ -70,13 +70,13 @@ namespace FristList.WebApi.Controllers
             return Ok();
         }
 
-        [HttpGet]
+        [HttpGet("all")]
         [Authorize]
         public async Task<IActionResult> AllActions()
         {
             var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
-            var actions = _actionRepository.FindAllByUserId(user.Id)
-                .ToEnumerable();
+            var actions = await _actionRepository.FindAllByUserId(user.Id)
+                .ToArrayAsync();
             return Ok(actions);
         }
     }

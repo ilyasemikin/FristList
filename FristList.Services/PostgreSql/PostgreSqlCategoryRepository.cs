@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using FristList.Models;
@@ -39,9 +40,28 @@ namespace FristList.Services.PostgreSql
             return RepositoryResult.Success;
         }
 
-        public Task<RepositoryResult> UpdateAsync(Category category)
+        public async Task<RepositoryResult> UpdateAsync(Category category)
         {
-            throw new NotImplementedException();
+            await using var connection = new NpgsqlConnection(_connectionString);
+
+            try
+            {
+                var updated = await connection.ExecuteAsync(
+                    "UPDATE category SET \"Name\"=@Name, \"UserId\"=@UserId WHERE \"Id\"=@Id",
+                    new { Id = category.Id, Name = category.Name, UserId = category.UserId });
+
+                if (updated == 0)
+                    throw new InvalidOperationException("entity not updated");
+            }
+            catch (Exception e)
+            {
+                return RepositoryResult.Failed(new RepositoryResultError
+                {
+                    Description = e.Message
+                });
+            }
+            
+            return RepositoryResult.Success;
         }
 
         public async Task<RepositoryResult> DeleteAsync(Category category)
@@ -62,6 +82,17 @@ namespace FristList.Services.PostgreSql
             await using var connection = new NpgsqlConnection(_connectionString);
             return await connection.QuerySingleOrDefaultAsync<Category>("SELECT * FROM category WHERE \"Id\"=@Id",
                 new { Id = id });
+        }
+
+        public async IAsyncEnumerable<Category> FindByIdsAsync(IEnumerable<int> ids)
+        {
+            await using var connection = new NpgsqlConnection(_connectionString);
+            var reader = await connection.ExecuteReaderAsync(
+                "SELECT * FROM category WHERE \"Id\" = ANY(@Ids)", new { Ids = ids.ToArray() });
+            var parser = reader.GetRowParser<Category>();
+
+            while (await reader.ReadAsync())
+                yield return parser(reader);
         }
 
         public async IAsyncEnumerable<Category> FindAllByUserIdAsync(int userId)

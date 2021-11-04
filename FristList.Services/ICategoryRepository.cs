@@ -12,6 +12,7 @@ namespace FristList.Services
         Task<RepositoryResult> DeleteAsync(Category category);
 
         Task<Category> FindByIdAsync(int id);
+        IAsyncEnumerable<Category> FindByIdsAsync(IEnumerable<int> ids);
         IAsyncEnumerable<Category> FindAllByUserIdAsync(int userId);
     }
 }
