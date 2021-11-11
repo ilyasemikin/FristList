@@ -1,16 +1,19 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using FristList.Dto;
+using FristList.Dto.Queries;
+using FristList.Dto.Queries.Actions;
+using FristList.Dto.Responses;
 using FristList.Models;
 using FristList.Services;
-using FristList.WebApi.Queries.Actions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Action = FristList.Models.Action;
+using Category = FristList.Models.Category;
 
 namespace FristList.WebApi.Controllers
 {
@@ -66,9 +69,9 @@ namespace FristList.WebApi.Controllers
         public async Task<IActionResult> DeleteAction(DeleteActionQuery query)
         {
             var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
-            var action = await _actionRepository.FindById(query.Id);
+            var action = await _actionRepository.FindByIdAsync(query.Id);
 
-            if (action.UserId != user.Id)
+            if (action is null || action.UserId != user.Id)
                 return NotFound();
 
             await _actionRepository.DeleteAsync(action);
@@ -77,12 +80,16 @@ namespace FristList.WebApi.Controllers
 
         [HttpGet("all")]
         [Authorize]
-        public async Task<IActionResult> AllActions()
+        public async Task<IActionResult> AllActions([FromQuery]PaginationQuery query)
         {
             var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
-            var actions = await _actionRepository.FindAllByUserId(user.Id)
+            var actionsCount = await _actionRepository.CountByUserAsync(user);
+            var actions = await _actionRepository
+                .FindAllByUserAsync(user, (query.PageNumber - 1) * query.PageSize, query.PageSize)
                 .ToArrayAsync();
-            return Ok(actions);
+
+            var response = PagedResponse<Action>.Create(actions, query.PageNumber, query.PageSize, actionsCount);
+            return Ok(response);
         }
 
         [HttpPost("start")]
@@ -102,10 +109,20 @@ namespace FristList.WebApi.Controllers
                     return NotFound();
             }
 
-            if (await _actionManager.StartActionAsync(user, categories))
-                return Ok();
-                
-            return Problem();
+            var action = await _actionManager.StartActionAsync(user, categories);
+            if (action is null)
+                return Problem();
+
+            var currentAction = new Dto.CurrentAction
+            {
+                StartTime = action.StartTime,
+                Categories = action.Categories.Select(c => new Dto.Category
+                {
+                    Id = c.Id,
+                    Name = c.Name
+                }).ToArray()
+            };
+            return Ok(new Response<Dto.CurrentAction>(currentAction));
         }
 
         [HttpPost("stop")]
@@ -115,7 +132,7 @@ namespace FristList.WebApi.Controllers
             var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
 
             if (await _actionManager.StopActionAsync(user))
-                return Ok();
+                return Ok(new Response<object>(new {}));
 
             return Problem();
         }
@@ -125,10 +142,24 @@ namespace FristList.WebApi.Controllers
         public async Task<IActionResult> CurrentAction()
         {
             var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
-
             var action = await _actionManager.GetRunningActionAsync(user);
 
-            return Ok(action);
+            if (action is null)
+                return NoContent();
+
+            var categories = action.Categories?.Select(c => new Dto.Category
+            {
+                Id = c.Id,
+                Name = c.Name
+            }).ToArray() ?? Array.Empty<Dto.Category>();
+
+            var currentAction = new CurrentAction
+            {
+                StartTime = action.StartTime,
+                Categories = categories
+            };
+            
+            return Ok(new Response<CurrentAction>(currentAction));
         }
 
         [HttpDelete("current")]

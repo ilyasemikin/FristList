@@ -14,9 +14,12 @@ namespace FristList.Services.PostgreSql
             _configuration = configuration;
         }
 
+        public IStorageInitializer CreateStorageInitializer() => new PostgreSqlStorageInitializer();
+
         public IUserStore<AppUser> CreateUserRepository() => new PostgreSqlUserRepository(_configuration);
         public ICategoryRepository CreateCategoryRepository() => new PostgreSqlCategoryRepository(_configuration);
-        public IActionRepository CreateActionRepository() => new PostgreSqlActionRepository(_configuration, CreateCategoryRepository());
-        public ITaskRepository CreateTaskRepository() => new PostgreSqlTaskRepository(_configuration, CreateCategoryRepository());
+        public IActionRepository CreateActionRepository() => new PostgreSqlActionRepository(_configuration);
+        public ITaskRepository CreateTaskRepository() => new PostgreSqlTaskRepository(_configuration);
+        public IProjectRepository CreateProjectRepository() => new PostgreSqlProjectRepository(_configuration);
     }
 }

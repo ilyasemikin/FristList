@@ -1,9 +1,9 @@
-using System;
 using System.Linq;
 using System.Threading.Tasks;
+using FristList.Dto;
+using FristList.Dto.Queries.Account;
+using FristList.Dto.Responses;
 using FristList.Models;
-using FristList.WebApi.Queries;
-using FristList.WebApi.Queries.Account;
 using FristList.WebApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -59,7 +59,11 @@ namespace FristList.WebApi.Controllers
             if (!success)
                 return Unauthorized();
 
-            return Ok(_jwtTokenProvider.CreateToken(user));
+            var login = new SuccessLogin
+            {
+                Token = _jwtTokenProvider.CreateToken(user)
+            };
+            return Ok(new Response<SuccessLogin>(login));
         }
     }
 }

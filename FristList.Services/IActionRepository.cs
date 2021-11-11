@@ -10,7 +10,10 @@ namespace FristList.Services
         Task<RepositoryResult> UpdateAsync(Action action);
         Task<RepositoryResult> DeleteAsync(Action action);
 
-        Task<Action> FindById(int id);
-        IAsyncEnumerable<Action> FindAllByUserId(int userId);
+        Task<int> CountAsync();
+        Task<int> CountByUserAsync(AppUser user);
+        
+        Task<Action> FindByIdAsync(int id);
+        IAsyncEnumerable<Action> FindAllByUserAsync(AppUser user, int skip = 0, int count = int.MaxValue);
     }
 }

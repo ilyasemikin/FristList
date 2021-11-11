@@ -10,7 +10,7 @@ CREATE TABLE app_user (
     "PhoneNumber"           VARCHAR(16),
     "PhoneNumberConfirmed"  BOOLEAN DEFAULT false NOT NULL,
     "PasswordHash"          VARCHAR(256) NOT NULL,
-    "TwoFactorEnable"       BOOLEAN NOT NULL
+    "TwoFactorEnable"       BOOLEAN DEFAULT false NOT NULL
 );
 
 CREATE TABLE running_action (
@@ -26,7 +26,8 @@ CREATE TABLE category (
     "Name"      VARCHAR(256),
     "UserId"    INTEGER NOT NULL,
 
-    FOREIGN KEY ("UserId") REFERENCES app_user("Id")
+    FOREIGN KEY ("UserId") REFERENCES app_user("Id"),
+    UNIQUE ("Name", "UserId")
 );
 
 CREATE TABLE running_action_categories (
@@ -69,6 +70,7 @@ CREATE TABLE task_actions (
     "Id"            SERIAL PRIMARY KEY,
     "TaskId"        INTEGER NOT NULL,
     "ActionId"      INTEGER NOT NULL,
+    "Description"   TEXT,
     
     FOREIGN KEY ("TaskId") REFERENCES task("Id"),
     FOREIGN KEY ("ActionId") REFERENCES action("Id")
@@ -152,11 +154,28 @@ BEGIN
 END
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION check_running_action_categories() RETURNS TRIGGER
+CREATE FUNCTION check_running_action_categories() RETURNS TRIGGER
 AS $$
 BEGIN
     IF (SELECT "UserId" FROM category WHERE "Id" = NEW."CategoryId") != NEW."UserId" THEN
         RAISE EXCEPTION 'Category cannot belong to another user';
+    END IF;
+
+    RETURN NEW;
+END
+$$ LANGUAGE plpgsql;
+
+CREATE FUNCTION check_project_task() RETURNS TRIGGER
+AS $$
+DECLARE 
+    task_user_id        INTEGER;
+    project_user_id     INTEGER;
+BEGIN
+    SELECT "UserId" FROM project WHERE "Id" = NEW."ProjectId" INTO project_user_id;
+    SELECT "UserId" FROM task WHERE "Id" = NEW."TaskId" INTO task_user_id;
+
+    IF project_user_id != task_user_id THEN
+        RAISE EXCEPTION 'Incorrect project task';
     END IF;
 
     RETURN NEW;
@@ -174,3 +193,7 @@ CREATE TRIGGER running_action_delete_trigger BEFORE DELETE ON running_action
 CREATE CONSTRAINT TRIGGER check_running_action_categories AFTER INSERT OR UPDATE ON running_action_categories
     FOR EACH ROW
     EXECUTE PROCEDURE check_running_action_categories();
+
+CREATE CONSTRAINT TRIGGER check_project_task_owner AFTER INSERT OR UPDATE ON project_tasks
+    FOR EACH ROW
+    EXECUTE PROCEDURE check_project_task();

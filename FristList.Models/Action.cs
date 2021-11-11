@@ -11,6 +11,11 @@ namespace FristList.Models
         public string Description { get; set; }
         public int UserId { get; set; }
         
-        public IReadOnlyList<Category> Categories { get; set; }
+        public IList<Category> Categories { get; set; }
+
+        public Action()
+        {
+            Categories = new List<Category>();
+        }
     }
 }

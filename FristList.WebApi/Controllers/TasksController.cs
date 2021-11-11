@@ -1,9 +1,11 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using FristList.Dto.Queries;
+using FristList.Dto.Queries.Tasks;
+using FristList.Dto.Responses;
 using FristList.Models;
 using FristList.Services;
-using FristList.WebApi.Queries.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -60,7 +62,7 @@ namespace FristList.WebApi.Controllers
         public async Task<IActionResult> DeleteTask(DeleteTaskQuery query)
         {
             var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
-            var task = await _taskRepository.FindById(query.Id);
+            var task = await _taskRepository.FindByIdAsync(query.Id);
             if (task.UserId == user.Id)
                 return NotFound();
 
@@ -74,12 +76,15 @@ namespace FristList.WebApi.Controllers
 
         [HttpGet("all")]
         [Authorize]
-        public async Task<IActionResult> AllTask()
+        public async Task<IActionResult> AllTask([FromQuery]PaginationQuery query)
         {
             var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
-            var tasks = _taskRepository.FindByAllUserId(user.Id)
+            var tasksCount = await _taskRepository.CountByUserAsync(user);
+            var tasks = _taskRepository.FindByAllUserAsync(user, (query.PageNumber - 1) * query.PageSize, query.PageSize)
                 .ToEnumerable();
-            return Ok(tasks);
+
+            var response = PagedResponse<Task>.Create(tasks, query.PageNumber, query.PageSize, tasksCount);
+            return Ok(response);
         }
     }
 }

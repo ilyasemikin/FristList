@@ -77,10 +77,23 @@ namespace FristList.Services.PostgreSql
             return RepositoryResult.Success;
         }
 
+        public async Task<int> CountAsync()
+        {
+            await using var connection = new NpgsqlConnection(_connectionString);
+            return await connection.QuerySingleAsync<int>("SELECT COUNT(*) FROM \"category\"");
+        }
+
+        public async Task<int> CountByUserAsync(AppUser user)
+        {
+            await using var connection = new NpgsqlConnection(_connectionString);
+            return await connection.QuerySingleAsync<int>("SELECT COUNT(*) FROM \"category\" WHERE \"UserId\"=@UserId",
+                new { UserId = user.Id });
+        }
+
         public async Task<Category> FindByIdAsync(int id)
         {
             await using var connection = new NpgsqlConnection(_connectionString);
-            return await connection.QuerySingleOrDefaultAsync<Category>("SELECT * FROM category WHERE \"Id\"=@Id",
+            return await connection.QuerySingleOrDefaultAsync<Category>("SELECT \"Id\" AS \"CategoryId\", \"Name\" AS \"CategoryName\", \"UserId\" FROM category WHERE \"Id\"=@Id",
                 new { Id = id });
         }
 
@@ -88,18 +101,19 @@ namespace FristList.Services.PostgreSql
         {
             await using var connection = new NpgsqlConnection(_connectionString);
             var reader = await connection.ExecuteReaderAsync(
-                "SELECT * FROM category WHERE \"Id\" = ANY(@Ids)", new { Ids = ids.ToArray() });
+                "SELECT \"Id\" AS \"CategoryId\", \"Name\" AS \"CategoryName\", \"UserId\" FROM category WHERE \"Id\" = ANY(@Ids)", new { Ids = ids.ToArray() });
             var parser = reader.GetRowParser<Category>();
 
             while (await reader.ReadAsync())
                 yield return parser(reader);
         }
 
-        public async IAsyncEnumerable<Category> FindAllByUserIdAsync(int userId)
+        public async IAsyncEnumerable<Category> FindAllByUserIdAsync(AppUser user, int skip, int count)
         {
             await using var connection = new NpgsqlConnection(_connectionString);
             var reader = await connection.ExecuteReaderAsync(
-                "SELECT * FROM category WHERE \"UserId\"=@UserId", new { UserId = userId });
+                "SELECT \"Id\" AS \"CategoryId\", \"Name\" AS \"CategoryName\", \"UserId\" FROM category WHERE \"UserId\"=@UserId ORDER BY \"Id\" OFFSET @Offset LIMIT @Limit",
+                new { UserId = user.Id, Offset = skip, Limit = count });
             var parser = reader.GetRowParser<Category>();
 
             while (await reader.ReadAsync())

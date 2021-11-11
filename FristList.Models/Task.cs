@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace FristList.Models
@@ -7,7 +8,13 @@ namespace FristList.Models
         public int Id { get; set; }
         public string Name { get; set; }
         public int UserId { get; set; }
+        public int? ProjectId { get; set; }
+        
+        public IList<Category> Categories { get; set; }
 
-        public IReadOnlyList<Category> Categories { get; set; }
+        public Task()
+        {
+            Categories = new List<Category>();
+        }
     }
 }

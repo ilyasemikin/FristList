@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
+using FristList.Models;
 using Microsoft.Extensions.Configuration;
 using Npgsql;
 using Task = FristList.Models.Task;
@@ -12,24 +13,10 @@ namespace FristList.Services.PostgreSql
     public class PostgreSqlTaskRepository : ITaskRepository
     {
         private readonly string _connectionString;
-        private readonly ICategoryRepository _categoryRepository;
 
-        public PostgreSqlTaskRepository(IConfiguration configuration, ICategoryRepository categoryRepository)
+        public PostgreSqlTaskRepository(IConfiguration configuration)
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection");
-            _categoryRepository = categoryRepository;
-        }
-
-        private async IAsyncEnumerable<int> GetCategories(int taskId)
-        {
-            await using var connection = new NpgsqlConnection(_connectionString);
-
-            var reader = await connection.ExecuteReaderAsync(
-                "SELECT \"CategoryId\" FROM task_categories WHERE \"TaskId\"=@TaskId", new { TaskId = taskId });
-            var parser = reader.GetRowParser<int>();
-
-            while (await reader.ReadAsync())
-                yield return parser(reader);
         }
 
         public async Task<RepositoryResult> CreateAsync(Task task)
@@ -83,40 +70,60 @@ namespace FristList.Services.PostgreSql
             throw new NotImplementedException();
         }
 
-        public async Task<Task> FindById(int id)
+        public async Task<int> CountAsync()
         {
             await using var connection = new NpgsqlConnection(_connectionString);
-            var task = await connection.QuerySingleOrDefaultAsync<Task>("SELECT * FROM task WHERE \"Id\"=@Id",
-                new { Id = id });
-
-            if (task is null)
-                return null;
-
-            var categories = GetCategories(task.Id)
-                .ToEnumerable();
-            task.Categories = await _categoryRepository.FindByIdsAsync(categories)
-                .ToArrayAsync();
-
-            return task;
+            return await connection.QuerySingleAsync<int>("SELECT COUNT(*) FROM \"task\"");
         }
 
-        public async IAsyncEnumerable<Task> FindByAllUserId(int userId)
+        public async Task<int> CountByUserAsync(AppUser user)
         {
             await using var connection = new NpgsqlConnection(_connectionString);
-            var reader = await connection.ExecuteReaderAsync("SELECT * FROM task WHERE \"UserId\"=@UserId",
-                new { UserId = userId });
-            var parser = reader.GetRowParser<Task>();
-            while (await reader.ReadAsync())
-            {
-                var task = parser(reader);
-                
-                var categories = GetCategories(task.Id)
-                    .ToEnumerable();
-                task.Categories = await _categoryRepository.FindByIdsAsync(categories)
-                    .ToArrayAsync();
-                
+            return await connection.QuerySingleAsync<int>("SELECT COUNT(*) FROM \"task\" WHERE \"UserId\"=@UserId",
+                new { UserId = user.Id });
+        }
+
+        public async Task<Task> FindByIdAsync(int id)
+        {
+            await using var connection = new NpgsqlConnection(_connectionString);
+            Task answer = null;
+
+            await connection.QueryAsync<Task, Category, Task>(
+                "SELECT t.\"Id\" AS \"TaskId\", t.\"Name\" AS \"TaskName\", pt.\"ProjectId\" AS \"TaskProjectId\", c.\"Id\" AS \"CategoryId\", c.\"Name\" AS \"CategoryName\" FROM task t LEFT JOIN task_categories tc on t.\"Id\" = tc.\"TaskId\" LEFT JOIN category c on tc.\"CategoryId\" = c.\"Id\" LEFT JOIN project_tasks pt on t.\"Id\" = pt.\"TaskId\" WHERE t.\"Id\"=@Id",
+                (task, category) =>
+                {
+                    answer ??= task;
+                    if (category is not null)
+                        answer.Categories.Add(category);
+                    return answer;
+                }, new { Id = id }, splitOn: "CategoryId");
+
+            return answer;
+        }
+
+        public async IAsyncEnumerable<Task> FindByAllUserAsync(AppUser user, int skip, int count)
+        {
+            await using var connection = new NpgsqlConnection(_connectionString);
+            
+            var uniqueTasks = new Dictionary<int, Task>();
+            var tasks = await connection.QueryAsync<Task, Category, Task>(
+                "SELECT t.\"Id\" AS \"TaskId\", t.\"Name\" AS \"TaskName\", pt.\"ProjectId\" AS \"TaskProjectId\", t.\"UserId\" AS \"TaskUserId\", c.\"Id\" AS \"CategoryId\", c.\"Name\" AS \"CategoryName\", c.\"UserId\" AS \"CategoryUserId\" FROM (SELECT * FROM task WHERE \"UserId\"=@UserId ORDER BY \"Id\" OFFSET @Offset LIMIT @Limit) t LEFT JOIN task_categories tc ON t.\"Id\"=tc.\"TaskId\" LEFT JOIN category c on tc.\"CategoryId\" = c.\"Id\" LEFT JOIN project_tasks pt on t.\"Id\" = pt.\"TaskId\"",
+                (task, category) =>
+                {
+                    if (!uniqueTasks.TryGetValue(task.Id, out var entity))
+                    {
+                        entity = task;
+                        uniqueTasks.Add(entity.Id, entity);
+                    }
+
+                    if (category is not null)
+                        entity.Categories.Add(category);
+
+                    return entity;
+                }, new { UserId = user.Id, Offset = skip, Limit = count }, splitOn: "CategoryId");
+
+            foreach (var task in tasks.Distinct())
                 yield return task;
-            }
         }
     }
 }

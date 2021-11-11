@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
+using FristList.Models;
 using Microsoft.Extensions.Configuration;
 using Npgsql;
 using Action = FristList.Models.Action;
@@ -12,22 +13,10 @@ namespace FristList.Services.PostgreSql
     public class PostgreSqlActionRepository : IActionRepository
     {
         private readonly string _connectionString;
-        private readonly ICategoryRepository _categoryRepository;
 
-        public PostgreSqlActionRepository(IConfiguration configuration, ICategoryRepository categoryRepository)
+        public PostgreSqlActionRepository(IConfiguration configuration)
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection");
-            _categoryRepository = categoryRepository;
-        }
-
-        private async IAsyncEnumerable<int> GetCategoriesIds(int actionId)
-        {
-            await using var connection = new NpgsqlConnection(_connectionString);
-            var reader = await connection.ExecuteReaderAsync("SELECT \"CategoryId\" FROM action_categories WHERE \"ActionId\"=@ActionId",
-                new { ActionId = actionId });
-            var parser = reader.GetRowParser<int>();
-            while (await reader.ReadAsync())
-                yield return parser(reader);
         }
 
         public async Task<RepositoryResult> CreateAsync(Action action)
@@ -64,7 +53,7 @@ namespace FristList.Services.PostgreSql
             return RepositoryResult.Success;
         }
 
-        public async Task<RepositoryResult> UpdateAsync(Action action)
+        public Task<RepositoryResult> UpdateAsync(Action action)
         {
             throw new NotImplementedException();
         }
@@ -82,40 +71,59 @@ namespace FristList.Services.PostgreSql
             return RepositoryResult.Success;
         }
 
-        public async Task<Action> FindById(int id)
+        public async Task<int> CountAsync()
         {
             await using var connection = new NpgsqlConnection(_connectionString);
-            var action = await connection.QuerySingleAsync<Action>("SELECT * FROM action WHERE \"Id\"=@ActionId",
-                new { ActionId = id });
-
-            if (action is null) 
-                return null;
-
-            var categoryIds = GetCategoriesIds(action.Id)
-                .ToEnumerable();
-            action.Categories = await _categoryRepository.FindByIdsAsync(categoryIds)
-                .ToArrayAsync();
-
-            return action;
+            return await connection.QuerySingleAsync<int>("SELECT COUNT(*) FROM \"action\"");
         }
 
-        public async IAsyncEnumerable<Action> FindAllByUserId(int userId)
+        public async Task<int> CountByUserAsync(AppUser user)
         {
             await using var connection = new NpgsqlConnection(_connectionString);
-            var reader = await connection.ExecuteReaderAsync("SELECT * FROM action WHERE \"UserId\"=@UserId",
-                new { UserId = userId });
-            var parser = reader.GetRowParser<Action>();
-            while (await reader.ReadAsync())
-            {
-                var action = parser(reader);
-                
-                var categoryIds = GetCategoriesIds(action.Id)
-                    .ToEnumerable();
-                action.Categories = await _categoryRepository.FindByIdsAsync(categoryIds)
-                    .ToArrayAsync();
+            return await connection.QuerySingleAsync<int>("SELECT COUNT(*) FROM \"action\" WHERE \"UserId\"=@UserId",
+                new { UserId = user.Id });
+        }
 
+        public async Task<Action> FindByIdAsync(int id)
+        {
+            await using var connection = new NpgsqlConnection(_connectionString);
+            Action answer = null;
+
+            await connection.QueryAsync<Action, Category, Action>(
+                "SELECT a.\"Id\" AS \"ActionId\", a.\"StartTime\" AS \"ActionStartTime\", a.\"EndTime\" AS \"ActionEndTime\", c.\"Id\" AS \"CategoryId\", c.\"Name\" AS \"CategoryName\" FROM action a LEFT JOIN action_categories ac on a.\"Id\"=ac.\"ActionId\" LEFT JOIN category c on ac.\"CategoryId\"=c.\"Id\" WHERE a.\"Id\"=@Id",
+                (action, category) =>
+                {
+                    answer ??= action;
+                    if (category is not null)
+                        action.Categories.Add(category);
+                    return answer;
+                }, new { Id = id }, splitOn: "CategoryId");
+            
+            return answer;
+        }
+
+        public async IAsyncEnumerable<Action> FindAllByUserAsync(AppUser user, int skip, int count)
+        {
+            await using var connection = new NpgsqlConnection(_connectionString);
+
+            var uniqueActions = new Dictionary<int, Action>();
+            var actions = await connection.QueryAsync<Action, Category, Action>(
+                "SELECT a.\"Id\" AS \"ActionId\", a.\"StartTime\" AS \"ActionStartTime\", a.\"EndTime\" AS \"ActionEndTime\", c.\"Id\" AS \"CategoryId\", c.\"Name\" AS \"CategoryName\" FROM (SELECT * FROM action WHERE \"UserId\"=@UserId ORDER BY \"Id\" OFFSET @Offset LIMIT @Limit) a LEFT JOIN action_categories ac ON a.\"Id\"=ac.\"ActionId\" LEFT JOIN category c on ac.\"CategoryId\"=c.\"Id\"",
+                (action, category) =>
+                {
+                    if (!uniqueActions.TryGetValue(action.Id, out var entity))
+                    {
+                        entity = action;
+                        uniqueActions.Add(entity.Id, entity);
+                    }
+                    
+                    if (category is not null)
+                        entity.Categories.Add(category);
+                    return entity;
+                }, new { UserId = user.Id, Offset = skip, Limit = count }, splitOn: "CategoryId");
+
+            foreach (var action in actions.Distinct())
                 yield return action;
-            }
         }
     }
 }

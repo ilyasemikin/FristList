@@ -5,9 +5,12 @@ namespace FristList.Services.AbstractFactories
 {
     public interface IRepositoryAbstractFactory
     {
+        IStorageInitializer CreateStorageInitializer();
+        
         IUserStore<AppUser> CreateUserRepository();
         ICategoryRepository CreateCategoryRepository();
         IActionRepository CreateActionRepository();
         ITaskRepository CreateTaskRepository();
+        IProjectRepository CreateProjectRepository();
     }
 }

@@ -6,7 +6,7 @@ namespace FristList.Services
 {
     public interface IActionManager
     {
-        Task<bool> StartActionAsync(AppUser user, IEnumerable<Category> categories);
+        Task<RunningAction> StartActionAsync(AppUser user, IEnumerable<Category> categories);
         Task<bool> StopActionAsync(AppUser user);
 
         Task<bool> DeleteActionAsync(AppUser user);

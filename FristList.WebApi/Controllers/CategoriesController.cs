@@ -1,10 +1,11 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using FristList.Dto.Queries;
+using FristList.Dto.Queries.Categories;
+using FristList.Dto.Responses;
 using FristList.Models;
 using FristList.Services;
-using FristList.WebApi.Queries;
-using FristList.WebApi.Queries.Categories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -49,7 +50,7 @@ namespace FristList.WebApi.Controllers
             var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
             var category = await _categoryRepository.FindByIdAsync(query.Id);
 
-            if (category.UserId != user.Id)
+            if (category is null || category.UserId != user.Id)
                 return NotFound();
 
             if (query.Name != null)
@@ -81,13 +82,17 @@ namespace FristList.WebApi.Controllers
         [HttpGet]
         [Route("all")]
         [Authorize]
-        public async Task<IActionResult> AllCategories()
+        public async Task<IActionResult> AllCategories([FromQuery]PaginationQuery query)
         {
             var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
-            var categories = _categoryRepository.FindAllByUserIdAsync(user.Id)
-                .ToEnumerable();
+            var categoriesCount = await _categoryRepository.CountByUserAsync(user);
+            var categories = await _categoryRepository
+                .FindAllByUserIdAsync(user, query.PageSize * (query.PageNumber - 1), query.PageSize)
+                .ToArrayAsync();
 
-            return Ok(categories);
+            var response =
+                PagedResponse<Category>.Create(categories, query.PageNumber, query.PageSize, categoriesCount);
+            return Ok(response);
         }
     }
 }

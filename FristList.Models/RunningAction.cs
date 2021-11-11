@@ -7,6 +7,11 @@ namespace FristList.Models
     {
         public int UserId { get; set; }
         public DateTime StartTime { get; set; }
-        public IReadOnlyList<Category> Categories { get; set; }
+        public IList<Category> Categories { get; set; }
+
+        public RunningAction()
+        {
+            Categories = new List<Category>();
+        }
     }
 }

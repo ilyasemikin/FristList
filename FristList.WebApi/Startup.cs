@@ -36,6 +36,8 @@ namespace FristList.WebApi
             services.AddSingleton<IRepositoryAbstractFactory, PostgreSqlRepositoryAbstractFactory>();
 
             services.AddTransient(provider =>
+                provider.GetRequiredService<IRepositoryAbstractFactory>().CreateStorageInitializer());
+            services.AddTransient(provider =>
                 provider.GetRequiredService<IRepositoryAbstractFactory>().CreateUserRepository());
             services.AddTransient(provider =>
                 provider.GetRequiredService<IRepositoryAbstractFactory>().CreateActionRepository());
@@ -43,6 +45,8 @@ namespace FristList.WebApi
                 provider.GetRequiredService<IRepositoryAbstractFactory>().CreateCategoryRepository());
             services.AddTransient(provider =>
                 provider.GetRequiredService<IRepositoryAbstractFactory>().CreateTaskRepository());
+            services.AddTransient(provider =>
+                provider.GetRequiredService<IRepositoryAbstractFactory>().CreateProjectRepository());
 
             services.AddTransient<IActionManager, PostgreSqlActionManager>();
             
@@ -85,6 +89,10 @@ namespace FristList.WebApi
                 app.UseDeveloperExceptionPage();
             }
 
+            var storageInitializer = app.ApplicationServices.GetRequiredService<IStorageInitializer>();
+            storageInitializer.InitializeAsync()
+                .Wait();
+            
             app.UseRouting();
 
             app.UseAuthentication();

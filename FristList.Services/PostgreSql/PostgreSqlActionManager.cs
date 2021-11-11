@@ -8,6 +8,7 @@ using Dapper;
 using FristList.Models;
 using Microsoft.Extensions.Configuration;
 using Npgsql;
+using Task = FristList.Models.Task;
 
 namespace FristList.Services.PostgreSql
 {
@@ -20,7 +21,7 @@ namespace FristList.Services.PostgreSql
             _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
 
-        public async Task<bool> StartActionAsync(AppUser user, IEnumerable<Category> categories)
+        public async Task<RunningAction> StartActionAsync(AppUser user, IEnumerable<Category> categories)
         {
             await using var connection = new NpgsqlConnection(_connectionString);
             await connection.OpenAsync();
@@ -39,15 +40,15 @@ namespace FristList.Services.PostgreSql
                         "INSERT INTO running_action_categories (\"UserId\", \"CategoryId\") VALUES (@UserId, @CategoryId)",
                         new { UserId = user.Id, CategoryId = category.Id });
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 await transaction.RollbackAsync();
-                return false;
+                return null;
             }
 
             await transaction.CommitAsync();
-
-            return true;
+            
+            return await GetRunningActionAsync(user);
         }
 
         public async Task<bool> StopActionAsync(AppUser user)
@@ -64,7 +65,7 @@ namespace FristList.Services.PostgreSql
                 if (stopped == 0)
                     throw new InvalidOperationException("action not found");
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 await transaction.RollbackAsync();
                 return false;
@@ -88,22 +89,18 @@ namespace FristList.Services.PostgreSql
         {
             await using var connection = new NpgsqlConnection(_connectionString);
 
-            var startTime = await connection.ExecuteScalarAsync<DateTime?>(
-                "SELECT \"StartTime\" FROM running_action WHERE \"UserId\"=@UserId", new { UserId = user.Id });
+            RunningAction answer = null;
+            await connection.QueryAsync<RunningAction, Category, RunningAction>(
+                "SELECT ra.\"StartTime\" AS \"RunningActionStartTime\", ra.\"UserId\" AS \"RunningActionUserId\", rac.\"CategoryId\", c.\"Name\" AS \"CategoryName\" FROM running_action ra LEFT JOIN running_action_categories rac ON ra.\"UserId\"=rac.\"UserId\" LEFT JOIN category c on rac.\"CategoryId\"=c.\"Id\" WHERE ra.\"UserId\"=@UserId",
+                (action, category) =>
+                {
+                    answer ??= action;
+                    if (category is not null)
+                        answer.Categories.Add(category);
+                    return answer;
+                }, new { UserId = user.Id }, splitOn: "CategoryId");
 
-            if (startTime is null)
-                return null;
-
-            var categories = await connection.QueryAsync<Category>(
-                "SELECT \"Id\", c.\"UserId\", \"Name\" FROM running_action_categories ruc JOIN category c ON ruc.\"CategoryId\" = c.\"Id\" WHERE ruc.\"UserId\" = @UserId",
-                new { UserId = user.Id });
-
-            return new RunningAction
-            {
-                UserId = user.Id,
-                StartTime = (DateTime)startTime,
-                Categories = categories.ToArray()
-            };
+            return answer;
         }
     }
 }
