@@ -41,11 +41,9 @@ CREATE TABLE running_action_categories (
 
 CREATE TABLE action (
     "Id"            SERIAL PRIMARY KEY,
-    "StartTime"     TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    "EndTime"       TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    "During"        TSRANGE NOT NULL,
     "UserId"        INTEGER NOT NULL,
 
-    CHECK ("StartTime" <= "EndTime"),
     FOREIGN KEY ("UserId") REFERENCES app_user("Id")
 );
 
@@ -104,7 +102,7 @@ CREATE TABLE project_tasks (
     FOREIGN KEY ("ProjectId") REFERENCES project("Id")
 );
 
-CREATE FUNCTION save_running_action(user_id INTEGER) RETURNS VOID
+CREATE OR REPLACE FUNCTION save_running_action(user_id INTEGER) RETURNS VOID
 AS $$
 DECLARE
     action_id INTEGER;
@@ -113,12 +111,15 @@ BEGIN
         RETURN;
     END IF;
 
-    INSERT INTO action ("StartTime", "EndTime", "UserId")
-        (SELECT "StartTime", NOW() AT TIME ZONE 'UTC', user_id FROM running_action WHERE "UserId" = user_id)
+    INSERT INTO action ("During", "UserId")
+        (SELECT TSRANGE("StartTime", NOW() AT TIME ZONE 'UTC', '()'),
+                user_id
+           FROM running_action
+          WHERE "UserId" = user_id)
         RETURNING "Id" INTO action_id;
     
     INSERT INTO action_categories ("ActionId", "CategoryId")
-    SELECT action_id, "CategoryId" FROM running_action_categories WHERE "UserId" = user_id;
+         SELECT action_id, "CategoryId" FROM running_action_categories WHERE "UserId" = user_id;
 
     DELETE FROM running_action_categories WHERE "UserId" = user_id;
     DELETE FROM running_action WHERE "UserId" = user_id;

@@ -43,8 +43,9 @@ namespace FristList.Services.PostgreSql
         {
             await using var connection = new NpgsqlConnection(_connectionString);
 
-            var deleted =
-                await connection.ExecuteAsync("DELETE FROM project WHERE \"Id\"=@Id", new { Id = project.Id });
+            var deleted = await connection.ExecuteAsync(
+                "DELETE FROM project WHERE \"Id\"=@Id", 
+                new { Id = project.Id });
             
             if (deleted == 0)
                 return RepositoryResult.Failed();
@@ -66,22 +67,25 @@ namespace FristList.Services.PostgreSql
         public async Task<int> CountByUserAsync(AppUser user)
         {
             await using var connection = new NpgsqlConnection(_connectionString);
-            return await connection.QuerySingleOrDefaultAsync<int>("SELECT COUNT(*) FROM project WHERE \"UserId\"=@UserId",
+            return await connection.QuerySingleOrDefaultAsync<int>(
+                "SELECT COUNT(*) FROM project WHERE \"UserId\"=@UserId",
                 new { UserId = user.Id });
         }
 
         public async Task<Project> FindByIdAsync(int id)
         {
             await using var connection = new NpgsqlConnection(_connectionString);
-            return await connection.QuerySingleOrDefaultAsync<Project>("SELECT p.\"Id\" AS \"ProjectId\", p.\"Name\" AS \"ProjectName\", p.\"Description\" AS \"ProjectDescription\", p.\"UserId\" AS \"ProjectUserId\" FROM project p WHERE \"Id\"=@Id",
+            return await connection.QuerySingleOrDefaultAsync<Project>(
+                "SELECT * FROM get_project(@Id)",
                 new { Id = id });
         }
 
         public async IAsyncEnumerable<Project> FindByUserAsync(AppUser user, int skip, int count)
         {
             await using var connection = new NpgsqlConnection(_connectionString);
-            var reader = await connection.ExecuteReaderAsync("SELECT p.\"Id\" AS \"ProjectId\", p.\"Name\" AS \"ProjectName\", p.\"Description\" AS \"ProjectDescription\", p.\"UserId\" AS \"ProjectUserId\" FROM project p WHERE \"UserId\"=@UserId ORDER BY \"Id\" OFFSET @Offset LIMIT @Limit",
-                new { UserId = user.Id, Offset = skip, Limit = count });
+            var reader = await connection.ExecuteReaderAsync(
+                "SELECT * FROM get_user_projects(@UserId, @Skip, @Count)",
+                new { UserId = user.Id, Skip = skip, Count = count });
             var parser = reader.GetRowParser<Project>();
 
             while (await reader.ReadAsync())
@@ -94,7 +98,7 @@ namespace FristList.Services.PostgreSql
 
             var uniqueTasks = new Dictionary<int, Task>();
             var tasks = await connection.QueryAsync<Task, Category, Task>(
-                "SELECT t.\"Id\" AS \"TaskId\", t.\"Name\" AS \"TaskName\", t.\"UserId\" AS \"TaskUserId\", pt.\"ProjectId\" AS \"TaskProjectId\", c.\"Id\" AS \"CategoryId\", c.\"Name\" AS \"CategoryName\" FROM (SELECT * FROM project_tasks pt WHERE pt.\"ProjectId\"=@ProjectId ORDER BY pt.\"TaskId\" OFFSET @Offset LIMIT @Limit) pt LEFT JOIN task t ON pt.\"TaskId\"=t.\"Id\" LEFT JOIN task_categories tc ON t.\"Id\" = tc.\"TaskId\" LEFT JOIN category c ON tc.\"CategoryId\" = c.\"Id\"",
+                "SELECT * FROM get_project_tasks(@ProjectId, @Skip, @Count)",
                 (task, category) =>
                 {
                     if (!uniqueTasks.TryGetValue(task.Id, out var entity))
@@ -106,7 +110,7 @@ namespace FristList.Services.PostgreSql
                     if (category is not null)
                         entity.Categories.Add(category);
                     return entity;
-                }, new { ProjectId = project.Id, Offset = skip, Limit = count }, splitOn: "CategoryId");
+                }, new { ProjectId = project.Id, Skip = skip, Count = count }, splitOn: "CategoryId");
 
             foreach (var task in tasks.Distinct())
                 yield return task;

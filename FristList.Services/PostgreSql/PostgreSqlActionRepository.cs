@@ -28,8 +28,7 @@ namespace FristList.Services.PostgreSql
             try
             {
                 var id = await connection.ExecuteScalarAsync<int>(
-                    @"INSERT INTO action (""StartTime"", ""EndTime"", ""UserId"") VALUES (@StartTime, @EndTime, @UserId)
-                            RETURNING ""Id""",
+                    "INSERT INTO action (\"StartTime\", \"EndTime\", \"UserId\") VALUES (@StartTime, @EndTime, @UserId) RETURNING \"Id\"",
                     new { StartTime = action.StartTime, EndTime = action.EndTime, UserId = action.UserId });
 
                 foreach (var category in action.Categories)
@@ -62,7 +61,8 @@ namespace FristList.Services.PostgreSql
         {
             await using var connection = new NpgsqlConnection(_connectionString);
 
-            var deleted = await connection.ExecuteAsync("DELETE FROM action_categories WHERE \"ActionId\"=@ActionId",
+            var deleted = await connection.ExecuteAsync(
+                "DELETE FROM action_categories WHERE \"ActionId\"=@ActionId",
                 new { ActionId = action.Id });
 
             if (deleted == 0)
@@ -80,7 +80,8 @@ namespace FristList.Services.PostgreSql
         public async Task<int> CountByUserAsync(AppUser user)
         {
             await using var connection = new NpgsqlConnection(_connectionString);
-            return await connection.QuerySingleAsync<int>("SELECT COUNT(*) FROM \"action\" WHERE \"UserId\"=@UserId",
+            return await connection.QuerySingleAsync<int>(
+                "SELECT COUNT(*) FROM \"action\" WHERE \"UserId\"=@UserId",
                 new { UserId = user.Id });
         }
 
@@ -90,7 +91,7 @@ namespace FristList.Services.PostgreSql
             Action answer = null;
 
             await connection.QueryAsync<Action, Category, Action>(
-                "SELECT a.\"Id\" AS \"ActionId\", a.\"StartTime\" AS \"ActionStartTime\", a.\"EndTime\" AS \"ActionEndTime\", c.\"Id\" AS \"CategoryId\", c.\"Name\" AS \"CategoryName\" FROM action a LEFT JOIN action_categories ac on a.\"Id\"=ac.\"ActionId\" LEFT JOIN category c on ac.\"CategoryId\"=c.\"Id\" WHERE a.\"Id\"=@Id",
+                "SELECT * FROM get_action(@Id)",
                 (action, category) =>
                 {
                     answer ??= action;
@@ -108,7 +109,7 @@ namespace FristList.Services.PostgreSql
 
             var uniqueActions = new Dictionary<int, Action>();
             var actions = await connection.QueryAsync<Action, Category, Action>(
-                "SELECT a.\"Id\" AS \"ActionId\", a.\"StartTime\" AS \"ActionStartTime\", a.\"EndTime\" AS \"ActionEndTime\", c.\"Id\" AS \"CategoryId\", c.\"Name\" AS \"CategoryName\" FROM (SELECT * FROM action WHERE \"UserId\"=@UserId ORDER BY \"Id\" OFFSET @Offset LIMIT @Limit) a LEFT JOIN action_categories ac ON a.\"Id\"=ac.\"ActionId\" LEFT JOIN category c on ac.\"CategoryId\"=c.\"Id\"",
+                "SELECT * FROM get_user_actions(@UserId, @Skip, @Count) ORDER BY \"ActionId\"",
                 (action, category) =>
                 {
                     if (!uniqueActions.TryGetValue(action.Id, out var entity))
@@ -120,7 +121,7 @@ namespace FristList.Services.PostgreSql
                     if (category is not null)
                         entity.Categories.Add(category);
                     return entity;
-                }, new { UserId = user.Id, Offset = skip, Limit = count }, splitOn: "CategoryId");
+                }, new { UserId = user.Id, Skip = skip, Count = count }, splitOn: "CategoryId");
 
             foreach (var action in actions.Distinct())
                 yield return action;

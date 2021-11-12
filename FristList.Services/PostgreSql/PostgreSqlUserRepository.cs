@@ -59,7 +59,9 @@ namespace FristList.Services.PostgreSql
             cancellationToken.ThrowIfCancellationRequested();
 
             await using var connection = new NpgsqlConnection(_connectionString);
-            var deleted = await connection.ExecuteAsync("DELETE FROM app_user WHERE \"Id\"=@Id", new { Id = user.Id });
+            var deleted = await connection.ExecuteAsync(
+                "DELETE FROM app_user WHERE \"Id\"=@Id", 
+                new { Id = user.Id });
 
             if (deleted != 1) 
                 return IdentityResult.Failed();
@@ -114,7 +116,8 @@ namespace FristList.Services.PostgreSql
             
             await using var connection = new NpgsqlConnection(_connectionString);
             return await connection.QuerySingleOrDefaultAsync<AppUser>(
-                "SELECT * FROM app_user WHERE \"Id\"=@Id", new { Id = userId });
+                "SELECT * FROM app_user WHERE \"Id\"=@Id", 
+                new { Id = userId });
         }
 
         public async Task<AppUser> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken)
@@ -132,7 +135,8 @@ namespace FristList.Services.PostgreSql
             cancellationToken.ThrowIfCancellationRequested();
 
             await using var connection = new NpgsqlConnection(_connectionString);
-            await connection.ExecuteAsync("UPDATE app_user SET \"UserName\"=@UserName WHERE \"Id\"=@Id",
+            await connection.ExecuteAsync(
+                "UPDATE app_user SET \"UserName\"=@UserName WHERE \"Id\"=@Id",
                 new { UserName = userName, Id = user.Id });
 
             user.UserName = userName;
@@ -143,7 +147,8 @@ namespace FristList.Services.PostgreSql
             cancellationToken.ThrowIfCancellationRequested();
 
             await using var connection = new NpgsqlConnection(_connectionString);
-            await connection.ExecuteAsync("UPDATE app_user SET \"NormalizedUserName\"=@NormalizedUserName WHERE \"Id\"=@Id",
+            await connection.ExecuteAsync(
+                "UPDATE app_user SET \"NormalizedUserName\"=@NormalizedUserName WHERE \"Id\"=@Id",
                 new { NormalizedUserName = normalizedName, Id = user.Id });
 
             user.NormalizedUserName = normalizedName;
@@ -162,7 +167,8 @@ namespace FristList.Services.PostgreSql
         {
             await using var connection = new NpgsqlConnection(_connectionString);
 
-            await connection.ExecuteAsync("UPDATE app_user SET \"PasswordHash\"=@PasswordHash WHERE \"Id\"=@Id",
+            await connection.ExecuteAsync(
+                "UPDATE app_user SET \"PasswordHash\"=@PasswordHash WHERE \"Id\"=@Id",
                 new { Id = user.Id, PasswordHash = passwordHash });
 
             user.PasswordHash = passwordHash;
@@ -189,7 +195,8 @@ namespace FristList.Services.PostgreSql
             cancellationToken.ThrowIfCancellationRequested();
 
             await using var connection = new NpgsqlConnection(_connectionString);
-            await connection.ExecuteAsync("UPDATE app_user SET \"Email\"=@Email WHERE \"Id\"=@Id",
+            await connection.ExecuteAsync(
+                "UPDATE app_user SET \"Email\"=@Email WHERE \"Id\"=@Id",
                 new { Id = user.Id, Email = email });
 
             user.Email = email;
@@ -200,7 +207,8 @@ namespace FristList.Services.PostgreSql
             cancellationToken.ThrowIfCancellationRequested();
 
             await using var connection = new NpgsqlConnection(_connectionString);
-            await connection.ExecuteAsync("UPDATE app_user SET \"NormalizedEmail\"=@NormalizedEmail WHERE \"Id\"=@Id",
+            await connection.ExecuteAsync(
+                "UPDATE app_user SET \"NormalizedEmail\"=@NormalizedEmail WHERE \"Id\"=@Id",
                 new { Id = user.Id, NormalizedEmail = normalizedEmail });
 
             user.NormalizedEmail = normalizedEmail;
@@ -211,7 +219,8 @@ namespace FristList.Services.PostgreSql
             cancellationToken.ThrowIfCancellationRequested();
 
             await using var connection = new NpgsqlConnection(_connectionString);
-            await connection.ExecuteAsync("UPDATE app_user SET \"EmailConfirmed\"=@EmailConfirmed WHERE \"Id\"=@Id",
+            await connection.ExecuteAsync(
+                "UPDATE app_user SET \"EmailConfirmed\"=@EmailConfirmed WHERE \"Id\"=@Id",
                 new { Id = user.Id, EmailConfirmed = confirmed });
 
             user.EmailConfirmed = confirmed;

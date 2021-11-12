@@ -29,7 +29,8 @@ namespace FristList.Services.PostgreSql
 
             try
             {
-                var inserted = await connection.ExecuteAsync("INSERT INTO running_action (\"UserId\") VALUES (@UserId) ",
+                var inserted = await connection.ExecuteAsync(
+                    "INSERT INTO running_action (\"UserId\") VALUES (@UserId) ",
                     new { UserId = user.Id });
 
                 if (inserted == 0)
@@ -59,7 +60,8 @@ namespace FristList.Services.PostgreSql
 
             try
             {
-                var stopped = await connection.ExecuteAsync("SELECT save_running_action(@UserId)",
+                var stopped = await connection.ExecuteAsync(
+                    "SELECT save_running_action(@UserId)",
                     new { UserId = user.Id });
 
                 if (stopped == 0)
@@ -91,7 +93,7 @@ namespace FristList.Services.PostgreSql
 
             RunningAction answer = null;
             await connection.QueryAsync<RunningAction, Category, RunningAction>(
-                "SELECT ra.\"StartTime\" AS \"RunningActionStartTime\", ra.\"UserId\" AS \"RunningActionUserId\", rac.\"CategoryId\", c.\"Name\" AS \"CategoryName\" FROM running_action ra LEFT JOIN running_action_categories rac ON ra.\"UserId\"=rac.\"UserId\" LEFT JOIN category c on rac.\"CategoryId\"=c.\"Id\" WHERE ra.\"UserId\"=@UserId",
+                "SELECT * FROM get_current_action(@UserId)",
                 (action, category) =>
                 {
                     answer ??= action;

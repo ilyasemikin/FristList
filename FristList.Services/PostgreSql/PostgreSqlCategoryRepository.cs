@@ -69,7 +69,8 @@ namespace FristList.Services.PostgreSql
             await using var connection = new NpgsqlConnection(_connectionString);
 
             var deleted = await connection.ExecuteAsync(
-                "DELETE FROM category WHERE \"Id\"=@Id", new { Id = category.Id });
+                "DELETE FROM category WHERE \"Id\"=@Id", 
+                new { Id = category.Id });
             
             if (deleted == 0)
                 return RepositoryResult.Failed();
@@ -86,14 +87,16 @@ namespace FristList.Services.PostgreSql
         public async Task<int> CountByUserAsync(AppUser user)
         {
             await using var connection = new NpgsqlConnection(_connectionString);
-            return await connection.QuerySingleAsync<int>("SELECT COUNT(*) FROM \"category\" WHERE \"UserId\"=@UserId",
+            return await connection.QuerySingleAsync<int>(
+                "SELECT COUNT(*) FROM \"category\" WHERE \"UserId\"=@UserId",
                 new { UserId = user.Id });
         }
 
         public async Task<Category> FindByIdAsync(int id)
         {
             await using var connection = new NpgsqlConnection(_connectionString);
-            return await connection.QuerySingleOrDefaultAsync<Category>("SELECT \"Id\" AS \"CategoryId\", \"Name\" AS \"CategoryName\", \"UserId\" FROM category WHERE \"Id\"=@Id",
+            return await connection.QuerySingleOrDefaultAsync<Category>(
+                "SELECT * FROM get_category(@Id)",
                 new { Id = id });
         }
 
@@ -101,7 +104,8 @@ namespace FristList.Services.PostgreSql
         {
             await using var connection = new NpgsqlConnection(_connectionString);
             var reader = await connection.ExecuteReaderAsync(
-                "SELECT \"Id\" AS \"CategoryId\", \"Name\" AS \"CategoryName\", \"UserId\" FROM category WHERE \"Id\" = ANY(@Ids)", new { Ids = ids.ToArray() });
+                "SELECT \"Id\" AS \"CategoryId\", \"Name\" AS \"CategoryName\", \"UserId\" FROM category WHERE \"Id\" = ANY(@Ids)",
+                new { Ids = ids.ToArray() });
             var parser = reader.GetRowParser<Category>();
 
             while (await reader.ReadAsync())
@@ -112,8 +116,8 @@ namespace FristList.Services.PostgreSql
         {
             await using var connection = new NpgsqlConnection(_connectionString);
             var reader = await connection.ExecuteReaderAsync(
-                "SELECT \"Id\" AS \"CategoryId\", \"Name\" AS \"CategoryName\", \"UserId\" FROM category WHERE \"UserId\"=@UserId ORDER BY \"Id\" OFFSET @Offset LIMIT @Limit",
-                new { UserId = user.Id, Offset = skip, Limit = count });
+                "SELECT * FROM get_user_categories(@UserId, @Skip, @Count)",
+                new { UserId = user.Id, Skip = skip, Count = count });
             var parser = reader.GetRowParser<Category>();
 
             while (await reader.ReadAsync())
