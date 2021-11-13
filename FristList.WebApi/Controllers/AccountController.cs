@@ -4,6 +4,7 @@ using FristList.Dto;
 using FristList.Dto.Queries.Account;
 using FristList.Dto.Responses;
 using FristList.Models;
+using FristList.Services;
 using FristList.WebApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -17,11 +18,13 @@ namespace FristList.WebApi.Controllers
     {
         private readonly UserManager<AppUser> _userManager;
         private readonly IJwtTokenProvider _jwtTokenProvider;
+        private readonly IRefreshTokenProvider _refreshTokenProvider;
 
-        public AccountController(UserManager<AppUser> userManager, IJwtTokenProvider jwtTokenProvider)
+        public AccountController(UserManager<AppUser> userManager, IJwtTokenProvider jwtTokenProvider, IRefreshTokenProvider refreshTokenProvider)
         {
             _userManager = userManager;
             _jwtTokenProvider = jwtTokenProvider;
+            _refreshTokenProvider = refreshTokenProvider;
         }
 
         [HttpPost("register")]
@@ -59,11 +62,37 @@ namespace FristList.WebApi.Controllers
             if (!success)
                 return Unauthorized();
 
+            var refreshToken = await _refreshTokenProvider.CreateAsync(user);
             var login = new SuccessLogin
             {
-                Token = _jwtTokenProvider.CreateToken(user)
+                Token = _jwtTokenProvider.CreateToken(user),
+                RefreshToken = refreshToken.Token
             };
             return Ok(new Response<SuccessLogin>(login));
+        }
+        
+        [HttpPost("refresh-token")]
+        [AllowAnonymous]
+        public async Task<IActionResult> RefreshToken(RefreshTokenQuery query)
+        {
+            var refreshToken = await _refreshTokenProvider.FindAsync(query.Token);
+            if (refreshToken is null)
+                return Problem();
+                
+            var newRefreshToken = await _refreshTokenProvider.RefreshAsync(refreshToken);
+
+            if (newRefreshToken is null)
+                return Problem();
+            
+            var user = await _userManager.FindByIdAsync(newRefreshToken.UserId.ToString());
+            var jwtAccessToken = _jwtTokenProvider.CreateToken(user);
+
+            var response = new Dto.RefreshToken
+            {
+                TokenValue = jwtAccessToken,
+                RefreshTokenValue = refreshToken.Token
+            };
+            return Ok(response);
         }
     }
 }

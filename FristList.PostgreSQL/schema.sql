@@ -1,5 +1,7 @@
 -- PostgreSQL - FristList schema
 
+CREATE EXTENSION btree_gist;
+
 CREATE TABLE app_user (
     "Id"                    SERIAL PRIMARY KEY,
     "UserName"              VARCHAR(256) NOT NULL UNIQUE,
@@ -12,6 +14,17 @@ CREATE TABLE app_user (
     "PasswordHash"          VARCHAR(256) NOT NULL,
     "TwoFactorEnable"       BOOLEAN DEFAULT false NOT NULL
 );
+
+CREATE TABLE user_refresh_token (
+    "Id"                    SERIAL PRIMARY KEY,
+    "Token"                 VARCHAR(1024) NOT NULL,
+    "Expires"               TIMESTAMP WITHOUT TIME ZONE,
+    "UserId"                INTEGER NOT NULL,
+    
+    FOREIGN KEY ("UserId") REFERENCES app_user("Id")
+);
+
+CREATE INDEX ON user_refresh_token("Token");
 
 CREATE TABLE running_action (
     "UserId"    INTEGER NOT NULL,
@@ -44,7 +57,8 @@ CREATE TABLE action (
     "During"        TSRANGE NOT NULL,
     "UserId"        INTEGER NOT NULL,
 
-    FOREIGN KEY ("UserId") REFERENCES app_user("Id")
+    FOREIGN KEY ("UserId") REFERENCES app_user("Id"),
+    EXCLUDE USING GIST ("UserId" WITH =, "During" WITH &&)
 );
 
 CREATE TABLE action_categories (

@@ -117,7 +117,7 @@ namespace FristList.Services.PostgreSql
             await using var connection = new NpgsqlConnection(_connectionString);
             return await connection.QuerySingleOrDefaultAsync<AppUser>(
                 "SELECT * FROM app_user WHERE \"Id\"=@Id", 
-                new { Id = userId });
+                new { Id = int.Parse(userId) });
         }
 
         public async Task<AppUser> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken)

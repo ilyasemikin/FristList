@@ -77,6 +77,8 @@ namespace FristList.WebApi
                 });
 
             services.AddTransient<IJwtTokenProvider>(_ => new JwtTokenDefaultProvider(new SymmetricSecurityKey(secret)));
+            services.AddTransient<ITokenGenerator, RNGCryptoTokenGenerator>();
+            services.AddTransient<IRefreshTokenProvider, PostgreSqlRefreshTokenProvider>();
             
             services.AddControllers();
         }
