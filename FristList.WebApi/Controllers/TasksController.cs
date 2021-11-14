@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using FristList.Dto.Queries;
 using FristList.Dto.Queries.Tasks;
 using FristList.Dto.Responses;
+using FristList.Dto.Responses.Base;
 using FristList.Models;
 using FristList.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -28,8 +29,8 @@ namespace FristList.WebApi.Controllers
             _categoryRepository = categoryRepository;
         }
 
-        [HttpPost]
         [Authorize]
+        [HttpPost]
         public async Task<IActionResult> CreateTask(CreateTaskQuery query)
         {
             var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
@@ -57,8 +58,8 @@ namespace FristList.WebApi.Controllers
             return Ok(task.Id);
         }
 
-        [HttpDelete]
         [Authorize]
+        [HttpDelete]
         public async Task<IActionResult> DeleteTask(DeleteTaskQuery query)
         {
             var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
@@ -74,16 +75,27 @@ namespace FristList.WebApi.Controllers
             return Ok();
         }
 
-        [HttpGet("all")]
         [Authorize]
+        [HttpGet("all")]
         public async Task<IActionResult> AllTask([FromQuery]PaginationQuery query)
         {
             var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
             var tasksCount = await _taskRepository.CountByUserAsync(user);
-            var tasks = _taskRepository.FindByAllUserAsync(user, (query.PageNumber - 1) * query.PageSize, query.PageSize)
+            var tasks = _taskRepository
+                .FindByAllUserAsync(user, (query.PageNumber - 1) * query.PageSize, query.PageSize)
+                .Select(t => new Dto.Responses.Task
+                {
+                    Id = t.Id,
+                    Name = t.Name,
+                    Categories = t.Categories.Select(c => new Dto.Responses.Category
+                    {
+                        Id = c.Id,
+                        Name = c.Name
+                    }).ToArray()
+                })
                 .ToEnumerable();
 
-            var response = PagedResponse<Task>.Create(tasks, query.PageNumber, query.PageSize, tasksCount);
+            var response = PagedResponse<Dto.Responses.Task>.Create(tasks, query.PageNumber, query.PageSize, tasksCount);
             return Ok(response);
         }
     }

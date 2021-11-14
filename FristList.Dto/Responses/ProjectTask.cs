@@ -1,4 +1,4 @@
-namespace FristList.Dto
+namespace FristList.Dto.Responses
 {
     public class ProjectTask : Task
     {

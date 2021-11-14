@@ -1,13 +1,10 @@
-using System.Linq;
 using System.Threading.Tasks;
-using FristList.Dto;
 using FristList.Dto.Queries.Account;
 using FristList.Dto.Responses;
-using FristList.Models;
-using FristList.Services;
-using FristList.WebApi.Services;
+using FristList.Dto.Responses.Base;
+using FristList.WebApi.Requests.Account;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FristList.WebApi.Controllers
@@ -16,82 +13,81 @@ namespace FristList.WebApi.Controllers
     [Route("api/account")]
     public class AccountController : ControllerBase
     {
-        private readonly UserManager<AppUser> _userManager;
-        private readonly IJwtTokenProvider _jwtTokenProvider;
-        private readonly IRefreshTokenProvider _refreshTokenProvider;
-
-        public AccountController(UserManager<AppUser> userManager, IJwtTokenProvider jwtTokenProvider, IRefreshTokenProvider refreshTokenProvider)
+        private readonly IMediator _mediator;
+        
+        public AccountController(IMediator mediator)
         {
-            _userManager = userManager;
-            _jwtTokenProvider = jwtTokenProvider;
-            _refreshTokenProvider = refreshTokenProvider;
+            _mediator = mediator;
         }
 
-        [HttpPost("register")]
         [AllowAnonymous]
+        [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterAccountQuery query)
         {
-            var user = new AppUser
+            var request = new RegisterRequest
             {
-                UserName = query.UserName,
-                Email = query.Email
+                Query = query
             };
 
-            var registered = await _userManager.CreateAsync(user, query.Password);
-            if (!registered.Succeeded)
-                return Problem(string.Join(" | ",registered.Errors.Select(e => e.Description)));
+            var response = await _mediator.Send(request);
+
+            if (response is FailedResponse<Empty> failedResponse)
+                return new ObjectResult(failedResponse)
+                {
+                    StatusCode = (int)failedResponse.StatusCode
+                };
             
-            await _userManager.SetEmailAsync(user, query.Email);
-            return Ok();
+            return Ok(response);
         }
 
-        [HttpGet("login")]
         [AllowAnonymous]
+        [HttpGet("login")]
         public async Task<IActionResult> Login(LoginQuery query)
         {
-            AppUser user;
-            if (query.Login.Contains("@"))
-                user = await _userManager.FindByEmailAsync(query.Login);
-            else
-                user = await _userManager.FindByNameAsync(query.Login);
-
-            if (user is null)
-                return NotFound();
-            
-            var success = await _userManager.CheckPasswordAsync(user, query.Password);
-            if (!success)
-                return Unauthorized();
-
-            var refreshToken = await _refreshTokenProvider.CreateAsync(user);
-            var login = new SuccessLogin
+            var request = new LoginRequest
             {
-                Token = _jwtTokenProvider.CreateToken(user),
-                RefreshToken = refreshToken.Token
+                Query = query
             };
-            return Ok(new Response<SuccessLogin>(login));
+
+            var response = await _mediator.Send(request);
+            if (response is FailedResponse<Empty> failedResponse)
+                return new ObjectResult(failedResponse)
+                {
+                    StatusCode = (int) failedResponse.StatusCode
+                };
+
+            return Ok(response);
         }
         
-        [HttpPost("refresh-token")]
         [AllowAnonymous]
+        [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken(RefreshTokenQuery query)
         {
-            var refreshToken = await _refreshTokenProvider.FindAsync(query.Token);
-            if (refreshToken is null)
-                return Problem();
-                
-            var newRefreshToken = await _refreshTokenProvider.RefreshAsync(refreshToken);
-
-            if (newRefreshToken is null)
-                return Problem();
-            
-            var user = await _userManager.FindByIdAsync(newRefreshToken.UserId.ToString());
-            var jwtAccessToken = _jwtTokenProvider.CreateToken(user);
-
-            var response = new Dto.RefreshToken
+            var request = new RefreshTokenRequest
             {
-                TokenValue = jwtAccessToken,
-                RefreshTokenValue = refreshToken.Token
+                Query = query
             };
+
+            var response = await _mediator.Send(request);
+            if (response is FailedResponse<Empty> failedResponse)
+                return new ObjectResult(failedResponse)
+                {
+                    StatusCode = (int) failedResponse.StatusCode
+                };
+
+            return Ok(response);
+        }
+
+        [Authorize]
+        [HttpGet("self")]
+        public async Task<IActionResult> UserInfo()
+        {
+            var request = new UserInfoRequest
+            {
+                UserName = User.Identity!.Name
+            };
+
+            var response = await _mediator.Send(request);
             return Ok(response);
         }
     }

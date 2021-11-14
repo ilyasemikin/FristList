@@ -6,12 +6,15 @@ using System.Threading.Tasks;
 using FristList.Dto.Queries;
 using FristList.Dto.Queries.Projects;
 using FristList.Dto.Responses;
+using FristList.Dto.Responses.Base;
 using FristList.Models;
 using FristList.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Task = FristList.Dto.Task;
+using Category = FristList.Dto.Responses.Category;
+using Project = FristList.Dto.Responses.Project;
+using Task = FristList.Dto.Responses.Task;
 
 namespace FristList.WebApi.Controllers
 {
@@ -28,13 +31,13 @@ namespace FristList.WebApi.Controllers
             _projectRepository = projectRepository;
         }
 
-        [HttpPost]
         [Authorize]
+        [HttpPost]
         public async Task<IActionResult> CreateProject(CreateProjectQuery query)
         {
             var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
 
-            var project = new Project
+            var project = new Models.Project
             {
                 UserId = user.Id,
                 Name = query.Name,
@@ -45,7 +48,7 @@ namespace FristList.WebApi.Controllers
             if (!result.Succeeded)
                 return Problem();
 
-            var response = new Response<Dto.Project>(new Dto.Project
+            var response = new Response<Project>(new Project
             {
                 Id = project.Id,
                 Name = project.Name,
@@ -54,8 +57,8 @@ namespace FristList.WebApi.Controllers
             return Ok(response);
         }
 
-        [HttpDelete]
         [Authorize]
+        [HttpDelete]
         public async Task<IActionResult> DeleteProject(DeleteProjectQuery query)
         {
             var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
@@ -72,22 +75,28 @@ namespace FristList.WebApi.Controllers
             return Ok();
         }
 
-        [HttpGet("all")]
         [Authorize]
+        [HttpGet("all")]
         public async Task<IActionResult> AllProjects([FromQuery]PaginationQuery query)
         {
             var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
             var projectsCount = await _projectRepository.CountByUserAsync(user);
             var projects = _projectRepository
                 .FindByUserAsync(user, (query.PageNumber - 1) * query.PageSize, query.PageSize)
+                .Select(p => new Dto.Responses.Project
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Description = p.Description
+                })
                 .ToEnumerable();
 
             var response = PagedResponse<Project>.Create(projects, query.PageNumber, query.PageSize, projectsCount);
             return Ok(response);
         }
 
-        [HttpGet("{projectId:int}/tasks/all")]
         [Authorize]
+        [HttpGet("{projectId:int}/tasks/all")]
         public async Task<IActionResult> ProjectTasksAll(int projectId, [FromQuery]PaginationQuery query)
         {
             var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
@@ -98,18 +107,18 @@ namespace FristList.WebApi.Controllers
             var tasks = _projectRepository.GetProjectTasksAsync(project)
                 .ToEnumerable();
 
-            var dtoTasks = tasks.Select(t => new Dto.Task
+            var dtoTasks = tasks.Select(t => new Task
             {
                 Id = t.Id,
                 Name = t.Name,
-                Categories = t.Categories.Select(c => new Dto.Category
+                Categories = t.Categories.Select(c => new Category
                 {
                     Id = c.Id,
                     Name = c.Name
                 }).ToArray()
             });
 
-            var response = new Response<IEnumerable<Dto.Task>>(dtoTasks);
+            var response = new Response<IEnumerable<Task>>(dtoTasks);
             return Ok(response);
         }
     }

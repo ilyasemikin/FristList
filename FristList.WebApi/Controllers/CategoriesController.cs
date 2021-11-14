@@ -4,8 +4,11 @@ using System.Threading.Tasks;
 using FristList.Dto.Queries;
 using FristList.Dto.Queries.Categories;
 using FristList.Dto.Responses;
+using FristList.Dto.Responses.Base;
 using FristList.Models;
 using FristList.Services;
+using FristList.WebApi.Requests.Categories;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -18,19 +21,22 @@ namespace FristList.WebApi.Controllers
     {
         private readonly IUserStore<AppUser> _userStore;
         private readonly ICategoryRepository _categoryRepository;
+
+        private readonly IMediator _mediator;
         
-        public CategoriesController(ICategoryRepository categoryRepository, IUserStore<AppUser> userStore)
+        public CategoriesController(ICategoryRepository categoryRepository, IUserStore<AppUser> userStore, IMediator mediator)
         {
             _categoryRepository = categoryRepository;
             _userStore = userStore;
+            _mediator = mediator;
         }
 
-        [HttpPost]
         [Authorize]
+        [HttpPost]
         public async Task<IActionResult> CreateCategory(CreateCategoryQuery query)
         {
             var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
-            var category = new Category
+            var category = new Models.Category
             {
                 Name = query.Name,
                 UserId = user.Id
@@ -43,8 +49,8 @@ namespace FristList.WebApi.Controllers
             return Ok();
         }
 
-        [HttpPut]
         [Authorize]
+        [HttpPut]
         public async Task<IActionResult> EditCategory(EditCategoryQuery query)
         {
             var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
@@ -65,8 +71,8 @@ namespace FristList.WebApi.Controllers
             return Ok();
         }
 
-        [HttpDelete]
         [Authorize]
+        [HttpDelete]
         public async Task<IActionResult> DeleteCategory(DeleteCategoryQuery query)
         {
             var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
@@ -79,19 +85,17 @@ namespace FristList.WebApi.Controllers
             return Ok();
         }
 
-        [HttpGet]
-        [Route("all")]
         [Authorize]
+        [HttpGet("all")]
         public async Task<IActionResult> AllCategories([FromQuery]PaginationQuery query)
         {
-            var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
-            var categoriesCount = await _categoryRepository.CountByUserAsync(user);
-            var categories = await _categoryRepository
-                .FindAllByUserIdAsync(user, query.PageSize * (query.PageNumber - 1), query.PageSize)
-                .ToArrayAsync();
+            var request = new GetAllCategoriesRequest
+            {
+                Pagination = query,
+                UserName = User.Identity!.Name
+            };
 
-            var response =
-                PagedResponse<Category>.Create(categories, query.PageNumber, query.PageSize, categoriesCount);
+            var response = await _mediator.Send(request);
             return Ok(response);
         }
     }

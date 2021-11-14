@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace FristList.Dto.Responses
+namespace FristList.Dto.Responses.Base
 {
     public class PagedResponse<T> : Response<IEnumerable<T>>
     {

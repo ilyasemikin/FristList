@@ -5,6 +5,7 @@ using FristList.Client.Console.Application;
 using FristList.Client.Console.Message.Console;
 using FristList.Client.Console.Services;
 using FristList.Dto.Responses;
+using FristList.Dto.Responses.Base;
 using Newtonsoft.Json;
 
 namespace FristList.Client.Console.UserCommands.RemoteStorage
@@ -28,7 +29,7 @@ namespace FristList.Client.Console.UserCommands.RemoteStorage
         {
             if (statusCode == HttpStatusCode.OK)
             {
-                var answer = JsonConvert.DeserializeObject<Response<Dto.CurrentAction>>(json);
+                var answer = JsonConvert.DeserializeObject<Response<CurrentAction>>(json);
 
                 var message = new ColoredJsonMessageBuilder().Build(answer!.Data);
                 _messageWriter.WriteMessage(message);

@@ -1,4 +1,6 @@
 using System.Threading.Tasks;
+using FristList.Client.Console.Message.Console;
+using FristList.Client.Console.Message.Json;
 using FristList.Client.Console.Services;
 
 namespace FristList.Client.Console.UserCommands.Authorize
@@ -17,7 +19,8 @@ namespace FristList.Client.Console.UserCommands.Authorize
 
         public override Task<UserCommandExecutionResult> ExecuteAsync()
         {
-            _messageWriter.WriteMessage($"User: {_authorizeProvider.UserName}");
+            var authorize = _authorizeProvider.AuthorizeInfo;
+            _messageWriter.WriteMessage(new ColoredJsonMessageBuilder().Build(authorize));
             return Task.FromResult(DoNothing());
         }
     }

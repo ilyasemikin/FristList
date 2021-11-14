@@ -7,6 +7,7 @@ using FristList.Dto;
 using FristList.Dto.Queries;
 using FristList.Dto.Queries.Actions;
 using FristList.Dto.Responses;
+using FristList.Dto.Responses.Base;
 using FristList.Models;
 using FristList.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -34,8 +35,8 @@ namespace FristList.WebApi.Controllers
             _actionManager = actionManager;
         }
 
-        [HttpPost]
         [Authorize]
+        [HttpPost]
         public async Task<IActionResult> CreateAction(CreateActionQuery query)
         {
             var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
@@ -64,8 +65,8 @@ namespace FristList.WebApi.Controllers
             return Ok(action.Id);
         }
 
-        [HttpDelete]
         [Authorize]
+        [HttpDelete]
         public async Task<IActionResult> DeleteAction(DeleteActionQuery query)
         {
             var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
@@ -78,8 +79,8 @@ namespace FristList.WebApi.Controllers
             return Ok();
         }
 
-        [HttpGet("all")]
         [Authorize]
+        [HttpGet("all")]
         public async Task<IActionResult> AllActions([FromQuery]PaginationQuery query)
         {
             var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
@@ -92,8 +93,8 @@ namespace FristList.WebApi.Controllers
             return Ok(response);
         }
 
-        [HttpPost("start")]
         [Authorize]
+        [HttpPost("start")]
         public async Task<IActionResult> StartAction(StartActionQuery query)
         {
             var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
@@ -113,20 +114,20 @@ namespace FristList.WebApi.Controllers
             if (action is null)
                 return Problem();
 
-            var currentAction = new Dto.CurrentAction
+            var currentAction = new CurrentAction
             {
                 StartTime = action.StartTime,
-                Categories = action.Categories.Select(c => new Dto.Category
+                Categories = action.Categories.Select(c => new Dto.Responses.Category
                 {
                     Id = c.Id,
                     Name = c.Name
                 }).ToArray()
             };
-            return Ok(new Response<Dto.CurrentAction>(currentAction));
+            return Ok(new Response<CurrentAction>(currentAction));
         }
 
-        [HttpPost("stop")]
         [Authorize]
+        [HttpPost("stop")]
         public async Task<IActionResult> StopAction()
         {
             var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
@@ -137,8 +138,8 @@ namespace FristList.WebApi.Controllers
             return Problem();
         }
 
-        [HttpGet("current")]
         [Authorize]
+        [HttpGet("current")]
         public async Task<IActionResult> CurrentAction()
         {
             var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
@@ -147,11 +148,11 @@ namespace FristList.WebApi.Controllers
             if (action is null)
                 return NoContent();
 
-            var categories = action.Categories?.Select(c => new Dto.Category
+            var categories = action.Categories?.Select(c => new Dto.Responses.Category
             {
                 Id = c.Id,
                 Name = c.Name
-            }).ToArray() ?? Array.Empty<Dto.Category>();
+            }).ToArray() ?? Array.Empty<Dto.Responses.Category>();
 
             var currentAction = new CurrentAction
             {
@@ -162,8 +163,8 @@ namespace FristList.WebApi.Controllers
             return Ok(new Response<CurrentAction>(currentAction));
         }
 
-        [HttpDelete("current")]
         [Authorize]
+        [HttpDelete("current")]
         public async Task<IActionResult> DeleteCurrentAction()
         {
             var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());

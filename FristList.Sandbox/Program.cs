@@ -1,14 +1,10 @@
 ﻿using FristList.Models;
 using FristList.Services.PostgreSql;
 using System;
-using System.Collections.Generic;
-using System.Data;
 using System.Linq;
-using System.Threading;
 using Dapper;
 using FristList.Services;
 using FristList.Services.AbstractFactories;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -16,6 +12,10 @@ using Npgsql;
 
 namespace FristList.Sandbox
 {
+    class SampleObject
+    {
+        public TimeSpan TotalTime { get; set; }
+    }
     class Program
     {
         static async System.Threading.Tasks.Task Main(string[] args)
@@ -26,16 +26,11 @@ namespace FristList.Sandbox
             var storageInitializer = host.Services.GetRequiredService<IStorageInitializer>();
             await storageInitializer.InitializeAsync();
 
-            var taskRepository = host.Services.GetRequiredService<ITaskRepository>();
-            var tasks = taskRepository.FindByAllUserAsync(new AppUser
-            {
-                Id = 5
-            });
-
-            await foreach (var task in tasks)
-            {
-                Console.WriteLine($"Id: {task.Id}; Name: {task.Name}; ProjectId: {task.ProjectId}; UserId {task.UserId}; {string.Join(", ", task.Categories.Select(c => $"{c.Id} {c.Name}"))}");
-            }
+            var connectionString = host.Services.GetRequiredService<IConfiguration>()
+                .GetConnectionString("DefaultConnection");
+            var connection = new NpgsqlConnection(connectionString);
+            var value = await connection.QuerySingleOrDefaultAsync<SampleObject>("SELECT \"Time\" AS \"TotalTime\" FROM get_user_time(2, NOW() AT TIME ZONE 'UTC' - interval '2 day', NOW() AT TIME ZONE 'UTC')");
+            Console.WriteLine(value.TotalTime);
         }
 
         static IHostBuilder CreateHostBuilder(string[] args) =>

@@ -8,6 +8,7 @@ using FristList.Services;
 using FristList.Services.AbstractFactories;
 using FristList.Services.PostgreSql;
 using FristList.WebApi.Services;
+using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -79,7 +80,9 @@ namespace FristList.WebApi
             services.AddTransient<IJwtTokenProvider>(_ => new JwtTokenDefaultProvider(new SymmetricSecurityKey(secret)));
             services.AddTransient<ITokenGenerator, RNGCryptoTokenGenerator>();
             services.AddTransient<IRefreshTokenProvider, PostgreSqlRefreshTokenProvider>();
-            
+
+            services.AddMediatR(typeof(Startup));
+
             services.AddControllers();
         }
 

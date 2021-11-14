@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
+using FristList.Dto.Responses.Base;
 
-namespace FristList.Dto
+namespace FristList.Dto.Responses
 {
-    public class Task
+    public class Task : DtoObjectBase
     {
         public int Id { get; set; }
         public string Name { get; init; }

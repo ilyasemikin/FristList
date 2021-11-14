@@ -5,6 +5,7 @@ using FristList.Client.Console.Message.Console;
 using FristList.Client.Console.Services;
 using FristList.Dto;
 using FristList.Dto.Responses;
+using FristList.Dto.Responses.Base;
 using Newtonsoft.Json;
 
 namespace FristList.Client.Console.UserCommands.RemoteStorage
