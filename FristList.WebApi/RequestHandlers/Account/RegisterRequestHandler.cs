@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace FristList.WebApi.RequestHandlers.Account
 {
-    public class RegisterRequestHandler : IRequestHandler<RegisterRequest, Response<Empty>>
+    public class RegisterRequestHandler : IRequestHandler<RegisterRequest, DataResponse<Empty>>
     {
         private readonly UserManager<AppUser> _userManager;
 
@@ -20,7 +20,7 @@ namespace FristList.WebApi.RequestHandlers.Account
             _userManager = userManager;
         }
 
-        public async Task<Response<Empty>> Handle(RegisterRequest request, CancellationToken cancellationToken)
+        public async Task<DataResponse<Empty>> Handle(RegisterRequest request, CancellationToken cancellationToken)
         {
             var user = new AppUser
             {
@@ -30,11 +30,11 @@ namespace FristList.WebApi.RequestHandlers.Account
 
             var registered = await _userManager.CreateAsync(user, request.Query.Password);
             if (!registered.Succeeded)
-                return new FailedResponse<Empty>(new Empty(), HttpStatusCode.InternalServerError);
+                return new CustomHttpStatusDataResponse<Empty>(new Empty(), HttpStatusCode.InternalServerError);
             
             await _userManager.SetEmailAsync(user, request.Query.Email);
 
-            return new Response<Empty>(new Empty());
+            return new DataResponse<Empty>(new Empty());
         }
     }
 }

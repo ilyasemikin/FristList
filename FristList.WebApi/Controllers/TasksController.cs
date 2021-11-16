@@ -95,7 +95,7 @@ namespace FristList.WebApi.Controllers
                 })
                 .ToEnumerable();
 
-            var response = PagedResponse<Dto.Responses.Task>.Create(tasks, query.PageNumber, query.PageSize, tasksCount);
+            var response = PagedDataResponse<Dto.Responses.Task>.Create(tasks, query.PageNumber, query.PageSize, tasksCount);
             return Ok(response);
         }
     }

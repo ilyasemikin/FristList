@@ -57,9 +57,10 @@ CREATE TABLE action (
     "During"        TSRANGE NOT NULL,
     "UserId"        INTEGER NOT NULL,
 
-    FOREIGN KEY ("UserId") REFERENCES app_user("Id"),
-    EXCLUDE USING GIST ("UserId" WITH =, "During" WITH &&)
+    FOREIGN KEY ("UserId") REFERENCES app_user("Id")
 );
+
+CREATE INDEX ON action USING GIST ("UserId", "During");
 
 CREATE TABLE action_categories (
     "ActionId"      INTEGER NOT NULL,

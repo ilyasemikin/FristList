@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace FristList.Dto.Responses.Base
 {
-    public class PagedResponse<T> : Response<IEnumerable<T>>
+    public class PagedDataResponse<T> : DataResponse<IEnumerable<T>>
     {
         public int Page { get; init; }
         public int PageSize { get; init; }
@@ -10,7 +10,7 @@ namespace FristList.Dto.Responses.Base
         public int TotalPages { get; init; }
         public int TotalRecords { get; init; }
 
-        public PagedResponse(IEnumerable<T> data, int page, int pageSize, int totalPages, int totalRecords) 
+        public PagedDataResponse(IEnumerable<T> data, int page, int pageSize, int totalPages, int totalRecords) 
             : base(data)
         {
             Page = page;
@@ -20,10 +20,10 @@ namespace FristList.Dto.Responses.Base
             TotalRecords = totalRecords;
         }
 
-        public static PagedResponse<T> Create(IEnumerable<T> data, int page, int pageSize, int totalCount)
+        public static PagedDataResponse<T> Create(IEnumerable<T> data, int page, int pageSize, int totalCount)
         {
             var totalPages = totalCount / pageSize + (totalCount % pageSize > 0 ? 1 : 0);
-            return new PagedResponse<T>(data, page, pageSize, totalPages, totalCount);
+            return new PagedDataResponse<T>(data, page, pageSize, totalPages, totalCount);
         }
     }
 }

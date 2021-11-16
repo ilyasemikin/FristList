@@ -5,7 +5,7 @@ using MediatR;
 
 namespace FristList.WebApi.Requests.Account
 {
-    public class LoginRequest : IRequest<IResponse<DtoObjectBase>>
+    public class LoginRequest : IRequest<IResponse>
     {
         public LoginQuery Query { get; init; }
     }

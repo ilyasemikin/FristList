@@ -48,7 +48,7 @@ namespace FristList.WebApi.Controllers
             if (!result.Succeeded)
                 return Problem();
 
-            var response = new Response<Project>(new Project
+            var response = new DataResponse<Project>(new Project
             {
                 Id = project.Id,
                 Name = project.Name,
@@ -91,7 +91,7 @@ namespace FristList.WebApi.Controllers
                 })
                 .ToEnumerable();
 
-            var response = PagedResponse<Project>.Create(projects, query.PageNumber, query.PageSize, projectsCount);
+            var response = PagedDataResponse<Project>.Create(projects, query.PageNumber, query.PageSize, projectsCount);
             return Ok(response);
         }
 
@@ -118,7 +118,7 @@ namespace FristList.WebApi.Controllers
                 }).ToArray()
             });
 
-            var response = new Response<IEnumerable<Task>>(dtoTasks);
+            var response = new DataResponse<IEnumerable<Task>>(dtoTasks);
             return Ok(response);
         }
     }

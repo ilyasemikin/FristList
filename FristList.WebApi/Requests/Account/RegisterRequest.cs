@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace FristList.WebApi.Requests.Account
 {
-    public class RegisterRequest : IRequest<Response<Dto.Responses.Empty>>
+    public class RegisterRequest : IRequest<DataResponse<Dto.Responses.Empty>>
     {
         public RegisterAccountQuery Query { get; init; }
     }

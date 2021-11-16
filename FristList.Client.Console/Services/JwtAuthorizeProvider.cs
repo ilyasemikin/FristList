@@ -51,7 +51,7 @@ namespace FristList.Client.Console.Services
                 return false;
             
             var json = await response.Content.ReadAsStringAsync();
-            var answer = JsonConvert.DeserializeObject<Response<SuccessLogin>>(json);
+            var answer = JsonConvert.DeserializeObject<DataResponse<SuccessLogin>>(json);
 
             _accessToken = answer!.Data.Token;
 
@@ -60,7 +60,7 @@ namespace FristList.Client.Console.Services
             response = await client.SendAsync(request);
 
             json = await response.Content.ReadAsStringAsync();
-            var userAnswer = JsonConvert.DeserializeObject<Response<UserInfo>>(json);
+            var userAnswer = JsonConvert.DeserializeObject<DataResponse<UserInfo>>(json);
             AuthorizeInfo = new AuthorizeInfo
             {
                 IsAuthorize = true,
@@ -104,7 +104,7 @@ namespace FristList.Client.Console.Services
             }
 
             var json = await response.Content.ReadAsStringAsync();
-            var answer = JsonConvert.DeserializeObject<Response<RefreshToken>>(json);
+            var answer = JsonConvert.DeserializeObject<DataResponse<RefreshToken>>(json);
 
             _accessToken = answer!.Data.TokenValue;
             _refreshToken = answer!.Data.RefreshTokenValue;

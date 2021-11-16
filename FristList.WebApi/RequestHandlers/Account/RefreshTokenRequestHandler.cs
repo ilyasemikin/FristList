@@ -13,7 +13,7 @@ using RefreshToken = FristList.Dto.Responses.RefreshToken;
 
 namespace FristList.WebApi.RequestHandlers.Account
 {
-    public class RefreshTokenRequestHandler : IRequestHandler<RefreshTokenRequest, IResponse<DtoObjectBase>>
+    public class RefreshTokenRequestHandler : IRequestHandler<RefreshTokenRequest, IResponse>
     {
         private readonly IJwtTokenProvider _jwtTokenProvider;
         private readonly IRefreshTokenProvider _refreshTokenProvider;
@@ -26,16 +26,16 @@ namespace FristList.WebApi.RequestHandlers.Account
             _userManager = userManager;
         }
 
-        public async Task<IResponse<DtoObjectBase>> Handle(RefreshTokenRequest request, CancellationToken cancellationToken)
+        public async Task<IResponse> Handle(RefreshTokenRequest request, CancellationToken cancellationToken)
         {
             var refreshToken = await _refreshTokenProvider.FindAsync(request.Query.Token);
             if (refreshToken is null)
-                return new FailedResponse<Empty>(new Empty(), HttpStatusCode.InternalServerError);
+                return new CustomHttpStatusDataResponse<Empty>(new Empty(), HttpStatusCode.InternalServerError);
                 
             var newRefreshToken = await _refreshTokenProvider.RefreshAsync(refreshToken);
 
             if (newRefreshToken is null)
-                return new FailedResponse<Empty>(new Empty(), HttpStatusCode.InternalServerError);
+                return new CustomHttpStatusDataResponse<Empty>(new Empty(), HttpStatusCode.InternalServerError);
             
             var user = await _userManager.FindByIdAsync(newRefreshToken.UserId.ToString());
             var jwtAccessToken = _jwtTokenProvider.CreateToken(user);
@@ -45,7 +45,7 @@ namespace FristList.WebApi.RequestHandlers.Account
                 TokenValue = jwtAccessToken,
                 RefreshTokenValue = newRefreshToken.Token
             };
-            return new Response<RefreshToken>(response);
+            return new DataResponse<RefreshToken>(response);
         }
     }
 }

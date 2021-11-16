@@ -28,7 +28,7 @@ namespace FristList.Client.Console.UserCommands.RemoteStorage
         {
             if (statusCode == HttpStatusCode.OK)
             {
-                var answer = JsonConvert.DeserializeObject<PagedResponse<Action>>(json);
+                var answer = JsonConvert.DeserializeObject<PagedDataResponse<Action>>(json);
 
                 var message = new ColoredJsonMessageBuilder().Build(answer!.Data);
                 _messageWriter.WriteMessage(message);

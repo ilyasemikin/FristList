@@ -1,7 +1,6 @@
 using System.Threading.Tasks;
 using FristList.Dto.Queries.Account;
-using FristList.Dto.Responses;
-using FristList.Dto.Responses.Base;
+using FristList.WebApi.Controllers.Base;
 using FristList.WebApi.Requests.Account;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -11,13 +10,12 @@ namespace FristList.WebApi.Controllers
 {
     [ApiController]
     [Route("api/account")]
-    public class AccountController : ControllerBase
+    public class AccountController : FristListApiController
     {
-        private readonly IMediator _mediator;
-        
         public AccountController(IMediator mediator)
+            : base(mediator)
         {
-            _mediator = mediator;
+            
         }
 
         [AllowAnonymous]
@@ -29,15 +27,7 @@ namespace FristList.WebApi.Controllers
                 Query = query
             };
 
-            var response = await _mediator.Send(request);
-
-            if (response is FailedResponse<Empty> failedResponse)
-                return new ObjectResult(failedResponse)
-                {
-                    StatusCode = (int)failedResponse.StatusCode
-                };
-            
-            return Ok(response);
+            return await SendRequest(request);
         }
 
         [AllowAnonymous]
@@ -49,14 +39,7 @@ namespace FristList.WebApi.Controllers
                 Query = query
             };
 
-            var response = await _mediator.Send(request);
-            if (response is FailedResponse<Empty> failedResponse)
-                return new ObjectResult(failedResponse)
-                {
-                    StatusCode = (int) failedResponse.StatusCode
-                };
-
-            return Ok(response);
+            return await SendRequest(request);
         }
         
         [AllowAnonymous]
@@ -68,14 +51,7 @@ namespace FristList.WebApi.Controllers
                 Query = query
             };
 
-            var response = await _mediator.Send(request);
-            if (response is FailedResponse<Empty> failedResponse)
-                return new ObjectResult(failedResponse)
-                {
-                    StatusCode = (int) failedResponse.StatusCode
-                };
-
-            return Ok(response);
+            return await SendRequest(request);
         }
 
         [Authorize]
@@ -87,8 +63,7 @@ namespace FristList.WebApi.Controllers
                 UserName = User.Identity!.Name
             };
 
-            var response = await _mediator.Send(request);
-            return Ok(response);
+            return await SendRequest(request);
         }
     }
 }

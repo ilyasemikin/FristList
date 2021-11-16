@@ -5,7 +5,7 @@ using MediatR;
 
 namespace FristList.WebApi.Requests.Account
 {
-    public class RefreshTokenRequest : IRequest<IResponse<DtoObjectBase>>
+    public class RefreshTokenRequest : IRequest<IResponse>
     {
         public RefreshTokenQuery Query { get; set; }
     }

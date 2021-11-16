@@ -17,11 +17,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Mediators" />
-    <Folder Include="RequestHandlers\Actions" />
     <Folder Include="RequestHandlers\Projects" />
     <Folder Include="RequestHandlers\Tasks" />
-    <Folder Include="Requests\Actions" />
     <Folder Include="Requests\Projects" />
     <Folder Include="Requests\Tasks" />
   </ItemGroup>

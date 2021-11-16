@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace FristList.WebApi.RequestHandlers.Account
 {
-    public class LoginRequestHandler : IRequestHandler<LoginRequest, IResponse<DtoObjectBase>>
+    public class LoginRequestHandler : IRequestHandler<LoginRequest, IResponse>
     {
         private readonly UserManager<AppUser> _userManager;
         private readonly IJwtTokenProvider _jwtTokenProvider;
@@ -25,7 +25,7 @@ namespace FristList.WebApi.RequestHandlers.Account
             _refreshTokenProvider = refreshTokenProvider;
         }
 
-        public async Task<IResponse<DtoObjectBase>> Handle(LoginRequest request, CancellationToken cancellationToken)
+        public async Task<IResponse> Handle(LoginRequest request, CancellationToken cancellationToken)
         {
             AppUser user;
             if (request.Query.Login.Contains("@"))
@@ -34,11 +34,11 @@ namespace FristList.WebApi.RequestHandlers.Account
                 user = await _userManager.FindByNameAsync(request.Query.Login);
 
             if (user is null)
-                return new FailedResponse<Empty>(new Empty(), HttpStatusCode.NotFound);
+                return new CustomHttpStatusDataResponse<Empty>(new Empty(), HttpStatusCode.NotFound);
             
             var success = await _userManager.CheckPasswordAsync(user, request.Query.Password);
             if (!success)
-                return new FailedResponse<Empty>(new Empty(), HttpStatusCode.Unauthorized);
+                return new CustomHttpStatusDataResponse<Empty>(new Empty(), HttpStatusCode.Unauthorized);
 
             var refreshToken = await _refreshTokenProvider.CreateAsync(user);
             var login = new SuccessLogin
@@ -47,7 +47,7 @@ namespace FristList.WebApi.RequestHandlers.Account
                 RefreshToken = refreshToken.Token
             };
             
-            return new Response<SuccessLogin>(login);
+            return new DataResponse<SuccessLogin>(login);
         }
     }
 }

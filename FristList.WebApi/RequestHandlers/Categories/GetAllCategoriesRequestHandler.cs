@@ -11,7 +11,7 @@ using Category = FristList.Dto.Responses.Category;
 
 namespace FristList.WebApi.RequestHandlers.Categories
 {
-    public class GetAllCategoriesRequestHandler : IRequestHandler<GetAllCategoriesRequest, PagedResponse<Dto.Responses.Category>>
+    public class GetAllCategoriesRequestHandler : IRequestHandler<GetAllCategoriesRequest, PagedDataResponse<Dto.Responses.Category>>
     {
         private readonly IUserStore<AppUser> _userStore;
         private readonly ICategoryRepository _categoryRepository;
@@ -22,7 +22,7 @@ namespace FristList.WebApi.RequestHandlers.Categories
             _categoryRepository = categoryRepository;
         }
 
-        public async Task<PagedResponse<Category>> Handle(GetAllCategoriesRequest request, CancellationToken cancellationToken)
+        public async Task<PagedDataResponse<Category>> Handle(GetAllCategoriesRequest request, CancellationToken cancellationToken)
         {
             var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
             var pagination = request.Pagination;
@@ -36,7 +36,7 @@ namespace FristList.WebApi.RequestHandlers.Categories
                 })
                 .ToArrayAsync(cancellationToken);
 
-            var response = PagedResponse<Dto.Responses.Category>.Create(
+            var response = PagedDataResponse<Dto.Responses.Category>.Create(
                 categories, pagination.PageNumber, pagination.PageSize, categoriesCount);
 
             return response;

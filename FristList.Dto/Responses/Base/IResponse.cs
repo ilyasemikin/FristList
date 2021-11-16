@@ -2,9 +2,8 @@ using System;
 
 namespace FristList.Dto.Responses.Base
 {
-    public interface IResponse<out T>
+    public interface IResponse
     {
-        T Data { get; }
         string Message { get; }
         DateTime Time { get; }
         bool IsSuccess { get; }

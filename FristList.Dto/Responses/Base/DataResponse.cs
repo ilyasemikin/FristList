@@ -2,14 +2,14 @@ using System;
 
 namespace FristList.Dto.Responses.Base
 {
-    public class Response<T> : IResponse<T>
+    public class DataResponse<T> : IResponse
     {
         public T Data { get; init; }
         public string Message { get; init; }
         public DateTime Time { get; init; }
         public bool IsSuccess { get; init; }
 
-        public Response(T data)
+        public DataResponse(T data)
         {
             Data = data;
             Message = string.Empty;

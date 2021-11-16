@@ -1,177 +1,113 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using FristList.Dto;
 using FristList.Dto.Queries;
 using FristList.Dto.Queries.Actions;
-using FristList.Dto.Responses;
-using FristList.Dto.Responses.Base;
-using FristList.Models;
-using FristList.Services;
+using FristList.WebApi.Controllers.Base;
+using FristList.WebApi.Requests.Actions;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Action = FristList.Models.Action;
-using Category = FristList.Models.Category;
 
 namespace FristList.WebApi.Controllers
 {
     [ApiController]
     [Route("api/actions")]
-    public class ActionsController : ControllerBase
+    public class ActionsController : FristListApiController
     {
-        private readonly IActionRepository _actionRepository;
-        private readonly ICategoryRepository _categoryRepository;
-        private readonly IUserStore<AppUser> _userStore;
-        private readonly IActionManager _actionManager;
-
-        public ActionsController(IActionRepository actionRepository, ICategoryRepository categoryRepository, IUserStore<AppUser> userStore, IActionManager actionManager)
+        public ActionsController(IMediator mediator)
+            : base(mediator)
         {
-            _actionRepository = actionRepository;
-            _categoryRepository = categoryRepository;
-            _userStore = userStore;
-            _actionManager = actionManager;
+            
         }
 
         [Authorize]
         [HttpPost]
         public async Task<IActionResult> CreateAction(CreateActionQuery query)
         {
-            var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
-            var categories = new List<Category>();
-            foreach (var categoryId in query.Categories)
+            var request = new CreateActionRequest
             {
-                var category = await _categoryRepository.FindByIdAsync(categoryId);
-                if (category is null || category.UserId != user.Id)
-                    return Problem();
-                categories.Add(category);
-            }
-
-            var action = new Action
-            {
-                StartTime = query.StartTime,
-                EndTime = query.EndTime,
-                Description = query.Description,
-                Categories = categories,
-                UserId = user.Id
+                Query = query,
+                UserName = User.Identity!.Name
             };
 
-            var result = await _actionRepository.CreateAsync(action);
-            if (!result.Succeeded)
-                return Problem(string.Join(" | ", result.Errors.Select(e => e.Description)));
-            
-            return Ok(action.Id);
+            return await SendRequest(request);
         }
 
         [Authorize]
         [HttpDelete]
         public async Task<IActionResult> DeleteAction(DeleteActionQuery query)
         {
-            var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
-            var action = await _actionRepository.FindByIdAsync(query.Id);
+            var request = new DeleteActionRequest
+            {
+                Query = query,
+                UserName = User.Identity!.Name
+            };
 
-            if (action is null || action.UserId != user.Id)
-                return NotFound();
-
-            await _actionRepository.DeleteAsync(action);
-            return Ok();
+            return await SendRequest(request);
         }
 
         [Authorize]
         [HttpGet("all")]
-        public async Task<IActionResult> AllActions([FromQuery]PaginationQuery query)
+        public async Task<IActionResult> AllActions([FromQuery] PaginationQuery query)
         {
-            var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
-            var actionsCount = await _actionRepository.CountByUserAsync(user);
-            var actions = await _actionRepository
-                .FindAllByUserAsync(user, (query.PageNumber - 1) * query.PageSize, query.PageSize)
-                .ToArrayAsync();
+            var request = new GetAllActionsRequest
+            {
+                PaginationQuery = query,
+                UserName = User.Identity!.Name
+            };
 
-            var response = PagedResponse<Action>.Create(actions, query.PageNumber, query.PageSize, actionsCount);
-            return Ok(response);
+            return await SendRequest(request);
         }
 
         [Authorize]
         [HttpPost("start")]
         public async Task<IActionResult> StartAction(StartActionQuery query)
         {
-            var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
-            var categoryIds = query.CategoryIds.ToArray();
-            Category[] categories = Array.Empty<Category>();
-            if (categoryIds.Length > 0)
+            var request = new StartActionRequest
             {
-                categories = await _categoryRepository.FindByIdsAsync(categoryIds)
-                    .ToArrayAsync();
-                if (categories.Length != categoryIds.Length)
-                    return Problem();
-                if (categories.Any(c => c.UserId != user.Id))
-                    return NotFound();
-            }
-
-            var action = await _actionManager.StartActionAsync(user, categories);
-            if (action is null)
-                return Problem();
-
-            var currentAction = new CurrentAction
-            {
-                StartTime = action.StartTime,
-                Categories = action.Categories.Select(c => new Dto.Responses.Category
-                {
-                    Id = c.Id,
-                    Name = c.Name
-                }).ToArray()
+                Query = query,
+                UserName = User.Identity!.Name
             };
-            return Ok(new Response<CurrentAction>(currentAction));
+
+            return await SendRequest(request);
         }
 
         [Authorize]
         [HttpPost("stop")]
         public async Task<IActionResult> StopAction()
         {
-            var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
+            var request = new StopActionRequest
+            {
+                UserName = User.Identity!.Name
+            };
 
-            if (await _actionManager.StopActionAsync(user))
-                return Ok(new Response<object>(new {}));
-
-            return Problem();
+            return await SendRequest(request);
         }
 
         [Authorize]
         [HttpGet("current")]
         public async Task<IActionResult> CurrentAction()
         {
-            var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
-            var action = await _actionManager.GetRunningActionAsync(user);
-
-            if (action is null)
-                return NoContent();
-
-            var categories = action.Categories?.Select(c => new Dto.Responses.Category
+            var request = new GetCurrentActionRequest
             {
-                Id = c.Id,
-                Name = c.Name
-            }).ToArray() ?? Array.Empty<Dto.Responses.Category>();
-
-            var currentAction = new CurrentAction
-            {
-                StartTime = action.StartTime,
-                Categories = categories
+                UserName = User.Identity!.Name
             };
-            
-            return Ok(new Response<CurrentAction>(currentAction));
+
+            return await SendRequest(request);
         }
 
         [Authorize]
         [HttpDelete("current")]
         public async Task<IActionResult> DeleteCurrentAction()
         {
-            var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
+            var request = new DeleteCurrentActionRequest
+            {
+                UserName = User.Identity!.Name
+            };
 
-            if (await _actionManager.DeleteActionAsync(user))
-                return Ok();
-            return Problem();
+            return await SendRequest(request);
         }
     }
 }
