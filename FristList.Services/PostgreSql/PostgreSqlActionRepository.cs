@@ -28,26 +28,28 @@ namespace FristList.Services.PostgreSql
             try
             {
                 var id = await connection.ExecuteScalarAsync<int>(
-                    "INSERT INTO action (\"StartTime\", \"EndTime\", \"UserId\") VALUES (@StartTime, @EndTime, @UserId) RETURNING \"Id\"",
-                    new { StartTime = action.StartTime, EndTime = action.EndTime, UserId = action.UserId });
-
-                foreach (var category in action.Categories)
-                    await connection.ExecuteAsync(
-                        "INSERT INTO action_categories (\"ActionId\", \"CategoryId\") VALUES (@ActionId, @CategoryId)",
-                        new { ActionId = id, CategoryId = category.Id });
+                    "SELECT * FROM add_action(@StartTime, @EndTime, @Description, @UserId, @Categories)",
+                    new
+                    {
+                        StartTime = action.StartTime, 
+                        EndTime = action.EndTime, 
+                        Description = action.Description,
+                        UserId = action.UserId,
+                        Categories = action.Categories.Select(c => c.Id).ToArray()
+                    });
 
                 action.Id = id;
             }
             catch (Exception e)
             {
                 await transaction.RollbackAsync();
-                
+
                 return RepositoryResult.Failed(new RepositoryResultError
                 {
                     Description = e.Message
                 });
             }
-            
+
             await transaction.CommitAsync();
             return RepositoryResult.Success;
         }
@@ -63,11 +65,11 @@ namespace FristList.Services.PostgreSql
 
             var deleted = await connection.ExecuteAsync(
                 "DELETE FROM action_categories WHERE \"ActionId\"=@ActionId",
-                new { ActionId = action.Id });
+                new {ActionId = action.Id});
 
             if (deleted == 0)
                 return RepositoryResult.Failed();
-            
+
             return RepositoryResult.Success;
         }
 
@@ -82,7 +84,7 @@ namespace FristList.Services.PostgreSql
             await using var connection = new NpgsqlConnection(_connectionString);
             return await connection.QuerySingleAsync<int>(
                 "SELECT COUNT(*) FROM \"action\" WHERE \"UserId\"=@UserId",
-                new { UserId = user.Id });
+                new {UserId = user.Id});
         }
 
         public async Task<Action> FindByIdAsync(int id)
@@ -98,8 +100,8 @@ namespace FristList.Services.PostgreSql
                     if (category is not null)
                         action.Categories.Add(category);
                     return answer;
-                }, new { Id = id }, splitOn: "CategoryId");
-            
+                }, new {Id = id}, splitOn: "CategoryId");
+
             return answer;
         }
 
@@ -117,11 +119,11 @@ namespace FristList.Services.PostgreSql
                         entity = action;
                         uniqueActions.Add(entity.Id, entity);
                     }
-                    
+
                     if (category is not null)
                         entity.Categories.Add(category);
                     return entity;
-                }, new { UserId = user.Id, Skip = skip, Count = count }, splitOn: "CategoryId");
+                }, new {UserId = user.Id, Skip = skip, Count = count}, splitOn: "CategoryId");
 
             foreach (var action in actions.Distinct())
                 yield return action;

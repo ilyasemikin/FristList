@@ -53,9 +53,10 @@ CREATE TABLE running_action_categories (
 );
 
 CREATE TABLE action (
-    "Id"            SERIAL PRIMARY KEY,
-    "During"        TSRANGE NOT NULL,
-    "UserId"        INTEGER NOT NULL,
+    "Id"                SERIAL PRIMARY KEY,
+    "During"            TSRANGE NOT NULL,
+    "Description"       TEXT,
+    "UserId"            INTEGER NOT NULL,
 
     FOREIGN KEY ("UserId") REFERENCES app_user("Id")
 );

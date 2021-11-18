@@ -1,4 +1,4 @@
-namespace FristList.Dto.Responses.Base
+namespace FristList.Dto
 {
     public abstract class DtoObjectBase
     {

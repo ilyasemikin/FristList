@@ -50,7 +50,7 @@ namespace FristList.WebApi.RequestHandlers.Actions
             var currentAction = new CurrentAction
             {
                 StartTime = action.StartTime,
-                Categories = action.Categories.Select(c => new Dto.Responses.Category
+                Categories = action.Categories.Select(c => new Dto.Category
                 {
                     Id = c.Id,
                     Name = c.Name

@@ -1,16 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Text.RegularExpressions;
 using FristList.Client.Console.Application;
 using FristList.Client.Console.Application.Chains;
-using FristList.Client.Console.Message;
-using FristList.Client.Console.Message.Json;
+using FristList.Client.Console.Filesystem;
 using FristList.Client.Console.Services;
-using FristList.Client.Console.Services.Static;
-using FristList.Dto;
 using Microsoft.Extensions.DependencyInjection;
 using Task = System.Threading.Tasks.Task;
 
@@ -36,24 +30,27 @@ namespace FristList.Client.Console
 
             services.AddTransient<Executor, Executor>();
 
-            services.AddSingleton<CommandHandlerBase>(provider =>
+            services.AddSingleton(provider =>
             {
                 var httpClientFactory = provider.GetRequiredService<IHttpClientFactory>();
                 var authorizeProvider = provider.GetRequiredService<JwtAuthorizeProvider>();
                 var messageWriter = provider.GetRequiredService<IMessageWriter>();
-                
-                var common = new CommonCommandChainHandler(messageWriter);
-                var authorize = new AuthorizeCommandHandler(httpClientFactory, messageWriter, authorizeProvider);
-                var remoteStorage = new RemoteStorageCommandHandler(httpClientFactory, authorizeProvider, messageWriter);
-                var unknown = new UnknownCommandHandler(messageWriter);
 
-                common.Next = authorize;
-                authorize.Next = remoteStorage;
-                remoteStorage.Next = unknown;
-                return common;
+                var builder = new CommandHandlerBuilder();
+                
+                builder.AddChainHandler(new FilesystemChainHandler(messageWriter));
+                builder.AddChainHandler(new CommonCommandChainHandler(messageWriter));
+                builder.AddChainHandler(
+                    new AuthorizeCommandHandler(httpClientFactory, messageWriter, authorizeProvider));
+                builder.AddChainHandler(new RemoteStorageCommandHandler(httpClientFactory, authorizeProvider,
+                    messageWriter, provider.GetRequiredService<IFileActionStrategyFactory>()));
+                builder.AddChainHandler(new UnknownCommandHandler(messageWriter));
+
+                return builder.Build();
             });
 
             services.AddSingleton<JwtAuthorizeProvider, JwtAuthorizeProvider>();
+            services.AddSingleton<IFileActionStrategyFactory, FileActionStrategyFactory>();
 
             services.AddHttpClient("api", server => { server.BaseAddress = new Uri("https://localhost:5001"); })
                 .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler

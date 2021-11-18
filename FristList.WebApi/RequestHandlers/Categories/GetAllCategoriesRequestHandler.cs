@@ -7,11 +7,11 @@ using FristList.Services;
 using FristList.WebApi.Requests.Categories;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
-using Category = FristList.Dto.Responses.Category;
+using Category = FristList.Dto.Category;
 
 namespace FristList.WebApi.RequestHandlers.Categories
 {
-    public class GetAllCategoriesRequestHandler : IRequestHandler<GetAllCategoriesRequest, PagedDataResponse<Dto.Responses.Category>>
+    public class GetAllCategoriesRequestHandler : IRequestHandler<GetAllCategoriesRequest, PagedDataResponse<Category>>
     {
         private readonly IUserStore<AppUser> _userStore;
         private readonly ICategoryRepository _categoryRepository;
@@ -29,14 +29,14 @@ namespace FristList.WebApi.RequestHandlers.Categories
             var categoriesCount = await _categoryRepository.CountByUserAsync(user);
             var categories = await _categoryRepository
                 .FindAllByUserIdAsync(user, pagination.PageSize * (pagination.PageNumber - 1), pagination.PageSize)
-                .Select(c => new Dto.Responses.Category
+                .Select(c => new Category
                 {
                     Id = c.Id,
                     Name = c.Name
                 })
                 .ToArrayAsync(cancellationToken);
 
-            var response = PagedDataResponse<Dto.Responses.Category>.Create(
+            var response = PagedDataResponse<Category>.Create(
                 categories, pagination.PageNumber, pagination.PageSize, categoriesCount);
 
             return response;

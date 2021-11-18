@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using FristList.Dto;
 using FristList.Dto.Responses;
 using FristList.Dto.Responses.Base;
 using FristList.Models;

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using FristList.Client.Console.Filesystem;
 using FristList.Client.Console.Services;
 using FristList.Client.Console.UserCommands;
 using FristList.Client.Console.UserCommands.RemoteStorage;
@@ -14,14 +15,16 @@ namespace FristList.Client.Console.Application.Chains
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly JwtAuthorizeProvider _authorizeProvider;
         private readonly IMessageWriter _messageWriter;
+        private readonly IFileActionStrategyFactory _actionStrategyFactory;
         
         private readonly HashSet<string> _availableCommands;
 
-        public RemoteStorageCommandHandler(IHttpClientFactory httpClientFactory, JwtAuthorizeProvider authorizeProvider, IMessageWriter messageWriter)
+        public RemoteStorageCommandHandler(IHttpClientFactory httpClientFactory, JwtAuthorizeProvider authorizeProvider, IMessageWriter messageWriter, IFileActionStrategyFactory actionStrategyFactory)
         {
             _httpClientFactory = httpClientFactory;
             _authorizeProvider = authorizeProvider;
             _messageWriter = messageWriter;
+            _actionStrategyFactory = actionStrategyFactory;
             _availableCommands = new HashSet<string>
             {
                 "actions",
@@ -30,7 +33,8 @@ namespace FristList.Client.Console.Application.Chains
                 "stop action",
                 "current action",
                 "tasks",
-                "projects"
+                "projects",
+                "import csv"
             };
         }
         
@@ -52,6 +56,8 @@ namespace FristList.Client.Console.Application.Chains
                     context.Parameters),
                 "projects" => new AllProjectsUserCommand(_httpClientFactory, _authorizeProvider, _messageWriter,
                     context.Parameters),
+                "import csv" => new ImportUserCommand(_httpClientFactory, _authorizeProvider,
+                    _actionStrategyFactory.CreateImportActionStrategy("csv"), _messageWriter, context.Parameters),
                 _ => null
             };
 

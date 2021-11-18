@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FristList.WebApi.RequestHandlers.Account
 {
-    public class UserInfoRequestHandler : IRequestHandler<UserInfoRequest, DataResponse<Dto.Responses.UserInfo>>
+    public class UserInfoRequestHandler : IRequestHandler<UserInfoRequest, IResponse>
     {
         private readonly UserManager<AppUser> _userManager;
 
@@ -19,7 +19,7 @@ namespace FristList.WebApi.RequestHandlers.Account
             _userManager = userManager;
         }
 
-        public async Task<DataResponse<UserInfo>> Handle(UserInfoRequest request, CancellationToken cancellationToken)
+        public async Task<IResponse> Handle(UserInfoRequest request, CancellationToken cancellationToken)
         {
             var user = await _userManager.FindByNameAsync(request.UserName);
 

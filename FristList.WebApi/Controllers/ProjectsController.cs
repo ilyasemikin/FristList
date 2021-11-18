@@ -12,9 +12,9 @@ using FristList.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Category = FristList.Dto.Responses.Category;
-using Project = FristList.Dto.Responses.Project;
-using Task = FristList.Dto.Responses.Task;
+using Category = FristList.Dto.Category;
+using Project = FristList.Dto.Project;
+using Task = FristList.Dto.Task;
 
 namespace FristList.WebApi.Controllers
 {
@@ -83,7 +83,7 @@ namespace FristList.WebApi.Controllers
             var projectsCount = await _projectRepository.CountByUserAsync(user);
             var projects = _projectRepository
                 .FindByUserAsync(user, (query.PageNumber - 1) * query.PageSize, query.PageSize)
-                .Select(p => new Dto.Responses.Project
+                .Select(p => new Project
                 {
                     Id = p.Id,
                     Name = p.Name,

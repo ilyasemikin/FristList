@@ -15,7 +15,9 @@ namespace FristList.Services
         Task<int> CountByUserAsync(AppUser user);
 
         Task<Category> FindByIdAsync(int id);
+        Task<Category> FindByNameAsync(string name);
         IAsyncEnumerable<Category> FindByIdsAsync(IEnumerable<int> ids);
+        IAsyncEnumerable<Category> FindByNamesAsync(IEnumerable<string> names);
         IAsyncEnumerable<Category> FindAllByUserIdAsync(AppUser userId, int skip = 0, int count = int.MaxValue);
     }
 }

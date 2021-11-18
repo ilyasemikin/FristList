@@ -10,6 +10,7 @@ using FristList.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Category = FristList.Dto.Category;
 using Task = FristList.Models.Task;
 
 namespace FristList.WebApi.Controllers
@@ -83,11 +84,11 @@ namespace FristList.WebApi.Controllers
             var tasksCount = await _taskRepository.CountByUserAsync(user);
             var tasks = _taskRepository
                 .FindByAllUserAsync(user, (query.PageNumber - 1) * query.PageSize, query.PageSize)
-                .Select(t => new Dto.Responses.Task
+                .Select(t => new Dto.Task
                 {
                     Id = t.Id,
                     Name = t.Name,
-                    Categories = t.Categories.Select(c => new Dto.Responses.Category
+                    Categories = t.Categories.Select(c => new Category
                     {
                         Id = c.Id,
                         Name = c.Name
@@ -95,7 +96,7 @@ namespace FristList.WebApi.Controllers
                 })
                 .ToEnumerable();
 
-            var response = PagedDataResponse<Dto.Responses.Task>.Create(tasks, query.PageNumber, query.PageSize, tasksCount);
+            var response = PagedDataResponse<Dto.Task>.Create(tasks, query.PageNumber, query.PageSize, tasksCount);
             return Ok(response);
         }
     }

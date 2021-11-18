@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace FristList.WebApi.RequestHandlers.Account
 {
-    public class RegisterRequestHandler : IRequestHandler<RegisterRequest, DataResponse<Empty>>
+    public class RegisterRequestHandler : IRequestHandler<RegisterRequest, IResponse>
     {
         private readonly UserManager<AppUser> _userManager;
 
@@ -20,7 +20,7 @@ namespace FristList.WebApi.RequestHandlers.Account
             _userManager = userManager;
         }
 
-        public async Task<DataResponse<Empty>> Handle(RegisterRequest request, CancellationToken cancellationToken)
+        public async Task<IResponse> Handle(RegisterRequest request, CancellationToken cancellationToken)
         {
             var user = new AppUser
             {

@@ -25,9 +25,9 @@ namespace FristList.Services.PostgreSql
             try
             {
                 var id = await connection.ExecuteScalarAsync<int>(
-                    "INSERT INTO category (\"Name\", \"UserId\") VALUES (@Name, @UserId)",
+                    "INSERT INTO category (\"Name\", \"UserId\") VALUES (@Name, @UserId) RETURNING \"Id\"",
                     new { Name = category.Name, UserId = category.UserId });
-                category.UserId = id;
+                category.Id = id;
             }
             catch (Exception e)
             {
@@ -100,12 +100,29 @@ namespace FristList.Services.PostgreSql
                 new { Id = id });
         }
 
+        public Task<Category> FindByNameAsync(string name)
+        {
+            throw new NotImplementedException();
+        }
+
         public async IAsyncEnumerable<Category> FindByIdsAsync(IEnumerable<int> ids)
         {
             await using var connection = new NpgsqlConnection(_connectionString);
             var reader = await connection.ExecuteReaderAsync(
                 "SELECT \"Id\" AS \"CategoryId\", \"Name\" AS \"CategoryName\", \"UserId\" FROM category WHERE \"Id\" = ANY(@Ids)",
                 new { Ids = ids.ToArray() });
+            var parser = reader.GetRowParser<Category>();
+
+            while (await reader.ReadAsync())
+                yield return parser(reader);
+        }
+
+        public async IAsyncEnumerable<Category> FindByNamesAsync(IEnumerable<string> names)
+        {
+            await using var connection = new NpgsqlConnection(_connectionString);
+            var reader = await connection.ExecuteReaderAsync(
+                "SELECT \"Id\" AS \"CategoryId\", \"Name\" AS \"CategoryName\" FROM category WHERE \"Name\" = ANY(@Names)",
+                new {Names = names.ToArray()});
             var parser = reader.GetRowParser<Category>();
 
             while (await reader.ReadAsync())

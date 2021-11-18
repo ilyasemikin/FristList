@@ -20,6 +20,11 @@ namespace FristList.Client.Console.UserCommands.RemoteStorage
             _authorizeProvider = authorizeProvider;
         }
 
+        protected virtual void PrepareCommand()
+        {
+            
+        }
+        
         protected abstract string CreateUri();
 
         protected virtual HttpContent CreateContent()
@@ -29,6 +34,8 @@ namespace FristList.Client.Console.UserCommands.RemoteStorage
         
         public sealed override async Task<UserCommandExecutionResult> ExecuteAsync()
         {
+            PrepareCommand();
+
             var client = _httpClientFactory.CreateClient("api");
 
             var uri = CreateUri();

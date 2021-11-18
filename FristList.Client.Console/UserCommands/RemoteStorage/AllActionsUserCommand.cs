@@ -3,6 +3,7 @@ using System.Net.Http;
 using FristList.Client.Console.Application;
 using FristList.Client.Console.Message.Console;
 using FristList.Client.Console.Services;
+using FristList.Dto;
 using FristList.Dto.Responses;
 using FristList.Dto.Responses.Base;
 using Newtonsoft.Json;
@@ -29,8 +30,15 @@ namespace FristList.Client.Console.UserCommands.RemoteStorage
             if (statusCode == HttpStatusCode.OK)
             {
                 var answer = JsonConvert.DeserializeObject<PagedDataResponse<Action>>(json);
-
-                var message = new ColoredJsonMessageBuilder().Build(answer!.Data);
+                var data = new
+                {
+                    Page = answer!.Page,
+                    TotalPage = answer!.TotalPages,
+                    TotalRecord = answer!.TotalRecords,
+                    Actions = answer.Data
+                };
+                
+                var message = new ColoredJsonMessageBuilder().Build(data);
                 _messageWriter.WriteMessage(message);
             }
             else

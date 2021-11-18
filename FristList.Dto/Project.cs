@@ -1,6 +1,4 @@
-using FristList.Dto.Responses.Base;
-
-namespace FristList.Dto.Responses
+namespace FristList.Dto
 {
     public class Project : DtoObjectBase
     {

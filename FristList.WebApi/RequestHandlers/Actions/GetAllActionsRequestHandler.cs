@@ -8,6 +8,8 @@ using FristList.Services;
 using FristList.WebApi.Requests.Actions;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
+using Action = FristList.Dto.Action;
+using Category = FristList.Dto.Category;
 
 namespace FristList.WebApi.RequestHandlers.Actions
 {
@@ -31,20 +33,20 @@ namespace FristList.WebApi.RequestHandlers.Actions
                     request.PaginationQuery.PageSize)
                 .ToEnumerable();
 
-            var actions = daoActions.Select(a => new Dto.Responses.Action
+            var actions = daoActions.Select(a => new Action
             {
                 Id = a.Id,
                 Description = a.Description,
                 StartTime = a.StartTime,
                 EndTime = a.EndTime,
-                Categories = a.Categories.Select(c => new Dto.Responses.Category
+                Categories = a.Categories.Select(c => new Category
                 {
                     Id = c.Id,
                     Name = c.Name
                 }).ToArray()
             });
 
-            return PagedDataResponse<Dto.Responses.Action>.Create(actions, request.PaginationQuery.PageNumber,
+            return PagedDataResponse<Action>.Create(actions, request.PaginationQuery.PageNumber,
                 request.PaginationQuery.PageSize, actionsCount);
         }
     }

@@ -10,6 +10,7 @@ using FristList.Services;
 using FristList.WebApi.Requests.Actions;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
+using Category = FristList.Dto.Category;
 
 namespace FristList.WebApi.RequestHandlers.Actions
 {
@@ -32,11 +33,11 @@ namespace FristList.WebApi.RequestHandlers.Actions
             if (action is null)
                 return new CustomHttpStatusDataResponse<Empty>(new Empty(), HttpStatusCode.NoContent);
 
-            var categories = action.Categories?.Select(c => new Dto.Responses.Category
+            var categories = action.Categories?.Select(c => new Category
             {
                 Id = c.Id,
                 Name = c.Name
-            }).ToArray() ?? Array.Empty<Dto.Responses.Category>();
+            }).ToArray() ?? Array.Empty<Category>();
 
             var currentAction = new CurrentAction
             {

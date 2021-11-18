@@ -2,37 +2,29 @@ using System.Collections.Generic;
 using System.Linq;
 using FristList.Client.Console.Services;
 using FristList.Client.Console.UserCommands;
-using FristList.Client.Console.UserCommands.Base;
+using FristList.Client.Console.UserCommands.Filesystem;
 
 namespace FristList.Client.Console.Application.Chains
 {
-    public class CommonCommandChainHandler : CommandChainHandlerBase
+    public class FilesystemChainHandler : CommandChainHandlerBase
     {
         private readonly IMessageWriter _messageWriter;
-        
         private readonly HashSet<string> _commands;
 
-        public CommonCommandChainHandler(IMessageWriter messageWriter)
+        public FilesystemChainHandler(IMessageWriter messageWriter)
         {
             _messageWriter = messageWriter;
-
             _commands = new HashSet<string>
             {
-                "env",
-                "exit",
-                "commands",
-                "set culture"
+                "cd"
             };
         }
-
+        
         public override UserCommandBase GetCommand(CommandContext context)
         {
-            UserCommandBase command = context.Command switch
+            var command = context.Command switch
             {
-                "commands" => new AvailableCommandsUserCommand(GetCommands(), _messageWriter, context.Parameters),
-                "env" => new EnvironmentUserCommand(_messageWriter),
-                "exit" => new ExitUserCommand(),
-                "set culture" => new UpdateCultureUserCommand(_messageWriter, context.Parameters),
+                "cd" => new ChangeDirectoryUserCommand(_messageWriter, context.Parameters),
                 _ => null
             };
 

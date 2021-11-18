@@ -1,9 +1,11 @@
 using System;
+using System.Globalization;
 using System.Net;
 using System.Net.Http;
 using FristList.Client.Console.Application;
 using FristList.Client.Console.Message.Console;
 using FristList.Client.Console.Services;
+using FristList.Dto;
 using FristList.Dto.Responses;
 using FristList.Dto.Responses.Base;
 using Newtonsoft.Json;
@@ -25,7 +27,6 @@ namespace FristList.Client.Console.UserCommands.RemoteStorage
 
             if (_parameters.Count < 1 || !int.TryParse(_parameters.Parameters[0].Value, out var id))
                 throw new InvalidOperationException();
-
             _projectId = id;
         }
 

@@ -114,6 +114,29 @@ $$ LANGUAGE plpgsql;
 
 -- Action functions
 
+CREATE OR REPLACE FUNCTION add_action(
+    start_time TIMESTAMP WITHOUT TIME ZONE, 
+    end_time TIMESTAMP WITHOUT TIME ZONE, 
+    description TEXT, 
+    user_id INTEGER, 
+    categories INTEGER[])
+RETURNS INTEGER
+AS $$
+DECLARE
+    action_id   INTEGER;
+BEGIN
+    INSERT INTO action ("During", "Description", "UserId") 
+         VALUES (TSRANGE(start_time, end_time, '[)'), description, user_id) 
+      RETURNING "Id" INTO action_id;
+    
+    INSERT INTO action_categories ("ActionId", "CategoryId") 
+         SELECT action_id, unnest
+           FROM unnest(categories);
+    
+    RETURN action_id;
+END
+$$ LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION get_action(action_id INTEGER)
 RETURNS TABLE (
     "ActionId"          INTEGER,
@@ -383,3 +406,15 @@ END
 $$ LANGUAGE plpgsql;
 
 -- End project functions
+
+-- Start action statistics
+
+SELECT MIN(lower(t."During")), MAX(upper(t."During")) FROM
+    (SELECT *, SUM(ns::INTEGER) OVER (ORDER BY lower(t."During"), upper(t."During")) grp FROM
+        (SELECT
+             *, coalesce(lower(a."During") > max(upper(a."During")) OVER(ORDER BY lower(a."During"), upper(a."During") ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING), TRUE) ns -- начало правее самого правого из предыдущих концов == разрыв
+         FROM action a) t) t
+GROUP BY grp, t."During"
+ORDER BY lower(t."During");
+
+-- End action statistics
