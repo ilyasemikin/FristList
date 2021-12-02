@@ -50,6 +50,7 @@ namespace FristList.WebApi
                 provider.GetRequiredService<IRepositoryAbstractFactory>().CreateProjectRepository());
 
             services.AddTransient<IActionManager, PostgreSqlActionManager>();
+            services.AddTransient<IStatisticsProvider, PostgreSqlStatisticsProvider>();
             
             services.AddIdentityCore<AppUser>()
                 .AddDefaultTokenProviders();

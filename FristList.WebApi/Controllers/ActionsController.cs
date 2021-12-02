@@ -109,5 +109,18 @@ namespace FristList.WebApi.Controllers
 
             return await SendRequest(request);
         }
+
+        [Authorize]
+        [HttpGet("total")]
+        public async Task<IActionResult> GetTotalTime(TotalActionTimeQuery query)
+        {
+            var request = new GetTotalActionTimeRequest
+            {
+                Query = query,
+                UserName = User.Identity!.Name
+            };
+
+            return await SendRequest(request);
+        }
     }
 }

@@ -5,8 +5,10 @@ using FristList.Dto.Queries;
 using FristList.Dto.Queries.Categories;
 using FristList.Dto.Responses;
 using FristList.Dto.Responses.Base;
+using FristList.Dto.Responses.Statistics;
 using FristList.Models;
 using FristList.Services;
+using FristList.WebApi.Controllers.Base;
 using FristList.WebApi.Requests.Categories;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -17,14 +19,15 @@ namespace FristList.WebApi.Controllers
 {
     [ApiController]
     [Route("api/categories")]
-    public class CategoriesController : ControllerBase
+    public class CategoriesController : FristListApiController
     {
         private readonly IUserStore<AppUser> _userStore;
         private readonly ICategoryRepository _categoryRepository;
 
         private readonly IMediator _mediator;
         
-        public CategoriesController(ICategoryRepository categoryRepository, IUserStore<AppUser> userStore, IMediator mediator)
+        public CategoriesController(ICategoryRepository categoryRepository, IUserStore<AppUser> userStore, IMediator mediator) 
+            : base(mediator)
         {
             _categoryRepository = categoryRepository;
             _userStore = userStore;
@@ -97,6 +100,19 @@ namespace FristList.WebApi.Controllers
 
             var response = await _mediator.Send(request);
             return Ok(response);
+        }
+
+        [Authorize]
+        [HttpGet("time")]
+        public async Task<IActionResult> TotalCategoryTime(TotalCategoryTimeQuery query)
+        {
+            var request = new GetTotalCategoryTimeRequest
+            {
+                Query = query,
+                UserName = User.Identity!.Name
+            };
+
+            return await SendRequest(request);
         }
     }
 }
