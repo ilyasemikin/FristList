@@ -210,50 +210,6 @@ BEGIN
 END
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION get_user_actions_by_time(user_id INTEGER, from_time TIMESTAMP, to_time TIMESTAMP)
-RETURNS TABLE (
-    "ActionId"          INTEGER,
-    "ActionStartTime"   TIMESTAMP WITHOUT TIME ZONE,
-    "ActionEndTime"     TIMESTAMP WITHOUT TIME ZONE,
-    "ActionUserId"      INTEGER,
-    "CategoryId"        INTEGER,
-    "CategoryName"      TEXT,
-    "CategoryActionId"  INTEGER
-)
-AS $$
-BEGIN
-    RETURN QUERY
-        SELECT a."Id",
-               lower(a."During"),
-               upper(a."During"),
-               a."UserId",
-               c."Id",
-               c."Name",
-               a."UserId"
-          FROM action a 
-              LEFT JOIN action_categories ac ON a."Id"=ac."ActionId"
-              LEFT JOIN category c ON ac."CategoryId"=c."Id"
-         WHERE a."UserId"=user_id AND a."During" && TSRANGE(from_time, to_time);
-END
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION get_user_time(user_id INTEGER, from_time TIMESTAMP, to_time TIMESTAMP)
-RETURNS TABLE (
-    "Time"          INTERVAL,
-    "TotalTime"     INTERVAL,
-    "ActionCount"   INTEGER
-)
-AS $$
-BEGIN
-    RETURN QUERY
-        SELECT COALESCE(SUM(upper(a."During") - lower(a."During")), INTERVAL '0'),
-               to_time - from_time,
-               COUNT(*)::integer
-          FROM action a
-         WHERE "UserId"=user_id AND a."During" && TSRANGE(from_time, to_time);
-END
-$$ LANGUAGE plpgsql;
-
 -- End action functions
 
 -- Running action functions
@@ -409,12 +365,125 @@ $$ LANGUAGE plpgsql;
 
 -- Start action statistics
 
-SELECT MIN(lower(t."During")), MAX(upper(t."During")) FROM
-    (SELECT *, SUM(ns::INTEGER) OVER (ORDER BY lower(t."During"), upper(t."During")) grp FROM
-        (SELECT
-             *, coalesce(lower(a."During") > max(upper(a."During")) OVER(ORDER BY lower(a."During"), upper(a."During") ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING), TRUE) ns -- начало правее самого правого из предыдущих концов == разрыв
-         FROM action a) t) t
-GROUP BY grp, t."During"
-ORDER BY lower(t."During");
+CREATE OR REPLACE FUNCTION get_user_action_intervals(
+    user_id         INTEGER,
+    from_time       TIMESTAMP WITHOUT TIME ZONE,
+    to_time         TIMESTAMP WITHOUT TIME ZONE
+)
+RETURNS TABLE (
+    "StartTime"         TIMESTAMP WITHOUT TIME ZONE,
+    "EndTime"           TIMESTAMP WITHOUT TIME ZONE
+)
+AS $$
+BEGIN
+    RETURN QUERY
+        WITH t1 AS (
+            SELECT LOWER(a."During") AS s, UPPER(a."During") AS e,
+                   COALESCE(
+                       LOWER(a."During") > MAX(UPPER(a."During")) 
+                           OVER(ORDER BY LOWER(a."During"), UPPER(a."During") 
+                               ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING), TRUE
+                       ) AS ns
+            FROM action a
+            WHERE a."UserId"=user_id AND LOWER(a."During") > from_time AND UPPER(a."During") < to_time
+        ), t2 AS (
+            SELECT t1.s, t1.e, SUM(ns::INTEGER) OVER(ORDER BY t1.s, t1.e) AS grp
+              FROM t1
+        )
+          SELECT MIN(a.s), MAX(a.e) 
+            FROM t2 a
+        GROUP BY a.grp
+        ORDER BY MIN(a.s);
+END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_user_action_intervals_by_categories(
+    user_id     INTEGER,
+    from_time   TIMESTAMP WITHOUT TIME ZONE,
+    to_time     TIMESTAMP WITHOUT TIME ZONE
+)
+RETURNS TABLE (
+    "StartTime"     TIMESTAMP WITHOUT TIME ZONE,
+    "EndTime"       TIMESTAMP WITHOUT TIME ZONE,
+    "CategoryId"    INTEGER
+)
+AS $$
+BEGIN
+    RETURN QUERY
+        WITH t1 AS (
+            SELECT ac."CategoryId", LOWER(a."During") AS s, UPPER(a."During") AS e,
+                   COALESCE(
+                       LOWER(a."During") > MAX(UPPER(a."During"))
+                           OVER(PARTITION BY ac."CategoryId" ORDER BY LOWER(a."During"), UPPER(a."During")
+                               ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING), TRUE
+                       ) AS ns
+              FROM action a LEFT JOIN action_categories ac on a."Id"=ac."ActionId"
+             WHERE a."UserId"=user_id AND LOWER(a."During") > from_time AND UPPER(a."During") < to_time
+        ), t2 AS (
+            SELECT t1."CategoryId", t1.s, t1.e, SUM(ns::INTEGER) OVER(ORDER BY t1.s, t1.e) AS grp
+              FROM t1
+        )
+          SELECT MIN(a.s), MAX(a.e), a."CategoryId"
+            FROM t2 a
+        GROUP BY a.grp, a."CategoryId"
+        ORDER BY MIN(a.s);
+END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_user_action_time(
+    user_id     INTEGER, 
+    from_time   TIMESTAMP WITHOUT TIME ZONE DEFAULT (TO_TIMESTAMP(0)),
+    to_time     TIMESTAMP WITHOUT TIME ZONE DEFAULT (NOW() AT TIME ZONE 'UTC')
+)
+RETURNS TABLE (
+    "StartTime"         TIMESTAMP WITHOUT TIME ZONE,
+    "EndTime"           TIMESTAMP WITHOUT TIME ZONE,
+    "Duration"          INTERVAL
+)
+AS $$
+BEGIN
+    RETURN QUERY
+          SELECT a."StartTime", a."EndTime", a."EndTime" - a."StartTime"
+            FROM get_user_action_intervals(user_id, from_time, to_time) AS a
+        ORDER BY a."StartTime";
+END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_user_total_action_time(
+    user_id     INTEGER,
+    from_time   TIMESTAMP WITHOUT TIME ZONE DEFAULT (TO_TIMESTAMP(0)),
+    to_time     TIMESTAMP WITHOUT TIME ZONE DEFAULT (NOW() AT TIME ZONE 'UTC')
+)
+RETURNS TABLE (
+    "TotalTime"         INTERVAL,
+    "MaxTime"           INTERVAL
+)
+AS $$
+BEGIN
+    RETURN QUERY
+          SELECT JUSTIFY_INTERVAL(SUM(a."EndTime" - a."StartTime")), JUSTIFY_INTERVAL(to_time - from_time)
+            FROM get_user_action_intervals(user_id, from_time, to_time) AS a
+        GROUP BY to_time, from_time;
+END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_user_total_action_time_by_categories(
+    user_id     INTEGER,
+    from_time   TIMESTAMP WITHOUT TIME ZONE DEFAULT (TO_TIMESTAMP(0)),
+    to_time     TIMESTAMP WITHOUT TIME ZONE DEFAULT (NOW() AT TIME ZONE 'UTC')
+)
+RETURNS TABLE (
+    "CategoryId"    INTEGER,
+    "TotalTime"     INTERVAL
+)
+AS $$
+BEGIN
+    RETURN QUERY
+          SELECT a."CategoryId", JUSTIFY_INTERVAL(SUM(a."EndTime" - a."StartTime"))
+            FROM get_user_action_intervals_by_categories(user_id, from_time, to_time) AS a
+        GROUP BY a."CategoryId"
+        ORDER BY a."CategoryId";
+END
+$$ LANGUAGE plpgsql;
 
 -- End action statistics
