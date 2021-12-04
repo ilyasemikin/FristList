@@ -1,5 +1,4 @@
 using FristList.Dto.Queries.Account;
-using FristList.Dto.Responses;
 using FristList.Dto.Responses.Base;
 using MediatR;
 

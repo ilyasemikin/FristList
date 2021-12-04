@@ -1,11 +1,9 @@
-using System;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using FristList.Client.Console.Models;
-using FristList.Dto;
 using FristList.Dto.Queries.Account;
 using FristList.Dto.Responses;
 using FristList.Dto.Responses.Base;

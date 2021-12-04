@@ -1,103 +1,63 @@
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using FristList.Dto.Queries;
 using FristList.Dto.Queries.Tasks;
-using FristList.Dto.Responses;
-using FristList.Dto.Responses.Base;
 using FristList.Models;
 using FristList.Services;
+using FristList.WebApi.Controllers.Base;
+using FristList.WebApi.Requests.Tasks;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Category = FristList.Dto.Category;
-using Task = FristList.Models.Task;
 
 namespace FristList.WebApi.Controllers
 {
     [Route("api/tasks")]
     [ApiController]
-    public class TasksController : ControllerBase
+    public class TasksController : FristListApiController
     {
-        private readonly IUserStore<AppUser> _userStore;
-        private readonly ITaskRepository _taskRepository;
-        private readonly ICategoryRepository _categoryRepository;
-
-        public TasksController(IUserStore<AppUser> userStore, ITaskRepository taskRepository, ICategoryRepository categoryRepository)
+        public TasksController(IUserStore<AppUser> userStore, ITaskRepository taskRepository, ICategoryRepository categoryRepository, IMediator mediator)
+            : base(mediator)
         {
-            _taskRepository = taskRepository;
-            _userStore = userStore;
-            _categoryRepository = categoryRepository;
         }
 
         [Authorize]
         [HttpPost]
         public async Task<IActionResult> CreateTask(CreateTaskQuery query)
         {
-            var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
-
-            var categoryIds = query.Categories.ToArray();
-            var categories = await _categoryRepository.FindByIdsAsync(query.Categories)
-                .ToArrayAsync();
-
-            if (categoryIds.Length != categories.Length)
-                return Problem();
-            if (categories.Any(c => c.UserId != user.Id))
-                return NotFound();
-            
-            var task = new Task
+            var request = new CreateTaskRequest
             {
-                UserId = user.Id,
-                Name = query.Name,
-                Categories = categories
+                Query = query,
+                UserName = User.Identity!.Name
             };
 
-            var result = await _taskRepository.CreateAsync(task);
-            if (!result.Succeeded)
-                return Problem(string.Join(" | ", result.Errors.Select(e => e.Description)));
-
-            return Ok(task.Id);
+            return await SendRequest(request);
         }
 
         [Authorize]
         [HttpDelete]
         public async Task<IActionResult> DeleteTask(DeleteTaskQuery query)
         {
-            var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
-            var task = await _taskRepository.FindByIdAsync(query.Id);
-            if (task.UserId == user.Id)
-                return NotFound();
+            var request = new DeleteTaskRequest
+            {
+                Query = query,
+                UserName = User.Identity!.Name
+            };
 
-            var result = await _taskRepository.DeleteAsync(task);
-
-            if (!result.Succeeded)
-                return Problem(string.Join(" | ", result.Errors.Select(e => e.Description)));
-
-            return Ok();
+            return await SendRequest(request);
         }
 
         [Authorize]
         [HttpGet("all")]
         public async Task<IActionResult> AllTask([FromQuery]PaginationQuery query)
         {
-            var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
-            var tasksCount = await _taskRepository.CountByUserAsync(user);
-            var tasks = _taskRepository
-                .FindByAllUserAsync(user, (query.PageNumber - 1) * query.PageSize, query.PageSize)
-                .Select(t => new Dto.Task
-                {
-                    Id = t.Id,
-                    Name = t.Name,
-                    Categories = t.Categories.Select(c => new Category
-                    {
-                        Id = c.Id,
-                        Name = c.Name
-                    }).ToArray()
-                })
-                .ToEnumerable();
+            var request = new GetAllTasksRequest
+            {
+                Query = query,
+                UserName = User.Identity!.Name
+            };
 
-            var response = PagedDataResponse<Dto.Task>.Create(tasks, query.PageNumber, query.PageSize, tasksCount);
-            return Ok(response);
+            return await SendRequest(request);
         }
     }
 }

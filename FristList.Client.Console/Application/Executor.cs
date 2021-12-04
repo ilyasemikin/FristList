@@ -2,7 +2,6 @@ using System;
 using System.Threading.Tasks;
 using FristList.Client.Console.Application.Chains;
 using FristList.Client.Console.Services;
-using FristList.Client.Console.UserCommands;
 
 namespace FristList.Client.Console.Application
 {

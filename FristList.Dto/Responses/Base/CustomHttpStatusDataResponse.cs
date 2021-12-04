@@ -1,4 +1,3 @@
-using System;
 using System.Net;
 
 namespace FristList.Dto.Responses.Base

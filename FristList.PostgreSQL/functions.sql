@@ -459,11 +459,18 @@ RETURNS TABLE (
     "MaxTime"           INTERVAL
 )
 AS $$
+DECLARE 
+    total_time  INTERVAL;
 BEGIN
-    RETURN QUERY
-          SELECT JUSTIFY_INTERVAL(SUM(a."EndTime" - a."StartTime")), JUSTIFY_INTERVAL(to_time - from_time)
-            FROM get_user_action_intervals(user_id, from_time, to_time) AS a
-        GROUP BY to_time, from_time;
+    SELECT JUSTIFY_INTERVAL(SUM(a."EndTime" - a."StartTime"))
+      FROM get_user_action_intervals(user_id, from_time, to_time) AS a
+      INTO total_time;
+    
+    IF total_time IS NULL THEN
+        total_time := INTERVAL '0';
+    END IF;
+    
+    RETURN QUERY SELECT total_time, JUSTIFY_INTERVAL(to_time - from_time);
 END
 $$ LANGUAGE plpgsql;
 
@@ -479,10 +486,12 @@ RETURNS TABLE (
 AS $$
 BEGIN
     RETURN QUERY
-          SELECT a."CategoryId", JUSTIFY_INTERVAL(SUM(a."EndTime" - a."StartTime"))
-            FROM get_user_action_intervals_by_categories(user_id, from_time, to_time) AS a
-        GROUP BY a."CategoryId"
-        ORDER BY a."CategoryId";
+          SELECT c."Id", COALESCE(JUSTIFY_INTERVAL(SUM(a."EndTime" - a."StartTime")), INTERVAL '0')
+            FROM category c LEFT JOIN get_user_action_intervals_by_categories(user_id, from_time, to_time) AS a 
+                ON c."Id" = a."CategoryId"
+           WHERE c."UserId"=user_id
+        GROUP BY c."Id"
+        ORDER BY c."Id";
 END
 $$ LANGUAGE plpgsql;
 

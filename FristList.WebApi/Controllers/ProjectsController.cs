@@ -1,31 +1,26 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using FristList.Dto.Queries;
 using FristList.Dto.Queries.Projects;
-using FristList.Dto.Responses;
-using FristList.Dto.Responses.Base;
 using FristList.Models;
 using FristList.Services;
+using FristList.WebApi.Controllers.Base;
+using FristList.WebApi.Requests.Projects;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Category = FristList.Dto.Category;
-using Project = FristList.Dto.Project;
-using Task = FristList.Dto.Task;
 
 namespace FristList.WebApi.Controllers
 {
     [ApiController]
     [Route("api/projects")]
-    public class ProjectsController : ControllerBase
+    public class ProjectsController : FristListApiController
     {
         private readonly IUserStore<AppUser> _userStore;
         private readonly IProjectRepository _projectRepository;
 
-        public ProjectsController(IUserStore<AppUser> userStore, IProjectRepository projectRepository)
+        public ProjectsController(IUserStore<AppUser> userStore, IProjectRepository projectRepository, IMediator mediator)
+            : base(mediator)
         {
             _userStore = userStore;
             _projectRepository = projectRepository;
@@ -35,91 +30,53 @@ namespace FristList.WebApi.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateProject(CreateProjectQuery query)
         {
-            var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
-
-            var project = new Models.Project
+            var request = new CreateProjectRequest
             {
-                UserId = user.Id,
-                Name = query.Name,
-                Description = query.Description
+                Query = query,
+                UserName = User.Identity!.Name
             };
-            var result = await _projectRepository.CreateAsync(project);
 
-            if (!result.Succeeded)
-                return Problem();
-
-            var response = new DataResponse<Project>(new Project
-            {
-                Id = project.Id,
-                Name = project.Name,
-                Description = project.Description
-            });
-            return Ok(response);
+            return await SendRequest(request);
         }
 
         [Authorize]
         [HttpDelete]
         public async Task<IActionResult> DeleteProject(DeleteProjectQuery query)
         {
-            var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
-            var project = await _projectRepository.FindByIdAsync(query.Id);
+            var request = new DeleteProjectRequest
+            {
+                Query = query,
+                UserName = User.Identity!.Name
+            };
 
-            if (project is null || project.UserId == user.Id)
-                return NotFound();
-
-            var result = await _projectRepository.DeleteAsync(project);
-
-            if (!result.Succeeded)
-                return Problem();
-            
-            return Ok();
+            return await SendRequest(request);
         }
 
         [Authorize]
         [HttpGet("all")]
         public async Task<IActionResult> AllProjects([FromQuery]PaginationQuery query)
         {
-            var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
-            var projectsCount = await _projectRepository.CountByUserAsync(user);
-            var projects = _projectRepository
-                .FindByUserAsync(user, (query.PageNumber - 1) * query.PageSize, query.PageSize)
-                .Select(p => new Project
-                {
-                    Id = p.Id,
-                    Name = p.Name,
-                    Description = p.Description
-                })
-                .ToEnumerable();
+            var request = new GetAllProjectsRequest
+            {
+                Query = query,
+                UserName = User.Identity!.Name
+            };
 
-            var response = PagedDataResponse<Project>.Create(projects, query.PageNumber, query.PageSize, projectsCount);
-            return Ok(response);
+            return await SendRequest(request);
         }
 
         [Authorize]
         [HttpGet("{projectId:int}/tasks/all")]
         public async Task<IActionResult> ProjectTasksAll(int projectId, [FromQuery]PaginationQuery query)
         {
-            var user = await _userStore.FindByNameAsync(User.Identity!.Name, new CancellationToken());
-            var project = await _projectRepository.FindByIdAsync(projectId);
-            if (project is null || project.UserId != user.Id)
-                return NotFound();
-
-            var tasks = _projectRepository.GetProjectTasksAsync(project)
-                .ToEnumerable();
-
-            var dtoTasks = tasks.Select(t => new Task
+            var request = new GetAllProjectTasksRequest
             {
-                Id = t.Id,
-                Name = t.Name,
-                Categories = t.Categories.Select(c => new Category
-                {
-                    Id = c.Id,
-                    Name = c.Name
-                }).ToArray()
-            });
+                Query = query,
+                ProjectId = projectId,
+                UserName = User.Identity!.Name
+            };
 
-            var response = new DataResponse<IEnumerable<Task>>(dtoTasks);
-            return Ok(response);
+            return await SendRequest(request);
         }
     }
 }

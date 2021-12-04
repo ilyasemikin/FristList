@@ -1,6 +1,5 @@
 using System.Threading.Tasks;
 using FristList.Client.Console.Message.Console;
-using FristList.Client.Console.Message.Json;
 using FristList.Client.Console.Services;
 
 namespace FristList.Client.Console.UserCommands.Authorize

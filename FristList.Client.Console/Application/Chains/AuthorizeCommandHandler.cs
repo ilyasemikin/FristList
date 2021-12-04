@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -6,7 +5,6 @@ using FristList.Client.Console.Services;
 using FristList.Client.Console.UserCommands;
 using FristList.Client.Console.UserCommands.Authorize;
 using FristList.Client.Console.UserCommands.Base;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace FristList.Client.Console.Application.Chains
 {

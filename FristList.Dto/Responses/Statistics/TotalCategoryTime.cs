@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
-using FristList.Dto.Responses.Base;
 
 namespace FristList.Dto.Responses.Statistics
 {

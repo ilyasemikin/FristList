@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace FristList.Models
+﻿namespace FristList.Models
 {
     public class Category
     {

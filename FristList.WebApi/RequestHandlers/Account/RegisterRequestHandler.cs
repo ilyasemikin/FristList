@@ -6,7 +6,6 @@ using FristList.Dto.Responses.Base;
 using FristList.Models;
 using FristList.WebApi.Requests.Account;
 using MediatR;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 
 namespace FristList.WebApi.RequestHandlers.Account

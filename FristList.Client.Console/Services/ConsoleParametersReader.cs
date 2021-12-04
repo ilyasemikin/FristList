@@ -4,7 +4,6 @@ using System.Linq;
 using FristList.Client.Console.Application;
 using FristList.Client.Console.Application.Chains;
 using FristList.Client.Console.Input;
-using FristList.Client.Console.UserCommands;
 
 namespace FristList.Client.Console.Services
 {

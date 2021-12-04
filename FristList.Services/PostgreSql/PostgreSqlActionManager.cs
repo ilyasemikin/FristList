@@ -1,14 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Security.Permissions;
 using System.Threading.Tasks;
 using Dapper;
 using FristList.Models;
 using Microsoft.Extensions.Configuration;
 using Npgsql;
-using Task = FristList.Models.Task;
 
 namespace FristList.Services.PostgreSql
 {

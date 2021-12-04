@@ -1,7 +1,6 @@
 using FristList.Client.Console.Services;
 using FristList.Client.Console.UserCommands;
 using FristList.Client.Console.UserCommands.Base;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace FristList.Client.Console.Application.Chains
 {

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using FristList.Client.Console.Input;
 
 namespace FristList.Client.Console.Application
 {

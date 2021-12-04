@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using FristList.Dto.Responses.Base;
 
 namespace FristList.Dto.Responses
 {
