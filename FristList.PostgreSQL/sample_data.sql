@@ -89,17 +89,6 @@ VALUES (1, 1),
        (11, 5),
        (11, 6);
 
-INSERT INTO project_tasks ("TaskId", "ProjectId", "IndexInProject")
-VALUES (1,  1, 0),
-       (2,  1, 1),
-       (3,  1, 2),
-       (4,  1, 3),
-       (15, 4, 0),
-       (17, 4, 1),
-       (24, 6, 0),
-       (28, 6, 1),
-       (30, 6, 2);
-
 ALTER SEQUENCE "app_user_Id_seq" RESTART WITH 4;
 ALTER SEQUENCE "category_Id_seq" RESTART WITH 18;
 ALTER SEQUENCE "project_Id_seq" RESTART WITH 8;

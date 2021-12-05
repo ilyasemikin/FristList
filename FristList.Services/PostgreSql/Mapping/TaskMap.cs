@@ -11,6 +11,7 @@ namespace FristList.Services.PostgreSql.Mapping
             Map(t => t.Name).ToColumn("TaskName");
             Map(t => t.UserId).ToColumn("TaskUserId");
             Map(t => t.ProjectId).ToColumn("TaskProjectId");
+            Map(t => t.IndexInProject).ToColumn("TaskProjectIndex");
         }
     }
 }

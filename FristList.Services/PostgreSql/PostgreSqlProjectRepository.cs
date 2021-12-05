@@ -6,7 +6,7 @@ using Dapper;
 using FristList.Models;
 using Microsoft.Extensions.Configuration;
 using Npgsql;
-using Task = FristList.Models.Task;
+using Models = FristList.Models;
 
 namespace FristList.Services.PostgreSql
 {
@@ -92,18 +92,19 @@ namespace FristList.Services.PostgreSql
                 yield return parser(reader);
         }
 
-        public async IAsyncEnumerable<Task> GetProjectTasksAsync(Project project, int skip, int count)
+        public async IAsyncEnumerable<Models.Task> GetProjectTasksAsync(Project project, int skip, int count)
         {
             await using var connection = new NpgsqlConnection(_connectionString);
 
-            var uniqueTasks = new Dictionary<int, Task>();
-            var tasks = await connection.QueryAsync<Task, Category, Task>(
-                "SELECT * FROM get_project_tasks(@ProjectId, @Skip, @Count)",
+            var uniqueTasks = new Dictionary<int, Models.Task>();
+            await connection.QueryAsync<Models.Task, Models.Category, Models.Task>(
+                "SELECT * FROM get_project_tasks_indexes(@ProjectId, @Skip, @Count)",
                 (task, category) =>
                 {
                     if (!uniqueTasks.TryGetValue(task.Id, out var entity))
                     {
                         entity = task;
+                        
                         uniqueTasks.Add(entity.Id, entity);
                     }
 
@@ -112,8 +113,33 @@ namespace FristList.Services.PostgreSql
                     return entity;
                 }, new { ProjectId = project.Id, Skip = skip, Count = count }, splitOn: "CategoryId");
 
-            foreach (var task in tasks.Distinct())
+            var tasks = uniqueTasks.Values
+                .OrderBy(t => t.IndexInProject ?? -1);
+
+            foreach (var task in tasks)
                 yield return task;
+        }
+
+        public async Task<RepositoryResult> AddTaskAsync(Project project, Models.Task task)
+        {
+            await using var connection = new NpgsqlConnection(_connectionString);
+            var success = (bool)await connection.ExecuteScalarAsync(
+                "SELECT * FROM add_task_to_project(@ProjectId, @TaskId)",
+                new { ProjectId = project.Id, TaskId = task.Id });
+            
+            if (!success)
+                return RepositoryResult.Failed();
+            return RepositoryResult.Success;
+        }
+
+        public async Task<RepositoryResult> DeleteTaskAsync(Project project, Models.Task task)
+        {
+            await using var connection = new NpgsqlConnection(_connectionString);
+            await connection.ExecuteAsync(
+                "DELETE FROM project_tasks WHERE \"TaskId\"=@TaskId",
+                new { TaskId = task.Id });
+            
+            return RepositoryResult.Success;
         }
     }
 }

@@ -26,12 +26,22 @@ CREATE TABLE user_refresh_token (
 
 CREATE INDEX ON user_refresh_token("Token");
 
+CREATE TABLE task (
+    "Id"        SERIAL PRIMARY KEY,
+    "Name"      TEXT,
+    "UserId"    INTEGER NOT NULL,
+
+    FOREIGN KEY ("UserId") REFERENCES app_user("Id")
+);
+
 CREATE TABLE running_action (
     "UserId"    INTEGER NOT NULL,
     "StartTime" TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    "TaskId"    INTEGER,
     
     PRIMARY KEY ("UserId"),
-    FOREIGN KEY ("UserId") REFERENCES app_user("Id")
+    FOREIGN KEY ("UserId") REFERENCES app_user("Id"),
+    FOREIGN KEY ("TaskId") REFERENCES task("Id")
 );
 
 CREATE TABLE category (
@@ -72,19 +82,10 @@ CREATE TABLE action_categories (
     FOREIGN KEY ("CategoryId") REFERENCES category("Id") ON DELETE CASCADE
 );
 
-CREATE TABLE task (
-    "Id"        SERIAL PRIMARY KEY,
-    "Name"      TEXT,
-    "UserId"    INTEGER NOT NULL,
-    
-    FOREIGN KEY ("UserId") REFERENCES app_user("Id")
-);
-
 CREATE TABLE task_actions (
     "Id"            SERIAL PRIMARY KEY,
     "TaskId"        INTEGER NOT NULL,
     "ActionId"      INTEGER NOT NULL,
-    "Description"   TEXT,
     
     FOREIGN KEY ("TaskId") REFERENCES task("Id"),
     FOREIGN KEY ("ActionId") REFERENCES action("Id")
@@ -111,7 +112,7 @@ CREATE TABLE project (
 CREATE TABLE project_tasks (
     "TaskId"            INTEGER NOT NULL,
     "ProjectId"         INTEGER NOT NULL,
-    "IndexInProject"    INTEGER DEFAULT 0 NOT NULL,
+    "NextTaskId"          INTEGER,
     
     PRIMARY KEY ("TaskId"),
     FOREIGN KEY ("TaskId") REFERENCES task("Id"),
@@ -121,11 +122,17 @@ CREATE TABLE project_tasks (
 CREATE OR REPLACE FUNCTION save_running_action(user_id INTEGER) RETURNS VOID
 AS $$
 DECLARE
-    action_id INTEGER;
+    action_id   INTEGER;
+    start_time  TIMESTAMP WITHOUT TIME ZONE;
+    task_id     INTEGER;
 BEGIN
     IF NOT EXISTS(SELECT "UserId" FROM "running_action" WHERE "UserId" = user_id) THEN
         RETURN;
     END IF;
+
+    SELECT "StartTime", "TaskId" 
+      FROM running_action 
+      INTO start_time, task_id;
 
     INSERT INTO action ("During", "UserId")
         (SELECT TSRANGE("StartTime", NOW() AT TIME ZONE 'UTC', '()'),
@@ -137,6 +144,11 @@ BEGIN
     INSERT INTO action_categories ("ActionId", "CategoryId")
          SELECT action_id, "CategoryId" FROM running_action_categories WHERE "UserId" = user_id;
 
+    IF task_id IS NOT NULL THEN
+        INSERT INTO task_actions ("TaskId", "ActionId") 
+             VALUES (task_id, action_id);
+    END IF;
+    
     DELETE FROM running_action_categories WHERE "UserId" = user_id;
     DELETE FROM running_action WHERE "UserId" = user_id;
 END

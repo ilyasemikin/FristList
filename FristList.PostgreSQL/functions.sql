@@ -300,6 +300,21 @@ $$ LANGUAGE plpgsql;
 
 -- Project functions
 
+CREATE OR REPLACE FUNCTION get_project_task_parents(project_id INTEGER)
+RETURNS TABLE (
+    "TaskId"        INTEGER,
+    "ParentTaskId"  INTEGER
+)
+AS $$
+BEGIN
+    RETURN QUERY
+        SELECT p1."TaskId", p2."TaskId"
+          FROM project_tasks p1 
+              LEFT JOIN project_tasks p2 ON p1."TaskId"=p2."NextTaskId" 
+         WHERE p1."ProjectId"=project_id ORDER BY p1."TaskId";
+END
+$$ LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION get_project(project_id INTEGER)
 RETURNS TABLE (
     "ProjectId"             INTEGER,
@@ -340,6 +355,8 @@ RETURNS TABLE (
     "TaskName"          TEXT,
     "TaskUserId"        INTEGER,
     "TaskProjectId"     INTEGER,
+    "NextTaskId"        INTEGER,
+    "IsHead"            BOOLEAN,
     "CategoryId"        INTEGER,
     "CategoryName"      TEXT,
     "CategoryUserId"    INTEGER
@@ -351,13 +368,86 @@ BEGIN
                t."Name"::TEXT,
                t."UserId",
                pt."ProjectId",
+               pt."NextTaskId",
+               prt."ParentTaskId" IS NULL,
                c."Id",
                c."Name"::TEXT,
                c."UserId"
           FROM (SELECT * FROM project_tasks pt WHERE pt."ProjectId"=project_id ORDER BY pt."TaskId" OFFSET skip LIMIT count) pt 
               LEFT JOIN task t ON pt."TaskId"=t."Id" 
               LEFT JOIN task_categories tc ON t."Id" = tc."TaskId" 
-              LEFT JOIN category c ON tc."CategoryId" = c."Id";
+              LEFT JOIN category c ON tc."CategoryId" = c."Id"
+              LEFT JOIN get_project_task_parents(project_id) prt ON prt."TaskId"=t."Id";
+END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_project_tasks_indexes(project_id INTEGER, skip INTEGER, count INTEGER)
+RETURNS TABLE (
+    "TaskId"            INTEGER,
+    "TaskName"          TEXT,
+    "TaskUserId"        INTEGER,
+    "TaskProjectId"     INTEGER,
+    "TaskProjectIndex"  INTEGER,
+    "CategoryId"        INTEGER,
+    "CategoryName"      TEXT,
+    "CategoryUserId"    INTEGER 
+)
+AS $$
+BEGIN
+    RETURN QUERY
+        WITH RECURSIVE project_tasks_ordered AS (
+            SELECT p."TaskId", "NextTaskId"
+              FROM get_project_task_parents(project_id) p
+                     LEFT JOIN project_tasks pt ON p."TaskId" = pt."TaskId"
+             WHERE "ParentTaskId" IS NULL
+
+            UNION
+
+            SELECT pt."TaskId", pt."NextTaskId"
+              FROM project_tasks_ordered pto
+                     JOIN project_tasks pt ON pto."NextTaskId" = pt."TaskId"
+             WHERE pto."NextTaskId" IS NOT NULL
+        ), project_task_indexes AS (
+            SELECT pto."TaskId", ROW_NUMBER() OVER () - 1 AS "Index"
+              FROM project_tasks_ordered pto
+            OFFSET skip LIMIT count
+        )
+        SELECT pti."TaskId", 
+               t."Name"::TEXT, 
+               t."UserId", 
+               project_id, 
+               pti."Index"::INTEGER, 
+               c."Id", 
+               c."Name"::TEXT, 
+               c."UserId"
+          FROM project_task_indexes pti 
+              LEFT JOIN task t ON pti."TaskId"=t."Id"
+              LEFT JOIN task_categories tc ON pti."TaskId"=tc."TaskId" 
+              LEFT JOIN category c ON tc."CategoryId"=c."Id";
+END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION add_task_to_project(project_id INTEGER, task_id INTEGER, after_task_id INTEGER DEFAULT NULL)
+RETURNS BOOLEAN
+AS $$
+DECLARE
+    next_task_id    INTEGER DEFAULT NULL;
+BEGIN
+    IF after_task_id IS NULL THEN
+        SELECT "TaskId"
+          FROM project_tasks
+         WHERE "ProjectId"=project_id AND "NextTaskId" IS NULL
+          INTO after_task_id;
+    END IF;
+
+    INSERT INTO project_tasks ("TaskId", "ProjectId", "NextTaskId")
+         VALUES (task_id, project_id, next_task_id);
+
+    UPDATE project_tasks
+       SET "NextTaskId"=task_id
+     WHERE "TaskId"=after_task_id;
+    
+    RETURN TRUE;
 END
 $$ LANGUAGE plpgsql;
 

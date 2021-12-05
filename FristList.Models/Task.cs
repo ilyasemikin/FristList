@@ -8,6 +8,7 @@ namespace FristList.Models
         public string Name { get; set; }
         public int UserId { get; set; }
         public int? ProjectId { get; set; }
+        public int? IndexInProject { get; set; }
         
         public IList<Category> Categories { get; set; }
 
