@@ -1,0 +1,39 @@
+version: '3.8'
+
+networks:
+  fristlistapi-dev:
+    driver: bridge
+
+services:
+  fristlistapi:
+    image: fristlistapi:latest
+    depends_on:
+      - "postgres_image"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./appsettings.Development.json:/app/appsettings.Development.json
+      - ./appsettings.json:/app/appsettings.json
+    ports: 
+      - "5001:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    networks:
+      - fristlistapi-dev
+
+  postgres_image:
+    image: postgres:latest
+    ports:
+      - "6543:5432"
+    restart: always
+    volumes:
+      - ./../FristList.PostgreSQL/schema.sql:/docker-entrypoint-initdb.d/1-schema.sql
+      - ./../FristList.PostgreSQL/functions.sql:/docker-entrypoint-initdb.d/2-functions.sql
+      - ./../FristList.PostgreSQL/sample_data.sql:/docker-entrypoint-initdb.d/3-sample_data.sql
+    environment:
+      POSTGRES_USER: "app"
+      POSTGRES_PASSWORD: "pass"
+      POSTGRES_DB: "frist_list"
+    networks:
+      - fristlistapi-dev
