@@ -10,8 +10,8 @@ services:
     depends_on:
       - "postgres_image"
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../
+      dockerfile: FristList.WebApi/Dockerfile
     volumes:
       - ./appsettings.Development.json:/app/appsettings.Development.json
       - ./appsettings.json:/app/appsettings.json
