@@ -431,23 +431,80 @@ CREATE OR REPLACE FUNCTION add_task_to_project(project_id INTEGER, task_id INTEG
 RETURNS BOOLEAN
 AS $$
 DECLARE
-    next_task_id    INTEGER DEFAULT NULL;
+    next_task_id        INTEGER DEFAULT NULL;
 BEGIN
     IF after_task_id IS NULL THEN
         SELECT "TaskId"
           FROM project_tasks
          WHERE "ProjectId"=project_id AND "NextTaskId" IS NULL
           INTO after_task_id;
+    ELSE
+        SELECT "NextTaskId"
+          FROM project_tasks
+         WHERE "ProjectId"=project_id AND "TaskId"=after_task_id
+          INTO next_task_id;
     END IF;
-
+    
     INSERT INTO project_tasks ("TaskId", "ProjectId", "NextTaskId")
          VALUES (task_id, project_id, next_task_id);
 
+    RAISE NOTICE '%', after_task_id;
+    
     UPDATE project_tasks
        SET "NextTaskId"=task_id
      WHERE "TaskId"=after_task_id;
     
     RETURN TRUE;
+END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION update_project_task_position(task_id INTEGER, new_parent_task_id INTEGER)
+RETURNS BOOLEAN
+AS $$
+DECLARE
+    project_id              INTEGER DEFAULT NULL;
+    parent_task_id          INTEGER DEFAULT NULL;
+    next_task_id            INTEGER DEFAULT NULL;
+BEGIN
+    SELECT "ProjectId", "NextTaskId" FROM project_tasks WHERE "TaskId"=task_id INTO project_id, next_task_id;
+    
+    IF project_id IS NULL OR new_parent_task_id IS NOT NULL AND EXISTS(SELECT "TaskId" FROM project_tasks WHERE "ProjectId"=project_id AND "TaskId"=new_parent_task_id) THEN
+        RETURN FALSE;
+    END IF;
+    
+    SELECT "ParentTaskId" FROM get_project_task_parents(project_id) WHERE "TaskId"=task_id INTO parent_task_id;
+    UPDATE project_tasks SET "NextTaskId"=next_task_id WHERE "TaskId"=parent_task_id;
+    
+    IF new_parent_task_id IS NULL THEN
+        SELECT "TaskId" FROM get_project_task_parents(project_id) WHERE "ParentTaskId" IS NULL INTO next_task_id;
+    ELSE
+        SELECT "NextTaskId" FROM project_tasks WHERE "TaskId"=new_parent_task_id INTO next_task_id;
+        UPDATE project_tasks SET "NextTaskId"=task_id WHERE "TaskId"=new_parent_task_id;
+    END IF;
+    
+    UPDATE project_tasks SET "NextTaskId"=next_task_id WHERE "TaskId"=task_id;
+    
+    RETURN TRUE;
+END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_non_project_tasks(user_id INTEGER)
+RETURNS TABLE (
+    "TaskId"            INTEGER,
+    "TaskName"          TEXT,
+    "TaskUserId"        INTEGER,
+    "CategoryId"        INTEGER,
+    "CategoryName"      TEXT,
+    "CategoryUserId"    INTEGER
+)
+AS $$
+BEGIN
+    RETURN QUERY
+        SELECT t."Id", t."Name", t."UserId"
+          FROM task t 
+              LEFT JOIN project_tasks pt ON t."Id"=pt."TaskId"
+              LEFT JOIN task_categories tc on t."Id" = tc."TaskId"
+         WHERE "UserId"=user_id AND pt."ProjectId" IS NULL;
 END
 $$ LANGUAGE plpgsql;
 

@@ -89,7 +89,47 @@ VALUES (1, 1),
        (11, 5),
        (11, 6);
 
-ALTER SEQUENCE "app_user_Id_seq" RESTART WITH 4;
-ALTER SEQUENCE "category_Id_seq" RESTART WITH 18;
-ALTER SEQUENCE "project_Id_seq" RESTART WITH 8;
-ALTER SEQUENCE "task_Id_seq" RESTART WITH 31;
+INSERT INTO project_tasks ("TaskId", "ProjectId", "NextTaskId") 
+VALUES (1, 1, 2),
+       (2, 1, 3),
+       (3, 1, 4),
+       (4, 1, 6),
+       (6, 1, NULL),
+       (7, 2, 9),
+       (8, 2, NULL),
+       (12, 4, 13),
+       (13, 4, NULL);
+
+INSERT INTO action ("Id", "During", "Description", "UserId")
+VALUES (1, TSRANGE(TIMESTAMP '2021-12-01 08:00:00', TIMESTAMP '2021-12-01 09:00:00'), DEFAULT, 1),
+       (2, TSRANGE(TIMESTAMP '2021-12-01 09:05:00', TIMESTAMP '2021-12-01 09:40:00'), DEFAULT, 1),
+       (3, TSRANGE(TIMESTAMP '2021-12-01 09:10:00', TIMESTAMP '2021-12-01 09:30:00'), DEFAULT, 1),
+       (4, TSRANGE(TIMESTAMP '2021-12-01 09:50:00', TIMESTAMP '2021-12-01 10:30:00'), DEFAULT, 1),
+       (5, TSRANGE(TIMESTAMP '2021-12-01 10:40:00', TIMESTAMP '2021-12-01 11:10:00'), DEFAULT, 1);
+
+INSERT INTO action_categories ("ActionId", "CategoryId") 
+VALUES (1, 1),
+       (1, 2),
+       (2, 3),
+       (3, 3),
+       (4, 3),
+       (5, 2),
+       (5, 3);
+
+CREATE OR REPLACE FUNCTION pg_temp.update_serial(table_name TEXT, column_name TEXT)
+    RETURNS VOID
+AS $$
+DECLARE
+    last_id  INTEGER;
+BEGIN
+    EXECUTE format('SELECT MAX(%I) FROM %I', column_name, table_name)
+        INTO last_id;
+    PERFORM setval(pg_get_serial_sequence(table_name, column_name), last_id, TRUE);
+END;
+$$ LANGUAGE plpgsql;
+
+SELECT pg_temp.update_serial('app_user', 'Id');
+SELECT pg_temp.update_serial('category', 'Id');
+SELECT pg_temp.update_serial('project', 'Id');
+SELECT pg_temp.update_serial('task', 'Id');
+SELECT pg_temp.update_serial('action', 'Id');
