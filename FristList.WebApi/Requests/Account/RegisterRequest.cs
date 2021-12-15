@@ -1,11 +1,10 @@
-using FristList.Dto.Queries.Account;
-using FristList.Dto.Responses.Base;
+using FristList.Data.Queries.Account;
+using FristList.Data.Responses;
 using MediatR;
 
-namespace FristList.WebApi.Requests.Account
+namespace FristList.WebApi.Requests.Account;
+
+public class RegisterRequest : IRequest<IResponse>
 {
-    public class RegisterRequest : IRequest<IResponse>
-    {
-        public RegisterAccountQuery Query { get; init; }
-    }
+    public RegisterQuery Query { get; set; }
 }

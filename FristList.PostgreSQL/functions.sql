@@ -72,6 +72,21 @@ BEGIN
 END
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION get_category(category_name TEXT, user_id INTEGER)
+    RETURNS TABLE (
+        "CategoryId"        INTEGER,
+        "CategoryName"      TEXT,
+        "CategoryUserId"    INTEGER
+    )
+AS $$
+BEGIN
+    RETURN QUERY
+        SELECT "Id", "Name"::TEXT, "UserId"
+        FROM category
+        WHERE "Name"=category_name AND "UserId"=user_id;
+END
+$$ LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION get_user_categories(user_id INTEGER, skip INTEGER, count INTEGER)
     RETURNS TABLE (
         "CategoryId"        INTEGER,

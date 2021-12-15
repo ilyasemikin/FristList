@@ -1,4 +1,4 @@
-using FristList.Models;
+using FristList.Data.Models;
 
 namespace FristList.WebApi.Services
 {

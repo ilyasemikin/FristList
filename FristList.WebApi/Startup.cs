@@ -1,7 +1,7 @@
 using System.Text;
-using FristList.Models;
+using FristList.Data.Models;
 using FristList.Services;
-using FristList.Services.AbstractFactories;
+using FristList.Services.Abstractions;
 using FristList.Services.PostgreSql;
 using FristList.WebApi.Services;
 using MediatR;
@@ -18,11 +18,9 @@ namespace FristList.WebApi
 {
     public class Startup
     {
-        private readonly IConfiguration _configuration;
-
-        public Startup(IConfiguration configuration)
+        public Startup()
         {
-            _configuration = configuration;
+            
         }
 
         // This method gets called by the runtime. Use this method to add services to the container.
@@ -30,22 +28,6 @@ namespace FristList.WebApi
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton<IRepositoryAbstractFactory, PostgreSqlRepositoryAbstractFactory>();
-
-            services.AddTransient(provider =>
-                provider.GetRequiredService<IRepositoryAbstractFactory>().CreateStorageInitializer());
-            services.AddTransient(provider =>
-                provider.GetRequiredService<IRepositoryAbstractFactory>().CreateUserRepository());
-            services.AddTransient(provider =>
-                provider.GetRequiredService<IRepositoryAbstractFactory>().CreateActionRepository());
-            services.AddTransient(provider =>
-                provider.GetRequiredService<IRepositoryAbstractFactory>().CreateCategoryRepository());
-            services.AddTransient(provider =>
-                provider.GetRequiredService<IRepositoryAbstractFactory>().CreateTaskRepository());
-            services.AddTransient(provider =>
-                provider.GetRequiredService<IRepositoryAbstractFactory>().CreateProjectRepository());
-
-            services.AddTransient<IActionManager, PostgreSqlActionManager>();
-            services.AddTransient<IStatisticsProvider, PostgreSqlStatisticsProvider>();
             
             services.AddIdentityCore<AppUser>()
                 .AddDefaultTokenProviders();
@@ -73,9 +55,21 @@ namespace FristList.WebApi
                     };
                 });
 
+            services.AddTransient(provider =>
+                provider.GetRequiredService<IRepositoryAbstractFactory>().CreateAppUserRepository());
+            services.AddTransient<IUserStore<AppUser>>(provider =>
+                provider.GetRequiredService<IRepositoryAbstractFactory>().CreateAppUserRepository());
+            services.AddTransient(provider =>
+                provider.GetRequiredService<IRepositoryAbstractFactory>().CreateActionRepository());
+            services.AddTransient(provider =>
+                provider.GetRequiredService<IRepositoryAbstractFactory>().CreateCategoryRepository());
+            services.AddTransient(provider =>
+                provider.GetRequiredService<IRepositoryAbstractFactory>().CreateRepositoryInitializer());
+            
             services.AddTransient<IJwtTokenProvider>(_ => new JwtTokenDefaultProvider(new SymmetricSecurityKey(secret)));
             services.AddTransient<ITokenGenerator>(_ => new RandomBytesCryptoTokenGenerator(64));
             services.AddTransient<IRefreshTokenProvider, PostgreSqlRefreshTokenProvider>();
+            services.AddTransient<IDatabaseConfiguration, DatabaseConfiguration>();
 
             services.AddMediatR(typeof(Startup));
 
@@ -90,7 +84,7 @@ namespace FristList.WebApi
                 app.UseDeveloperExceptionPage();
             }
 
-            var storageInitializer = app.ApplicationServices.GetRequiredService<IStorageInitializer>();
+            var storageInitializer = app.ApplicationServices.GetRequiredService<IRepositoryInitializer>();
             storageInitializer.InitializeAsync()
                 .Wait();
             

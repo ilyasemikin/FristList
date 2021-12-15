@@ -1,39 +1,40 @@
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using FristList.Dto.Responses;
-using FristList.Dto.Responses.Base;
-using FristList.Models;
+using FristList.Data.Dto;
+using FristList.Data.Responses;
+using FristList.Services.Abstractions;
 using FristList.WebApi.Requests.Account;
+using FristList.WebApi.Services;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
+using AppUser = FristList.Data.Models.AppUser;
 
-namespace FristList.WebApi.RequestHandlers.Account
+namespace FristList.WebApi.RequestHandlers.Account;
+
+public class RegisterRequestHandler : IRequestHandler<RegisterRequest, IResponse>
 {
-    public class RegisterRequestHandler : IRequestHandler<RegisterRequest, IResponse>
+    private readonly UserManager<AppUser> _userManager;
+
+    public RegisterRequestHandler(UserManager<AppUser> userManager)
     {
-        private readonly UserManager<AppUser> _userManager;
+        _userManager = userManager;
+    }
 
-        public RegisterRequestHandler(UserManager<AppUser> userManager)
+    public async Task<IResponse> Handle(RegisterRequest request, CancellationToken cancellationToken)
+    {
+        var user = new AppUser
         {
-            _userManager = userManager;
-        }
+            UserName = request.Query.UserName,
+            Email = request.Query.Email
+        };
 
-        public async Task<IResponse> Handle(RegisterRequest request, CancellationToken cancellationToken)
-        {
-            var user = new AppUser
-            {
-                UserName = request.Query.UserName,
-                Email = request.Query.Email
-            };
-
-            var registered = await _userManager.CreateAsync(user, request.Query.Password);
-            if (!registered.Succeeded)
-                return new CustomHttpStatusDataResponse<Empty>(new Empty(), HttpStatusCode.InternalServerError);
+        var registered = await _userManager.CreateAsync(user, request.Query.Password);
+        if (!registered.Succeeded)
+            return new CustomHttpCodeResponse(HttpStatusCode.InternalServerError);
             
-            await _userManager.SetEmailAsync(user, request.Query.Email);
+        await _userManager.SetEmailAsync(user, request.Query.Email);
 
-            return new DataResponse<Empty>(new Empty());
-        }
+        return new DataResponse<object>(new {});
     }
 }

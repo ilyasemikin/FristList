@@ -273,3 +273,13 @@ CREATE VIEW project_task_count AS
       FROM project p 
           LEFT JOIN project_tasks pt ON p."Id"=pt."ProjectId"
   GROUP BY p."Id";
+
+CREATE VIEW user_category_count AS
+    SELECT c."UserId" AS "UserId", COUNT(c."Id") AS "Count"
+      FROM category c
+  GROUP BY c."UserId";
+
+CREATE VIEW user_action_count AS
+     SELECT a."UserId" AS "UserId", COUNT(a."Id") AS "Count"
+       FROM action a
+   GROUP BY a."UserId";
