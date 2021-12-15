@@ -15,6 +15,13 @@ CREATE TABLE app_user (
     "TwoFactorEnable"       BOOLEAN DEFAULT false NOT NULL
 );
 
+CREATE TABLE app_user_settings (
+    "UserId"                INTEGER NOT NULL,
+    
+    PRIMARY KEY ("UserId"),
+    FOREIGN KEY ("UserId") REFERENCES app_user("Id")
+);
+
 CREATE TABLE user_refresh_token (
     "Id"                    SERIAL PRIMARY KEY,
     "Token"                 VARCHAR(1024) NOT NULL,
@@ -26,24 +33,6 @@ CREATE TABLE user_refresh_token (
 
 CREATE INDEX ON user_refresh_token("Token");
 
-CREATE TABLE task (
-    "Id"        SERIAL PRIMARY KEY,
-    "Name"      TEXT,
-    "UserId"    INTEGER NOT NULL,
-
-    FOREIGN KEY ("UserId") REFERENCES app_user("Id")
-);
-
-CREATE TABLE running_action (
-    "UserId"    INTEGER NOT NULL,
-    "StartTime" TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    "TaskId"    INTEGER,
-    
-    PRIMARY KEY ("UserId"),
-    FOREIGN KEY ("UserId") REFERENCES app_user("Id"),
-    FOREIGN KEY ("TaskId") REFERENCES task("Id")
-);
-
 CREATE TABLE category (
     "Id"        SERIAL PRIMARY KEY,
     "Name"      VARCHAR(256),
@@ -53,12 +42,14 @@ CREATE TABLE category (
     UNIQUE ("Name", "UserId")
 );
 
-CREATE TABLE running_action_categories (
-    "UserId"        INTEGER NOT NULL,
-    "CategoryId"    INTEGER NOT NULL,
+CREATE TYPE TIME_PERIOD AS ENUM ('Day', 'Week', 'Month', 'Year');
+
+CREATE TABLE category_goal (
+    "CategoryId"        INTEGER NOT NULL,
+    "TargetInterval"    INTERVAL NOT NULL,
+    "Period"            TIME_PERIOD NOT NULL,
     
-    PRIMARY KEY ("UserId", "CategoryId"),
-    FOREIGN KEY ("UserId") REFERENCES app_user("Id"),
+    PRIMARY KEY ("CategoryId"),
     FOREIGN KEY ("CategoryId") REFERENCES category("Id")
 );
 
@@ -82,6 +73,15 @@ CREATE TABLE action_categories (
     FOREIGN KEY ("CategoryId") REFERENCES category("Id") ON DELETE CASCADE
 );
 
+CREATE TABLE task (
+    "Id"            SERIAL PRIMARY KEY,
+    "Name"          TEXT,
+    "IsCompleted"   BOOLEAN DEFAULT FALSE NOT NULL,
+    "UserId"        INTEGER NOT NULL,
+
+    FOREIGN KEY ("UserId") REFERENCES app_user("Id")
+);
+
 CREATE TABLE task_actions (
     "Id"            SERIAL PRIMARY KEY,
     "TaskId"        INTEGER NOT NULL,
@@ -100,10 +100,29 @@ CREATE TABLE task_categories (
     FOREIGN KEY ("CategoryId") REFERENCES category("Id")
 );
 
+CREATE TABLE repeated_task (
+    "Id"            SERIAL,
+    "RepeatPeriod"  TIME_PERIOD NOT NULL,
+    "UserId"        INTEGER NOT NULL,
+    
+    PRIMARY KEY ("Id"),
+    FOREIGN KEY ("UserId") REFERENCES app_user("Id")
+);
+
+CREATE TABLE repeated_task_categories (
+    "RepeatedTaskId"    INTEGER NOT NULL,
+    "CategoryId"        INTEGER NOT NULL,
+    
+    PRIMARY KEY ("RepeatedTaskId", "CategoryId"),
+    FOREIGN KEY ("RepeatedTaskId") REFERENCES repeated_task("Id"),
+    FOREIGN KEY ("CategoryId") REFERENCES category("Id")
+);
+
 CREATE TABLE project (
     "Id"            SERIAL PRIMARY KEY,
     "Name"          TEXT NOT NULL,
     "Description"   TEXT,
+    "IsCompleted"   BOOLEAN DEFAULT FALSE NOT NULL,
     "UserId"        INTEGER NOT NULL,
 
     FOREIGN KEY ("UserId") REFERENCES app_user("Id")
@@ -112,14 +131,34 @@ CREATE TABLE project (
 CREATE TABLE project_tasks (
     "TaskId"            INTEGER NOT NULL,
     "ProjectId"         INTEGER NOT NULL,
-    "NextTaskId"          INTEGER,
+    "NextTaskId"        INTEGER,
     
     PRIMARY KEY ("TaskId"),
     FOREIGN KEY ("TaskId") REFERENCES task("Id"),
     FOREIGN KEY ("ProjectId") REFERENCES project("Id")
 );
 
-CREATE OR REPLACE FUNCTION save_running_action(user_id INTEGER) RETURNS VOID
+CREATE TABLE running_action (
+    "UserId"    INTEGER NOT NULL,
+    "StartTime" TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    "TaskId"    INTEGER,
+
+    PRIMARY KEY ("UserId"),
+    FOREIGN KEY ("UserId") REFERENCES app_user("Id"),
+    FOREIGN KEY ("TaskId") REFERENCES task("Id")
+);
+
+CREATE TABLE running_action_categories (
+    "UserId"        INTEGER NOT NULL,
+    "CategoryId"    INTEGER NOT NULL,
+
+    PRIMARY KEY ("UserId", "CategoryId"),
+    FOREIGN KEY ("UserId") REFERENCES app_user("Id"),
+    FOREIGN KEY ("CategoryId") REFERENCES category("Id")
+);
+
+CREATE OR REPLACE FUNCTION save_running_action(user_id INTEGER) 
+    RETURNS VOID
 AS $$
 DECLARE
     action_id   INTEGER;
@@ -135,7 +174,7 @@ BEGIN
       INTO start_time, task_id;
 
     INSERT INTO action ("During", "UserId")
-        (SELECT TSRANGE("StartTime", NOW() AT TIME ZONE 'UTC', '()'),
+        (SELECT TSRANGE("StartTime", NOW() AT TIME ZONE 'UTC', '[)'),
                 user_id
            FROM running_action
           WHERE "UserId" = user_id)
@@ -154,7 +193,8 @@ BEGIN
 END
 $$ LANGUAGE plpgsql;
 
-CREATE FUNCTION running_action_trigger_handler() RETURNS TRIGGER
+CREATE FUNCTION running_action_trigger_handler() 
+    RETURNS TRIGGER
 AS $$
 BEGIN
     IF TG_OP = 'INSERT' THEN
@@ -183,7 +223,8 @@ BEGIN
 END
 $$ LANGUAGE plpgsql;
 
-CREATE FUNCTION check_running_action_categories() RETURNS TRIGGER
+CREATE FUNCTION check_running_action_categories() 
+    RETURNS TRIGGER
 AS $$
 BEGIN
     IF (SELECT "UserId" FROM category WHERE "Id" = NEW."CategoryId") != NEW."UserId" THEN
@@ -226,3 +267,9 @@ CREATE CONSTRAINT TRIGGER check_running_action_categories AFTER INSERT OR UPDATE
 CREATE CONSTRAINT TRIGGER check_project_task_owner AFTER INSERT OR UPDATE ON project_tasks
     FOR EACH ROW
     EXECUTE PROCEDURE check_project_task();
+
+CREATE VIEW project_task_count AS
+    SELECT p."Id" AS "ProjectId", COUNT(pt."TaskId") AS "Count" 
+      FROM project p 
+          LEFT JOIN project_tasks pt ON p."Id"=pt."ProjectId"
+  GROUP BY p."Id";
