@@ -9,16 +9,15 @@ using Microsoft.AspNetCore.Mvc;
 namespace FristList.WebApi.Controllers;
 
 [ApiController]
+[AllowAnonymous]
 [Route("api/account")]
 public class AccountController : ApiController
 {
     public AccountController(IMediator mediator)
         : base(mediator)
     {
-        
     }
     
-    [AllowAnonymous]
     [HttpGet("login")]
     public async Task<IActionResult> Login(LoginQuery query)
     {
@@ -30,7 +29,6 @@ public class AccountController : ApiController
         return await SendRequest(request);
     }
 
-    [AllowAnonymous]
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterQuery query)
     {
@@ -42,7 +40,6 @@ public class AccountController : ApiController
         return await SendRequest(request);
     }
 
-    [AllowAnonymous]
     [HttpPost("refresh-token")]
     public async Task<IActionResult> RefreshToken(RefreshTokenQuery query)
     {

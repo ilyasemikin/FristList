@@ -89,17 +89,6 @@ VALUES (1, 1),
        (11, 5),
        (11, 6);
 
-INSERT INTO project_tasks ("TaskId", "ProjectId", "NextTaskId") 
-VALUES (1, 1, 2),
-       (2, 1, 3),
-       (3, 1, 4),
-       (4, 1, 6),
-       (6, 1, NULL),
-       (7, 2, 9),
-       (8, 2, NULL),
-       (12, 4, 13),
-       (13, 4, NULL);
-
 INSERT INTO action ("Id", "During", "Description", "UserId")
 VALUES (1, TSRANGE(TIMESTAMP '2021-12-01 08:00:00', TIMESTAMP '2021-12-01 09:00:00'), DEFAULT, 1),
        (2, TSRANGE(TIMESTAMP '2021-12-01 09:05:00', TIMESTAMP '2021-12-01 09:40:00'), DEFAULT, 1),

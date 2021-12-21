@@ -12,9 +12,12 @@ public class PostgreSqlRepositoryInitializer : IRepositoryInitializer
         {
             config.AddMap(new ActionMap());
             config.AddMap(new CategoryMap());
+            config.AddMap(new ProjectMap());
             config.AddMap(new RefreshTokenMap());
+            config.AddMap(new RunningActionMap());
+            config.AddMap(new TaskMap());
         });
-        
+
         return Task.CompletedTask;
     }
 }

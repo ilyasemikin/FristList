@@ -1,6 +1,8 @@
+using FristList.Data.Models.Base;
+
 namespace FristList.Data.Models;
 
-public class AppUser
+public class AppUser : ModelObjectBase
 {
     public int Id { get; set; }
     public string UserName { get; set; }

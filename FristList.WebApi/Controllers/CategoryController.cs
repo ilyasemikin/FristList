@@ -1,7 +1,10 @@
 using System;
 using System.Threading.Tasks;
 using FristList.Data.Queries;
+using FristList.Data.Queries.Category;
+using FristList.Data.Responses;
 using FristList.WebApi.Controllers.Base;
+using FristList.WebApi.Requests.Category;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace FristList.WebApi.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/category")]
 public class CategoryController : ApiController
 {
@@ -17,31 +21,51 @@ public class CategoryController : ApiController
     {
     }
 
-    [Authorize]
     [HttpPost]
-    public Task<IActionResult> CreateCategory()
+    public async Task<IActionResult> CreateCategory([FromBody]CreateCategoryQuery query)
     {
-        throw new NotImplementedException();
+        var request = new CreateCategoryRequest
+        {
+            Query = query,
+            UserName = User.Identity!.Name
+        };
+
+        return await SendRequest(request);
     }
 
-    [Authorize]
-    [HttpDelete("{id:int}")]
-    public Task<IActionResult> DeleteCategory(int id)
+    [HttpDelete]
+    public async Task<IActionResult> DeleteCategory(DeleteCategoryQuery query)
     {
-        throw new NotImplementedException();
+        var request = new DeleteCategoryRequest
+        {
+            Query = query,
+            UserName = User.Identity!.Name
+        };
+
+        return await SendRequest(request);
     }
 
-    [Authorize]
     [HttpGet("{id:int}")]
-    public Task<IActionResult> GetCategory(int id)
+    public async Task<IActionResult> GetCategory([FromRoute]int id)
     {
-        throw new NotImplementedException();
+        var request = new GetCategoryRequest
+        {
+            CategoryId = id,
+            UserName = User.Identity!.Name
+        };
+
+        return await SendRequest(request);
     }
 
-    [Authorize]
     [HttpGet("all")]
-    public Task<IActionResult> GetAllCategories(PagedQuery query)
+    public async Task<IActionResult> GetAllCategories([FromQuery]PagedQuery query)
     {
-        throw new NotImplementedException();
+        var request = new GetAllCategoryRequest
+        {
+            Query = query,
+            UserName = User.Identity!.Name
+        };
+
+        return await SendRequest(request);
     }
 }

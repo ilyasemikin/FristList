@@ -1,6 +1,8 @@
+using FristList.Data.Models.Base;
+
 namespace FristList.Data.Models;
 
-public class RefreshToken
+public class RefreshToken : ModelObjectBase
 {
     public int Id { get; set; }
     public string Token { get; set; }

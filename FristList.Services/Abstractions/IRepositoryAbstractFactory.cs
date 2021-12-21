@@ -11,4 +11,6 @@ public interface IRepositoryAbstractFactory
     
     ICategoryRepository CreateCategoryRepository();
     IActionRepository CreateActionRepository();
+    ITaskRepository CreateTaskRepository();
+    IProjectRepository CreateProjectRepository();
 }

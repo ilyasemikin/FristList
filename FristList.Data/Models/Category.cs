@@ -1,6 +1,8 @@
+using FristList.Data.Models.Base;
+
 namespace FristList.Data.Models;
 
-public class Category
+public class Category : ModelObjectBase
 {
     public int Id { get; set; }
     

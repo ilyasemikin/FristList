@@ -1,4 +1,4 @@
-namespace FristList.Data.Dto;
+namespace FristList.Data.Dto.Base;
 
 public class DtoObjectBase
 {

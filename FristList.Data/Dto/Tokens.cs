@@ -1,3 +1,5 @@
+using FristList.Data.Dto.Base;
+
 namespace FristList.Data.Dto;
 
 public class Tokens : DtoObjectBase

@@ -55,18 +55,33 @@ public class PostgreSqlCategoryRepository : Abstractions.ICategoryRepository
             new { UserId = user.Id });
     }
 
-    public async Task<Category> FinByIdAsync(int id)
+    public async Task<Category?> FindByIdAsync(int id)
     {
         await using var connection = new NpgsqlConnection(_connectionString);
         return await connection.QuerySingleOrDefaultAsync<Category>("SELECT * FROM get_category(@Id)", new { Id = id });
     }
 
-    public async Task<Category> FindByNameAsync(AppUser user, string name)
+    public async Task<Category?> FindByNameAsync(AppUser user, string name)
     {
         await using var connection = new NpgsqlConnection(_connectionString);
         return await connection.QuerySingleOrDefaultAsync<Category>(
             "SELECT * FROM get_category(@Name, @UserId)",
             new { Name = name, UserId = user.Id });
+    }
+
+    public async IAsyncEnumerable<Category> FindByIdsAsync(IEnumerable<int> ids)
+    {
+        var idsArray = ids.ToArray();
+        if (idsArray.Length == 0)
+            yield break;
+
+        var connection = new NpgsqlConnection(_connectionString);
+        var reader = await connection.ExecuteReaderAsync(
+            "SELECT * FROM get_categories(@CategoryIds)",
+            new {CategoryIds = idsArray});
+        var parser = reader.GetRowParser<Category>();
+        while (await reader.ReadAsync())
+            yield return parser(reader);
     }
 
     public async IAsyncEnumerable<Category> FindAllByUser(AppUser user, int skip = 0, int count = int.MaxValue)

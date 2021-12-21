@@ -13,5 +13,5 @@ public interface IActionRepository
 
     Task<Action?> FindByIdAsync(int id);
 
-    IAsyncEnumerable<Action> FindAllByUser(AppUser user, int skip = 0, int count = int.MaxValue);
+    IAsyncEnumerable<Action> FindAllByUserAsync(AppUser user, int skip = 0, int count = int.MaxValue);
 }

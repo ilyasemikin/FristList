@@ -24,4 +24,10 @@ public class PostgreSqlRepositoryAbstractFactory : IRepositoryAbstractFactory
 
     public IActionRepository CreateActionRepository()
         => new PostgreSqlActionRepository(_configuration);
+
+    public ITaskRepository CreateTaskRepository()
+        => new PostgreSqlTaskRepository(_configuration);
+
+    public IProjectRepository CreateProjectRepository()
+        => new PostgreSqlProjectRepository(_configuration);
 }

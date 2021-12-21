@@ -283,3 +283,13 @@ CREATE VIEW user_action_count AS
      SELECT a."UserId" AS "UserId", COUNT(a."Id") AS "Count"
        FROM action a
    GROUP BY a."UserId";
+
+CREATE VIEW user_all_task_count AS
+    SELECT t."UserId" AS "UserId", COUNT(t."Id") AS "Count"
+      FROM task t
+  GROUP BY t."UserId";
+
+CREATE VIEW user_project_count AS
+     SELECT p."UserId" AS "UserId", COUNT(p."Id") AS "Count"
+       FROM project p
+   GROUP BY p."UserId";

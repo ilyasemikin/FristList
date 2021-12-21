@@ -11,8 +11,10 @@ public interface ICategoryRepository
 
     Task<int> CountByUserAsync(AppUser user);
     
-    Task<Category> FinByIdAsync(int id);
-    Task<Category> FindByNameAsync(AppUser user, string name);
+    Task<Category?> FindByIdAsync(int id);
+    Task<Category?> FindByNameAsync(AppUser user, string name);
+
+    IAsyncEnumerable<Category> FindByIdsAsync(IEnumerable<int> ids);
 
     IAsyncEnumerable<Category> FindAllByUser(AppUser user, int skip = 0, int count = int.MaxValue);
 }

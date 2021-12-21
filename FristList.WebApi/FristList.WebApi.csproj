@@ -16,9 +16,4 @@
     <PackageReference Include="System.Linq.Async" Version="5.1.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="RequestHandlers\Category" />
-    <Folder Include="Requests\Category" />
-  </ItemGroup>
-
 </Project>

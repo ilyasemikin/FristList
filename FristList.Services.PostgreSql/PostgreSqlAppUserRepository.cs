@@ -29,16 +29,14 @@ public class PostgreSqlAppUserRepository : IAppUserRepository
         try
         {
             user.Id = await connection.ExecuteScalarAsync<int>(
-                "INSERT INTO app_user (\"UserName\", \"NormalizedUserName\", \"Email\", \"NormalizedEmail\", \"PhoneNumber\", \"PasswordHash\", \"TwoFactorEnable\") VALEUS (@UserName, @NormalizedUserName, @Email, @NormalizedEmail, @PhoneNumber, @PasswordHash, @TwoFactorEnable) RETURNING \"Id\"",
+                "INSERT INTO app_user (\"UserName\", \"NormalizedUserName\", \"Email\", \"NormalizedEmail\", \"PasswordHash\") VALUES (@UserName, @NormalizedUserName, @Email, @NormalizedEmail, @PasswordHash) RETURNING \"Id\"",
                 new
                 {
                     UserName = user.UserName,
                     NormalizedUserName = user.NormalizedUserName,
                     Email = user.Email,
                     NormalizedEmail = user.NormalizedEmail,
-                    PhoneNumber = user.PhoneNumber,
-                    PasswordHash = user.PasswordHash,
-                    TwoFactorEnable = user.TwoFactorEnable
+                    PasswordHash = user.PasswordHash
                 });
         }
         catch (Exception e)
@@ -68,9 +66,25 @@ public class PostgreSqlAppUserRepository : IAppUserRepository
         return IdentityResult.Success;
     }
 
-    public Task<IdentityResult> UpdateAsync(AppUser user, CancellationToken cancellationToken)
+    public async Task<IdentityResult> UpdateAsync(AppUser user, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        await using var connection = new NpgsqlConnection(_connectionString);
+
+        var affected = await connection.ExecuteAsync(
+            "UPDATE app_user SET \"UserName\"=@UserName, \"NormalizedUserName\"=@NormalizedUserName, \"Email\"=@Email, \"NormalizedEmail\"=@NormalizedEmail, \"PasswordHash\"=@PasswordHash WHERE \"Id\"=@Id",
+            new
+            {
+                Id = user.Id,
+                UserName = user.UserName,
+                NormalizedUserName = user.NormalizedUserName,
+                Email = user.Email,
+                NormalizedEmail = user.NormalizedEmail,
+                PasswordHash = user.PasswordHash
+            });
+
+        if (affected == 0)
+            return IdentityResult.Failed();
+        return IdentityResult.Success;
     }
     
     public async Task<AppUser> FindByIdAsync(string userId, CancellationToken cancellationToken)

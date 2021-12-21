@@ -20,7 +20,7 @@ public abstract class ApiController : ControllerBase
         var response = await Mediator.Send(request);
 
         if (response is ICustomHttpResponse customHttpResponse)
-            return new ObjectResult(new { })
+            return new ObjectResult(customHttpResponse.Message)
             {
                 StatusCode = (int)customHttpResponse.HttpStatusCode
             };

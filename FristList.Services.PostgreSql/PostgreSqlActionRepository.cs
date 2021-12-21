@@ -21,7 +21,7 @@ public class PostgreSqlActionRepository : Abstractions.IActionRepository
         try
         {
             action.Id = await connection.ExecuteScalarAsync<int>(
-                "SELECT * FROM add_action(@StartTime, @EndTime, @Description, @Userid, @Categories)",
+                "SELECT * FROM add_action(@StartTime AT TIME ZONE 'UTC', @EndTime AT TIME ZONE 'UTC', @Description, @UserId, @Categories)",
                 new
                 {
                     StartTime = action.StartTime, 
@@ -74,22 +74,44 @@ public class PostgreSqlActionRepository : Abstractions.IActionRepository
             {
                 answer ??= action;
                 if (category is not null)
-                    action.Categories.Add(category);
+                {
+                    answer.CategoryIds.Add(category.Id);
+                    answer.Categories.Add(category);
+                }
+
                 return answer;
             }, new {Id = id}, splitOn: "CategoryId");
 
         return answer;
     }
 
-    public async IAsyncEnumerable<Action> FindAllByUser(AppUser user, int skip = 0, int count = Int32.MaxValue)
+    public async IAsyncEnumerable<Action> FindAllByUserAsync(AppUser user, int skip = 0, int count = Int32.MaxValue)
     {
         await using var connection = new NpgsqlConnection(_connectionString);
-        var reader = await connection.ExecuteReaderAsync(
-            "SELECT * FROM get_user_actions_with_categories(@UserId, @Skip, @Count)",
-            new { UserId = user.Id, Skip = skip, Count = count });
-        var parser = reader.GetRowParser<Action>();
 
-        while (await reader.ReadAsync())
-            yield return parser(reader);
+        var actions = new Dictionary<int, Action>();
+        await connection.QueryAsync<Action, Category, Action>(
+            "SELECT * FROM get_user_actions_with_categories(@UserId, @Skip, @Count)",
+            (action, category) =>
+            {
+                if (!actions.TryGetValue(action.Id, out var entity))
+                {
+                    entity = action;
+                    actions.Add(entity.Id, entity);
+                }
+
+                if (category is not null)
+                {
+                    entity.CategoryIds.Add(category.Id);
+                    entity.Categories.Add(category);
+                }
+
+                return entity;
+            },
+            new { UserId = user.Id, Skip = skip, Count = count },
+            splitOn: "CategoryId");
+
+        foreach (var action in actions.Values)
+            yield return action;
     }
 }
