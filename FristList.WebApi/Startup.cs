@@ -3,7 +3,7 @@ using FristList.Data;
 using FristList.Data.Models;
 using FristList.Services;
 using FristList.Services.Abstractions;
-using FristList.Services.PostgreSql;
+using FristList.Services.PostgreSql.DependencyInjection;
 using FristList.WebApi.Services;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -22,8 +22,6 @@ public class Startup
     // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
     public void ConfigureServices(IServiceCollection services)
     {
-        services.AddSingleton<IRepositoryAbstractFactory, PostgreSqlRepositoryAbstractFactory>();
-
         services.AddIdentityCore<AppUser>()
             .AddDefaultTokenProviders();
 
@@ -32,6 +30,9 @@ public class Startup
             options.Password.RequireNonAlphanumeric = false;
             options.Password.RequireUppercase = false;
         });
+        
+        services.AddTransient<IDatabaseConfiguration, DatabaseConfiguration>();
+        services.AddPostgreSqlStorage();
 
         var secret = Encoding.UTF8.GetBytes("VeryVeryLongSecret");
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -50,29 +51,10 @@ public class Startup
                 };
             });
 
-        services.AddTransient(provider =>
-            provider.GetRequiredService<IRepositoryAbstractFactory>().CreateAppUserRepository());
-        services.AddTransient<IUserStore<AppUser>>(provider =>
-            provider.GetRequiredService<IRepositoryAbstractFactory>().CreateAppUserRepository());
-        services.AddTransient(provider =>
-            provider.GetRequiredService<IRepositoryAbstractFactory>().CreateActionRepository());
-        services.AddTransient(provider =>
-            provider.GetRequiredService<IRepositoryAbstractFactory>().CreateCategoryRepository());
-        services.AddTransient(provider =>
-            provider.GetRequiredService<IRepositoryAbstractFactory>().CreateTaskRepository());
-        services.AddTransient(provider =>
-            provider.GetRequiredService<IRepositoryAbstractFactory>().CreateProjectRepository());
-        services.AddTransient(provider =>
-            provider.GetRequiredService<IRepositoryAbstractFactory>().CreateRepositoryInitializer());
-
         services.AddTransient<IModelToDtoMapper, DefaultMapToDtoMapper>();
         services.AddTransient<IModelLinkPropertyAggregator, DefaultModelLinkPropertyAggregator>();
         services.AddTransient<IJwtTokenProvider>(_ => new JwtTokenDefaultProvider(new SymmetricSecurityKey(secret)));
         services.AddTransient<ITokenGenerator>(_ => new RandomBytesCryptoTokenGenerator(64));
-        services.AddTransient<IDatabaseConfiguration, DatabaseConfiguration>();
-
-        services.AddTransient<IRefreshTokenProvider, PostgreSqlRefreshTokenProvider>();
-        services.AddTransient<IRunningActionProvider, PostgreSqlRunningActionProvider>();
 
         services.AddMediatR(typeof(Startup));
 

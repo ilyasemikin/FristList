@@ -58,6 +58,26 @@ public class PostgreSqlProjectRepository : IProjectRepository
         return RepositoryResult.Success;
     }
 
+    public async Task<RepositoryResult> CompleteAsync(Project project)
+    {
+        await using var connection = new NpgsqlConnection(_connectionString);
+        var success = await connection.ExecuteScalarAsync<bool>(
+            "SELECT * FROM complete_task(@Id)", new { Id = project.Id });
+        if (!success)
+            return RepositoryResult.Failed();
+        return RepositoryResult.Success;
+    }
+
+    public async Task<RepositoryResult> UncompleteAsync(Project project)
+    {
+        await using var connection = new NpgsqlConnection(_connectionString);
+        var success = await connection.ExecuteScalarAsync<bool>(
+            "SELECT * FROM uncomplete_project(@Id)", new { Id = project.Id });
+        if (!success)
+            return RepositoryResult.Failed();
+        return RepositoryResult.Success;
+    }
+
     public async Task<int> CountByUserAsync(AppUser user)
     {
         await using var connection = new NpgsqlConnection(_connectionString);
