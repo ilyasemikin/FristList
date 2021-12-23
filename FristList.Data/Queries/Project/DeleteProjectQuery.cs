@@ -1,6 +1,9 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace FristList.Data.Queries.Project;
 
 public class DeleteProjectQuery
 {
-    public int Id { get; init; }
+    [Required]
+    public int? Id { get; init; }
 }

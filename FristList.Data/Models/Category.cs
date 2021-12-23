@@ -10,4 +10,9 @@ public class Category : ModelObjectBase
     public AppUser? User { get; set; }
     
     public string Name { get; set; }
+
+    public Category()
+    {
+        Name = string.Empty;
+    }
 }

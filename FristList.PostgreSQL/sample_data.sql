@@ -105,6 +105,12 @@ VALUES (1, 1),
        (5, 2),
        (5, 3);
 
+SELECT append_task_to_project(1, 1);
+SELECT append_task_to_project(1, 3);
+SELECT append_task_to_project(1, 2);
+SELECT append_task_to_project(1, 6);
+SELECT append_task_to_project(1, 4);
+
 CREATE OR REPLACE FUNCTION pg_temp.update_serial(table_name TEXT, column_name TEXT)
     RETURNS VOID
 AS $$

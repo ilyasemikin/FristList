@@ -150,10 +150,10 @@ public class PostgreSqlAppUserRepository : IAppUserRepository
             new { NormalizedEmail = normalizedEmail });
     }
 
-    public Task<string> GetEmailAsync(AppUser user, CancellationToken cancellationToken)
+    public Task<string?> GetEmailAsync(AppUser user, CancellationToken cancellationToken)
         => Task.FromResult(user.Email);
 
-    public Task<string> GetNormalizedEmailAsync(AppUser user, CancellationToken cancellationToken)
+    public Task<string?> GetNormalizedEmailAsync(AppUser user, CancellationToken cancellationToken)
         => Task.FromResult(user.NormalizedEmail);
 
     public Task<bool> GetEmailConfirmedAsync(AppUser user, CancellationToken cancellationToken)

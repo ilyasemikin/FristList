@@ -33,10 +33,13 @@ public class CreateActionRequestHandler : IRequestHandler<CreateActionRequest, I
         if (categories.Count != request.Query.CategoryIds.Count)
             return new CustomHttpCodeResponse(HttpStatusCode.BadRequest);
 
+        if (request.Query.StartTime is null || request.Query.EndTime is null)
+            return new CustomHttpCodeResponse(HttpStatusCode.BadRequest);
+        
         var action = new Data.Models.Action
         {
-            StartTime = request.Query.StartTime,
-            EndTime = request.Query.EndTime,
+            StartTime = request.Query.StartTime.Value,
+            EndTime = request.Query.EndTime.Value,
             Description = request.Query.Description,
             CategoryIds = request.Query.CategoryIds.ToList(),
             Categories = categories,

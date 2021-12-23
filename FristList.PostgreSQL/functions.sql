@@ -181,7 +181,7 @@ BEGIN
               FROM project_tasks 
              WHERE "ProjectId"=project_id AND "NextTaskId" IS NULL INTO parent_task_id;
 
-            IF (SELECT * FROM add_task_to_project(project_id, task_id, parent_task_id)) THEN
+            IF (SELECT * FROM append_task_to_project(project_id, task_id, parent_task_id)) THEN
                 RAISE EXCEPTION 'Error while attempt add task to project';
             END IF;
         END;
@@ -356,7 +356,7 @@ $$ LANGUAGE plpgsql;
 
 -- Start project tasks functions
 
-CREATE OR REPLACE FUNCTION push_task_to_project(project_id INTEGER, task_id INTEGER)
+CREATE OR REPLACE FUNCTION append_task_to_project(project_id INTEGER, task_id INTEGER)
     RETURNS BOOLEAN
 AS $$
 DECLARE
@@ -372,6 +372,60 @@ BEGIN
     
     IF parent_id IS NOT NULL THEN
         UPDATE project_tasks SET "NextTaskId"=task_id WHERE "TaskId"=parent_id;
+    END IF;
+    
+    RETURN TRUE;
+END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION insert_task_to_project(project_id INTEGER, task_id INTEGER, index INTEGER)
+    RETURNS BOOLEAN
+AS $$
+DECLARE
+    child_id    INTEGER;
+    parent_id   INTEGER;
+    task_count  INTEGER;
+BEGIN
+    IF index = 0 THEN
+        SELECT "TaskId" FROM get_project_task_parents(project_id) WHERE "ParentTaskId" IS NULL INTO child_id;
+        INSERT INTO project_tasks ("TaskId", "ProjectId", "NextTaskId") VALUES (task_id, project_id, child_id);
+        RETURN TRUE;
+    END IF;
+    
+    SELECT "Count" FROM project_task_count WHERE "ProjectId"=project_id INTO task_count;
+    
+    IF index >= task_count THEN
+        RETURN append_task_to_project(project_id, task_id);
+    END IF;
+    
+    SELECT t."TaskId", "NextTaskId" 
+      FROM get_project_tasks_indexes(project_id) t 
+          LEFT JOIN project_tasks pt ON t."TaskId"=pt."TaskId" 
+     WHERE "TaskProjectIndex"=index - 1
+      INTO parent_id, child_id;
+    
+    INSERT INTO project_tasks ("TaskId", "ProjectId", "NextTaskId") VALUES (task_id, project_id, child_id);
+    UPDATE project_tasks SET "NextTaskId"=task_id WHERE "TaskId"=parent_id;
+    
+    RETURN TRUE;
+END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION update_project_task_parent(task_id INTEGER, parent_id INTEGER)
+    RETURNS BOOLEAN
+AS $$
+DECLARE
+    project_id  INTEGER;
+    index       INTEGER;
+BEGIN
+    SELECT "ProjectId" FROM project_tasks WHERE "TaskId"=task_id INTO project_id;
+    PERFORM delete_task_from_project(task_id);
+    
+    IF parent_id IS NULL THEN
+        PERFORM insert_task_to_project(project_id, task_id, 0);
+    ELSE
+        SELECT "TaskProjectIndex" FROM get_project_tasks_indexes(project_id) WHERE "TaskId"=parent_id INTO index;
+        PERFORM insert_task_to_project(project_id, task_id, index + 1);
     END IF;
     
     RETURN TRUE;
@@ -465,6 +519,24 @@ BEGIN
         )
         SELECT pto."TaskId", (ROW_NUMBER() OVER () - 1)::INTEGER
           FROM project_tasks_ordered pto;
+END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION complete_project(project_id INTEGER)
+    RETURNS BOOLEAN
+AS $$
+BEGIN
+    UPDATE project SET "IsCompleted"=TRUE WHERE "Id"=project_id;
+    RETURN TRUE;
+END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION uncomplete_project(project_id INTEGER)
+    RETURNS BOOLEAN
+AS $$
+BEGIN
+    UPDATE project SET "IsCompleted"=FALSE WHERE "Id"=project_id;
+    RETURN TRUE;
 END
 $$ LANGUAGE plpgsql;
 

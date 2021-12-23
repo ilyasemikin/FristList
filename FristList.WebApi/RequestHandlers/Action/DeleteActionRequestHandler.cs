@@ -24,7 +24,11 @@ public class DeleteActionRequestHandler : IRequestHandler<DeleteActionRequest, I
     public async Task<IResponse> Handle(DeleteActionRequest request, CancellationToken cancellationToken)
     {
         var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
-        var action = await _actionRepository.FindByIdAsync(request.Query.Id);
+
+        if (request.Query.Id is null)
+            return new CustomHttpCodeResponse(HttpStatusCode.BadRequest);
+        
+        var action = await _actionRepository.FindByIdAsync(request.Query.Id.Value);
 
         if (action is null || action.UserId != user.Id)
             return new CustomHttpCodeResponse(HttpStatusCode.NotFound);

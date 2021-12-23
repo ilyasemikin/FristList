@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using FristList.Data.Queries.ProjectTask;
 using FristList.WebApi.Controllers.Base;
 using FristList.WebApi.Requests.ProjectTask;
 using MediatR;
@@ -23,6 +24,19 @@ public class ProjectTaskController : ApiController
         {
             ProjectId = id,
             TaskId = taskId,
+            UserName = User.Identity!.Name
+        };
+
+        return await SendRequest(request);
+    }
+
+    [HttpPatch("{taskId:int}")]
+    public async Task<IActionResult> UpdatePreviousTask([FromRoute]int id, UpdatePreviousTaskQuery query)
+    {
+        var request = new UpdateProjectTaskPreviousRequest
+        {
+            TaskId = id,
+            PreviousTaskId = query.PreviousTaskId,
             UserName = User.Identity!.Name
         };
 

@@ -9,5 +9,10 @@ public class RefreshToken : ModelObjectBase
     public DateTime Expires { get; set; }
     
     public int UserId { get; set; }
-    public AppUser User { get; set; }
+    public AppUser? User { get; set; }
+
+    public RefreshToken()
+    {
+        Token = string.Empty;
+    }
 }

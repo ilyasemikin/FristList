@@ -1,4 +1,6 @@
+using FristList.Data.Models;
 using FristList.Services.Abstractions;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FristList.Services.PostgreSql.DependencyInjection;
@@ -7,8 +9,11 @@ public static class ServiceCollectionExtensions
 {
     public static void AddPostgreSqlStorage(this IServiceCollection services)
     {
-        services.AddSingleton<IRepositoryAbstractFactory, PostgreSqlRepositoryAbstractFactory>();
+        services.AddTransient<IRepositoryAbstractFactory, PostgreSqlRepositoryAbstractFactory>();
 
+        services.AddTransient<IUserStore<AppUser>>(provider =>
+            provider.GetRequiredService<IRepositoryAbstractFactory>().CreateAppUserRepository());
+        
         services.AddTransient(provider => 
             provider.GetRequiredService<IRepositoryAbstractFactory>().CreateAppUserRepository());
         services.AddTransient(provider => 

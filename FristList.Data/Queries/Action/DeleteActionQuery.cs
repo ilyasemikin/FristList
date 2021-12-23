@@ -1,6 +1,9 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace FristList.Data.Queries.Action;
 
 public class DeleteActionQuery
 {
-    public int Id { get; init; }
+    [Required]
+    public int? Id { get; init; }
 }

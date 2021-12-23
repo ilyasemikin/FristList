@@ -6,5 +6,5 @@ namespace FristList.Data.Queries.Account;
 public class RefreshTokenQuery
 {
     [Required]
-    public string Token { get; init; }
+    public string? Token { get; init; }
 }

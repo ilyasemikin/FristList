@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace FristList.Services
@@ -11,7 +12,7 @@ namespace FristList.Services
 
         static RepositoryResult()
         {
-            Success = new RepositoryResult(true, null);
+            Success = new RepositoryResult(true, Array.Empty<RepositoryResultError>());
         }
         
         private RepositoryResult(bool succeeded, IEnumerable<RepositoryResultError> errors)
@@ -21,6 +22,6 @@ namespace FristList.Services
         }
 
         public static RepositoryResult Failed(params RepositoryResultError[] errors)
-            => new RepositoryResult(false, errors);
+            => new (false, errors);
     }
 }

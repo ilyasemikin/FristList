@@ -107,10 +107,12 @@ public class PostgreSqlProjectRepository : IProjectRepository
         bool success;
         if (index == -1)
             success = await connection.ExecuteScalarAsync<bool>(
-                "SELECT * FROM push_task_to_project(@ProjectId, @TaskId)",
+                "SELECT * FROM append_task_to_project(@ProjectId, @TaskId)",
                 new { ProjectId = project.Id, TaskId = task.Id });
         else
-            throw new NotImplementedException();
+            success = await connection.ExecuteScalarAsync<bool>(
+                "SELECT * FROM insert_task_to_project(@ProjectId, @TaskId, @Index)", 
+                new { ProjectId = project.Id, TaskId = task.Id, Index = index });
 
         if (!success)
             return RepositoryResult.Failed();
@@ -124,6 +126,23 @@ public class PostgreSqlProjectRepository : IProjectRepository
         var success = await connection.ExecuteScalarAsync<bool>(
             "SELECT * FROM delete_task_from_project(@TaskId)",
             new { TaskId = task.Id });
+
+        if (!success)
+            return RepositoryResult.Failed();
+        return RepositoryResult.Success;
+    }
+
+    public async Task<RepositoryResult> UpdateTaskPositionAsync(Project project, Task task, Task? previousTask)
+    {
+        await using var connection = new NpgsqlConnection(_connectionString);
+
+        int? parentTaskId = null;
+        if (previousTask is not null)
+            parentTaskId = previousTask.Id;
+        
+        var success = await connection.ExecuteScalarAsync<bool>(
+            "SELECT * FROM update_project_task_parent(@TaskId, @ParentTaskId)",
+            new { TaskId = task.Id, ParentTaskId = parentTaskId });
 
         if (!success)
             return RepositoryResult.Failed();

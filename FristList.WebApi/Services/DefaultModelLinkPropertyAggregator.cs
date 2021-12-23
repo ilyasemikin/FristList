@@ -20,7 +20,9 @@ public class DefaultModelLinkPropertyAggregator : IModelLinkPropertyAggregator
     {
         // TODO: fill task property
         if (action.TaskId is not null)
-            ;
+        {
+            
+        }
 
         if (action.CategoryIds.Count != 0 && action.CategoryIds.Count != action.Categories.Count)
             action.Categories = await _categoryRepository.FindByIdsAsync(action.CategoryIds)
@@ -36,7 +38,6 @@ public class DefaultModelLinkPropertyAggregator : IModelLinkPropertyAggregator
                 break;
             default:
                 throw new NotImplementedException($"Type {model.GetType()} not supported");
-                break;
         }
         
         

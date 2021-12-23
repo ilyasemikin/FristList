@@ -6,23 +6,18 @@ namespace FristList.Data.Queries.Account;
 public class RegisterQuery
 {
     [Required]
-    public string UserName { get; init; }
+    public string? UserName { get; init; }
     
     [Required]
     [PasswordPropertyText]
-    public string Password { get; init; }
+    public string? Password { get; init; }
     
     [Required]
     [EmailAddress]
-    public string Email { get; init; }
+    public string? Email { get; init; }
     
     [Required]
     [PasswordPropertyText]
     [Compare(nameof(Password))]
-    public string ConfirmPassword { get; init; }
-
-    public RegisterQuery()
-    {
-        UserName = Password = ConfirmPassword = string.Empty;
-    }
+    public string? ConfirmPassword { get; init; }
 }

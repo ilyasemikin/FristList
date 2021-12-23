@@ -5,5 +5,5 @@ namespace FristList.Data.Queries.Category;
 public class CreateCategoryQuery
 {
     [Required]
-    public string Name { get; init; }
+    public string? Name { get; init; }
 }

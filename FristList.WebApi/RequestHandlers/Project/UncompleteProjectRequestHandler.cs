@@ -10,32 +10,29 @@ using Microsoft.AspNetCore.Identity;
 
 namespace FristList.WebApi.RequestHandlers.Project;
 
-public class DeleteProjectRequestHandler : IRequestHandler<DeleteProjectRequest, IResponse>
+public class UncompleteProjectRequestHandler : IRequestHandler<UncompleteProjectRequest, IResponse>
 {
     private readonly IUserStore<AppUser> _userStore;
     private readonly IProjectRepository _projectRepository;
 
-    public DeleteProjectRequestHandler(IUserStore<AppUser> userStore, IProjectRepository projectRepository)
+    public UncompleteProjectRequestHandler(IUserStore<AppUser> userStore, IProjectRepository projectRepository)
     {
         _userStore = userStore;
         _projectRepository = projectRepository;
     }
 
-    public async Task<IResponse> Handle(DeleteProjectRequest request, CancellationToken cancellationToken)
+    public async Task<IResponse> Handle(UncompleteProjectRequest request, CancellationToken cancellationToken)
     {
         var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
+        var project = await _projectRepository.FindByIdAsync(request.ProjectId);
 
-        if (request.Query.Id is null)
-            return new CustomHttpCodeResponse(HttpStatusCode.BadRequest);
-        
-        var project = await _projectRepository.FindByIdAsync(request.Query.Id.Value);
-        if (project is null)
+        if (project is null || project.UserId != user.Id)
             return new CustomHttpCodeResponse(HttpStatusCode.NotFound);
 
-        var result = await _projectRepository.DeleteAsync(project);
+        var result = await _projectRepository.UncompleteAsync(project);
         if (!result.Succeeded)
             return new CustomHttpCodeResponse(HttpStatusCode.InternalServerError);
-
+        
         return new DataResponse<object>(new { });
     }
 }
