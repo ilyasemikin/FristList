@@ -24,7 +24,7 @@ public class DeleteTaskRequestHandler : IRequestHandler<DeleteTaskRequest, IResp
     public async Task<IResponse> Handle(DeleteTaskRequest request, CancellationToken cancellationToken)
     {
         var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
-        var task = await _taskRepository.FindByIdAsync(request.Query.Id);
+        var task = await _taskRepository.FindByIdAsync(request.Query.Id!.Value);
 
         if (task is null || task.UserId != user.Id)
             return new CustomHttpCodeResponse(HttpStatusCode.NotFound);
