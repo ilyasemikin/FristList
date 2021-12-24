@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using FristList.Data.Models;
@@ -11,6 +12,8 @@ public interface ITaskRepository
     Task<RepositoryResult> CompleteAsync(Data.Models.Task task);
     Task<RepositoryResult> UncompleteAsync(Data.Models.Task task);
 
+    Task<TimeSpan> GetSummaryTimeAsync(Data.Models.Task task, DateTime from, DateTime to);
+    
     Task<int> CountAllByUser(AppUser user);
 
     Task<Data.Models.Task?> FindByIdAsync(int id);

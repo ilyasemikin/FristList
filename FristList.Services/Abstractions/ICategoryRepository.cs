@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using FristList.Data.Models;
@@ -9,6 +10,8 @@ public interface ICategoryRepository
     Task<RepositoryResult> CreateAsync(Category category);
     Task<RepositoryResult> DeleteAsync(Category category);
 
+    Task<TimeSpan> GetSummaryTimeAsync(Category category, DateTime from, DateTime to);
+    
     Task<int> CountByUserAsync(AppUser user);
     
     Task<Category?> FindByIdAsync(int id);

@@ -47,6 +47,14 @@ public class PostgreSqlCategoryRepository : Abstractions.ICategoryRepository
         return RepositoryResult.Success;
     }
 
+    public async Task<TimeSpan> GetSummaryTimeAsync(Category category, DateTime from, DateTime to)
+    {
+        await using var connection = new NpgsqlConnection(_connectionString);
+        return await connection.QuerySingleOrDefaultAsync<TimeSpan>(
+            "SELECT * FROM get_category_summary_time(@CategoryId, @FromTime AT TIME ZONE 'UTC', @ToTime AT TIME ZONE 'UTC')",
+            new { CategoryId = category.Id, FromTime = from, ToTime = to });
+    }
+
     public async Task<int> CountByUserAsync(AppUser user)
     {
         await using var connection = new NpgsqlConnection(_connectionString);

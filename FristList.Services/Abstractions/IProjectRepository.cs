@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using FristList.Data.Models;
@@ -12,6 +13,8 @@ public interface IProjectRepository
 
     Task<RepositoryResult> CompleteAsync(Project project);
     Task<RepositoryResult> UncompleteAsync(Project project);
+
+    Task<TimeSpan> GetSummaryTimeAsync(Project project, DateTime from, DateTime to);
 
     Task<int> CountByUserAsync(AppUser user);
 

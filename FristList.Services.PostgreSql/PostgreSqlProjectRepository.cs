@@ -78,6 +78,14 @@ public class PostgreSqlProjectRepository : IProjectRepository
         return RepositoryResult.Success;
     }
 
+    public async Task<TimeSpan> GetSummaryTimeAsync(Project project, DateTime from, DateTime to)
+    {
+        await using var connection = new NpgsqlConnection(_connectionString);
+        return await connection.QuerySingleOrDefaultAsync<TimeSpan>(
+            "SELECT * FROM get_project_summary_time(@ProjectId, @FromTime AT TIME ZONE 'UTC', @ToTime AT TIME ZONE 'UTC')",
+            new { ProjectId = project.Id, FromTime = from, ToTime = to });
+    }
+
     public async Task<int> CountByUserAsync(AppUser user)
     {
         await using var connection = new NpgsqlConnection(_connectionString);

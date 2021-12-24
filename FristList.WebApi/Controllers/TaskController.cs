@@ -4,6 +4,7 @@ using FristList.Data.Queries;
 using FristList.Data.Queries.Task;
 using FristList.WebApi.Controllers.Base;
 using FristList.WebApi.Requests.Task;
+using FristList.WebApi.Requests.Task.Time;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -97,6 +98,20 @@ public class TaskController : ApiController
         var request = new GetAllNonProjectTaskRequest
         {
             Query = query,
+            UserName = User.Identity!.Name
+        };
+
+        return await SendRequest(request);
+    }
+
+    [HttpGet("{id:int}/time")]
+    public async Task<IActionResult> GetSummaryTime([FromRoute] int id, [FromQuery][FromBody]IntervalQuery query)
+    {
+        var request = new SummaryTimeRequest
+        {
+            TaskId = id,
+            FromTime = query.From,
+            ToTime = query.To,
             UserName = User.Identity!.Name
         };
 

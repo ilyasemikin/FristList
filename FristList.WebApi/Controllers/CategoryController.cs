@@ -5,6 +5,7 @@ using FristList.Data.Queries.Category;
 using FristList.Data.Responses;
 using FristList.WebApi.Controllers.Base;
 using FristList.WebApi.Requests.Category;
+using FristList.WebApi.Requests.Category.Time;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -57,6 +58,33 @@ public class CategoryController : ApiController
         return await SendRequest(request);
     }
 
+    [HttpGet("{id:int}/time")]
+    public async Task<IActionResult> SummaryCategoryTime([FromRoute]int id, [FromQuery][FromBody]IntervalQuery query)
+    {
+        var request = new SummaryCategoryTimeRequest
+        {
+            CategoryId = id,
+            FromTime = query.From,
+            ToTime = query.To,
+            UserName = User.Identity!.Name
+        };
+
+        return await SendRequest(request);
+    }
+    
+    [HttpGet("/api/category/time")]
+    public async Task<IActionResult> SummaryAllCategoryTime([FromQuery][FromBody]IntervalQuery query)
+    {
+        var request = new SummaryAllCategoryTimeRequest
+        {
+            FromTime = query.From,
+            ToTime = query.To,
+            UserName = User.Identity!.Name
+        };
+
+        return await SendRequest(request);
+    }
+    
     [HttpGet("all")]
     public async Task<IActionResult> GetAllCategories([FromQuery]PagedQuery query)
     {
