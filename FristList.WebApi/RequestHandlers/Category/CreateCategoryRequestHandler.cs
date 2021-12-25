@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using FristList.Data.Models;
 using FristList.Data.Responses;
 using FristList.Services.Abstractions;
+using FristList.WebApi.Notifications.Category;
 using FristList.WebApi.Requests.Category;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
@@ -15,11 +16,13 @@ public class CreateCategoryRequestHandler : IRequestHandler<CreateCategoryReques
 {
     private readonly IUserStore<AppUser> _userStore;
     private readonly ICategoryRepository _categoryRepository;
+    private readonly IMediator _mediator;
 
-    public CreateCategoryRequestHandler(IUserStore<AppUser> userStore, ICategoryRepository categoryRepository)
+    public CreateCategoryRequestHandler(IUserStore<AppUser> userStore, ICategoryRepository categoryRepository, IMediator mediator)
     {
         _userStore = userStore;
         _categoryRepository = categoryRepository;
+        _mediator = mediator;
     }
 
     public async Task<IResponse> Handle(CreateCategoryRequest request, CancellationToken cancellationToken)
@@ -37,6 +40,13 @@ public class CreateCategoryRequestHandler : IRequestHandler<CreateCategoryReques
             {
                 Message = string.Join("|", result.Errors.Select(x => x.Description))
             };
+
+        var message = new CategoryCreatedNotification
+        {
+            User = user,
+            Category = category
+        };
+        await _mediator.Publish(message, cancellationToken);
 
         return new DataResponse<object>(new {});
     }

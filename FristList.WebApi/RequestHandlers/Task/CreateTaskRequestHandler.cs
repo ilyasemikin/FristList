@@ -7,6 +7,7 @@ using FristList.Data.Dto.Base;
 using FristList.Data.Models;
 using FristList.Data.Responses;
 using FristList.Services.Abstractions;
+using FristList.WebApi.Notifications.Task;
 using FristList.WebApi.Requests.Task;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
@@ -17,11 +18,13 @@ public class CreateTaskRequestHandler : IRequestHandler<CreateTaskRequest, IResp
 {
     private readonly IUserStore<AppUser> _userStore;
     private readonly ITaskRepository _taskRepository;
+    private readonly IMediator _mediator;
 
-    public CreateTaskRequestHandler(IUserStore<AppUser> userStore, ITaskRepository taskRepository)
+    public CreateTaskRequestHandler(IUserStore<AppUser> userStore, ITaskRepository taskRepository, IMediator mediator)
     {
         _userStore = userStore;
         _taskRepository = taskRepository;
+        _mediator = mediator;
     }
 
     public async Task<IResponse> Handle(CreateTaskRequest request, CancellationToken cancellationToken)
@@ -40,6 +43,13 @@ public class CreateTaskRequestHandler : IRequestHandler<CreateTaskRequest, IResp
         var result = await _taskRepository.CreateAsync(task);
         if (!result.Succeeded)
             return new CustomHttpCodeResponse(HttpStatusCode.InternalServerError);
+
+        var message = new TaskCreatedNotification
+        {
+            Task = task,
+            User = user
+        };
+        await _mediator.Publish(message, cancellationToken);
 
         return new DataResponse<object>(new {});
     }

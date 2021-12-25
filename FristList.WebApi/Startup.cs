@@ -4,6 +4,7 @@ using FristList.Data.Models;
 using FristList.Services;
 using FristList.Services.Abstractions;
 using FristList.Services.PostgreSql.DependencyInjection;
+using FristList.WebApi.Hubs;
 using FristList.WebApi.Services;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -56,9 +57,13 @@ public class Startup
         services.AddTransient<IJwtTokenProvider>(_ => new JwtTokenDefaultProvider(new SymmetricSecurityKey(secret)));
         services.AddTransient<ITokenGenerator>(_ => new RandomBytesCryptoTokenGenerator(64));
 
+        services.AddSingleton<IRealTimeClientsService, InMemoryRealTimeClientsService>();
+        
         services.AddMediatR(typeof(Startup));
 
         services.AddControllers();
+
+        services.AddSignalR();
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -78,6 +83,10 @@ public class Startup
         app.UseAuthentication();
         app.UseAuthorization();
 
-        app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.MapHub<EventMessageHub>("/api/events");
+            endpoints.MapControllers();
+        });
     }
 }

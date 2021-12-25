@@ -37,12 +37,11 @@ public class PostgreSqlRunningActionProvider : IRunningActionProvider
         return RepositoryResult.Success;
     }
 
-    public async Task<RepositoryResult> SaveRunningAsync(RunningAction action)
+    public async Task<int?> SaveRunningAsync(RunningAction action)
     {
         var connection = new NpgsqlConnection(_connectionString);
 
-        await connection.ExecuteAsync("SELECT * FROM save_running_action(@UserId)", new {UserId = action.UserId});
-        return RepositoryResult.Success;
+        return await connection.ExecuteScalarAsync<int?>("SELECT * FROM save_running_action(@UserId)", new {UserId = action.UserId});
     }
 
     public async Task<RepositoryResult> DeleteRunningAsync(RunningAction action)

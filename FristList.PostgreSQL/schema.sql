@@ -158,7 +158,7 @@ CREATE TABLE running_action_categories (
 );
 
 CREATE OR REPLACE FUNCTION save_running_action(user_id INTEGER) 
-    RETURNS VOID
+    RETURNS INTEGER
 AS $$
 DECLARE
     action_id   INTEGER;
@@ -166,7 +166,7 @@ DECLARE
     task_id     INTEGER;
 BEGIN
     IF NOT EXISTS(SELECT "UserId" FROM "running_action" WHERE "UserId" = user_id) THEN
-        RETURN;
+        RETURN NULL;
     END IF;
 
     SELECT "StartTime", "TaskId" 
@@ -190,6 +190,8 @@ BEGIN
     
     DELETE FROM running_action_categories WHERE "UserId" = user_id;
     DELETE FROM running_action WHERE "UserId" = user_id;
+    
+    RETURN action_id;
 END
 $$ LANGUAGE plpgsql;
 
@@ -207,7 +209,7 @@ BEGIN
         END IF;
 
         IF EXISTS(SELECT "UserId" FROM running_action WHERE "UserId"=NEW."UserId") THEN
-            PERFORM save_running_action(NEW."UserId");
+            SELECT save_running_action(NEW."UserId");
         END IF;
 
         RETURN NEW;

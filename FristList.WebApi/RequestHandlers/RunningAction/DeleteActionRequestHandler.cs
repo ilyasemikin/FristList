@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using FristList.Data.Models;
 using FristList.Data.Responses;
 using FristList.Services.Abstractions;
+using FristList.WebApi.Notifications.RunningAction;
 using FristList.WebApi.Requests.RunningAction;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
@@ -14,11 +15,13 @@ public class DeleteActionRequestHandler : IRequestHandler<DeleteActionRequest, I
 {
     private readonly IUserStore<AppUser> _userStore;
     private readonly IRunningActionProvider _runningActionProvider;
+    private readonly IMediator _mediator;
 
-    public DeleteActionRequestHandler(IUserStore<AppUser> userStore, IRunningActionProvider runningActionProvider)
+    public DeleteActionRequestHandler(IUserStore<AppUser> userStore, IRunningActionProvider runningActionProvider, IMediator mediator)
     {
         _userStore = userStore;
         _runningActionProvider = runningActionProvider;
+        _mediator = mediator;
     }
 
     public async Task<IResponse> Handle(DeleteActionRequest request, CancellationToken cancellationToken)
@@ -33,6 +36,12 @@ public class DeleteActionRequestHandler : IRequestHandler<DeleteActionRequest, I
         if (!result.Succeeded)
             return new CustomHttpCodeResponse(HttpStatusCode.InternalServerError);
 
+        var message = new RunningActionDeletedNotification
+        {
+            User = user
+        };
+        await _mediator.Publish(message, cancellationToken);
+        
         return new DataResponse<object>(new {});
     }
 }

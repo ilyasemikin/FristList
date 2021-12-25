@@ -4,21 +4,24 @@ using System.Threading.Tasks;
 using FristList.Data.Models;
 using FristList.Data.Responses;
 using FristList.Services.Abstractions;
+using FristList.WebApi.Notifications.Project;
 using FristList.WebApi.Requests.Project;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 
 namespace FristList.WebApi.RequestHandlers.Project;
 
-public class CreateCategoryRequestHandler : IRequestHandler<CreateProjectRequest, IResponse>
+public class CreateProjectRequestHandler : IRequestHandler<CreateProjectRequest, IResponse>
 {
     private readonly IUserStore<AppUser> _userStore;
     private readonly IProjectRepository _projectRepository;
+    private readonly IMediator _mediator;
 
-    public CreateCategoryRequestHandler(IUserStore<AppUser> userStore, IProjectRepository projectRepository)
+    public CreateProjectRequestHandler(IUserStore<AppUser> userStore, IProjectRepository projectRepository, IMediator mediator)
     {
         _userStore = userStore;
         _projectRepository = projectRepository;
+        _mediator = mediator;
     }
 
     public async Task<IResponse> Handle(CreateProjectRequest request, CancellationToken cancellationToken)
@@ -37,6 +40,13 @@ public class CreateCategoryRequestHandler : IRequestHandler<CreateProjectRequest
         if (!result.Succeeded)
             return new CustomHttpCodeResponse(HttpStatusCode.InternalServerError);
 
+        var message = new ProjectCreatedNotification
+        {
+            User = user,
+            Project = project
+        };
+        await _mediator.Publish(message, cancellationToken);
+        
         return new DataResponse<object>(new {});
     }
 }
