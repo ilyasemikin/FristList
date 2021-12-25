@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using FristList.Data.Models;
 using FristList.Data.Responses;
 using FristList.Services.Abstractions;
+using FristList.WebApi.Notifications.ProjectTask;
 using FristList.WebApi.Requests.ProjectTask;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
@@ -16,12 +17,14 @@ public class UpdateProjectTaskPreviousRequestHandler : IRequestHandler<UpdatePro
     private readonly IUserStore<AppUser> _userStore;
     private readonly ITaskRepository _taskRepository;
     private readonly IProjectRepository _projectRepository;
+    private readonly IMediator _mediator;
 
-    public UpdateProjectTaskPreviousRequestHandler(IUserStore<AppUser> userStore, ITaskRepository taskRepository, IProjectRepository projectRepository)
+    public UpdateProjectTaskPreviousRequestHandler(IUserStore<AppUser> userStore, ITaskRepository taskRepository, IProjectRepository projectRepository, IMediator mediator)
     {
         _userStore = userStore;
         _taskRepository = taskRepository;
         _projectRepository = projectRepository;
+        _mediator = mediator;
     }
 
     public async Task<IResponse> Handle(UpdateProjectTaskPreviousRequest request, CancellationToken cancellationToken)
@@ -48,6 +51,14 @@ public class UpdateProjectTaskPreviousRequestHandler : IRequestHandler<UpdatePro
 
         if (!result.Succeeded)
             return new CustomHttpCodeResponse(HttpStatusCode.InternalServerError);
+
+        var message = new ProjectTaskOrderChangedNotification
+        {
+            Project = project,
+            User = user
+        };
+        await _mediator.Publish(message, cancellationToken);
+        
         return new DataResponse<object>(new { });
     }
 }

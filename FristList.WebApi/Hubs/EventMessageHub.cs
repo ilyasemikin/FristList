@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using FristList.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -24,6 +25,8 @@ public interface IEventMessage
 
     public Task AddProjectMessage(Data.Dto.Project project);
     public Task DeleteProjectMessage(int id);
+
+    public Task ChangeProjectTaskOrder(Data.Dto.Project project,  IEnumerable<int> taskIds);
 }
 
 [Authorize]
