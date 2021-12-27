@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Threading;
 using FristList.Data;
+using FristList.Models.Services;
 using FristList.Services;
 using FristList.WebApi.Hubs;
 using FristList.WebApi.Notifications.Project;

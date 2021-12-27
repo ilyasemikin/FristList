@@ -2,8 +2,8 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using FristList.Data.Models;
 using FristList.Data.Responses;
+using FristList.Models;
 using FristList.Services.Abstractions;
 using FristList.WebApi.Notifications.Category;
 using FristList.WebApi.Requests.Category;
@@ -28,7 +28,7 @@ public class CreateCategoryRequestHandler : IRequestHandler<CreateCategoryReques
     public async Task<IResponse> Handle(CreateCategoryRequest request, CancellationToken cancellationToken)
     {
         var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
-        var category = new Data.Models.Category
+        var category = new Models.Category
         {
             Name = request.Query.Name,
             UserId = user.Id

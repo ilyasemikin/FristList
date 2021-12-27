@@ -8,7 +8,7 @@ using FristList.WebApi.Requests.Account;
 using FristList.WebApi.Services;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
-using AppUser = FristList.Data.Models.AppUser;
+using AppUser = FristList.Models.AppUser;
 
 namespace FristList.WebApi.RequestHandlers.Account;
 

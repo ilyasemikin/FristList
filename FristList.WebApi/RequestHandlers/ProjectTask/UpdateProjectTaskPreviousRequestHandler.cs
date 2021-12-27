@@ -2,8 +2,8 @@
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using FristList.Data.Models;
 using FristList.Data.Responses;
+using FristList.Models;
 using FristList.Services.Abstractions;
 using FristList.WebApi.Notifications.ProjectTask;
 using FristList.WebApi.Requests.ProjectTask;
@@ -35,7 +35,7 @@ public class UpdateProjectTaskPreviousRequestHandler : IRequestHandler<UpdatePro
         if (task is null || task.UserId != user.Id || task.ProjectId is null)
             return new CustomHttpCodeResponse(HttpStatusCode.NotFound);
 
-        Data.Models.Task? previousTask = null;
+        Models.Task? previousTask = null;
         if (request.PreviousTaskId is not null)
         {
             previousTask = await _taskRepository.FindByIdAsync(request.PreviousTaskId.Value);

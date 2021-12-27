@@ -1,9 +1,10 @@
+using FristList.Models;
 using MediatR;
 
 namespace FristList.WebApi.Notifications.Task;
 
 public class TaskCreatedNotification : INotification
 {
-    public Data.Models.AppUser User { get; init; }
-    public Data.Models.Task Task { get; init; }
+    public AppUser User { get; init; }
+    public Models.Task Task { get; init; }
 }

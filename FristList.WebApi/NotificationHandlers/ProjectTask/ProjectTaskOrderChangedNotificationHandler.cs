@@ -2,6 +2,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FristList.Data;
+using FristList.Models.Services;
 using FristList.Services;
 using FristList.Services.Abstractions;
 using FristList.WebApi.Hubs;

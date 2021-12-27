@@ -1,8 +1,8 @@
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using FristList.Data.Models;
 using FristList.Data.Responses;
+using FristList.Models;
 using FristList.Services.Abstractions;
 using FristList.WebApi.Notifications.Category;
 using FristList.WebApi.Requests.Category;
@@ -28,7 +28,7 @@ public class DeleteCategoryRequestHandler : IRequestHandler<DeleteCategoryReques
     {
         var user = await _userStore.FindByNameAsync(request.UserName, new CancellationToken());
         
-        Data.Models.Category category = null;
+        Models.Category category = null;
         if (request.Query.Id is not null)
             category = await _categoryRepository.FindByIdAsync(request.Query.Id.Value);
         else if (request.Query.Name is not null)

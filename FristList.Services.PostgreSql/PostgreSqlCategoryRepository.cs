@@ -1,5 +1,5 @@
 using Dapper;
-using FristList.Data.Models;
+using FristList.Models;
 using Npgsql;
 
 namespace FristList.Services.PostgreSql;

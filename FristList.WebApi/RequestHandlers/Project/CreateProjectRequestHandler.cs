@@ -1,8 +1,8 @@
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using FristList.Data.Models;
 using FristList.Data.Responses;
+using FristList.Models;
 using FristList.Services.Abstractions;
 using FristList.WebApi.Notifications.Project;
 using FristList.WebApi.Requests.Project;
@@ -28,7 +28,7 @@ public class CreateProjectRequestHandler : IRequestHandler<CreateProjectRequest,
     {
         var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
 
-        var project = new Data.Models.Project
+        var project = new Models.Project
         {
             Name = request.Query.Name,
             Description = request.Query.Description,

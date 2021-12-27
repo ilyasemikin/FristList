@@ -1,5 +1,5 @@
 using Dapper.FluentMap.Mapping;
-using Task = FristList.Data.Models.Task;
+using Task = FristList.Models.Task;
 
 namespace FristList.Services.PostgreSql.Mapping;
 

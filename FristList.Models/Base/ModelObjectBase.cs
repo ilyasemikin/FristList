@@ -1,4 +1,4 @@
-namespace FristList.Data.Models.Base;
+namespace FristList.Models.Base;
 
 public class ModelObjectBase
 {

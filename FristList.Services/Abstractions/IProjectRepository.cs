@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using FristList.Data.Models;
-using Task = FristList.Data.Models.Task;
+using FristList.Models;
+using Task = FristList.Models.Task;
 
 namespace FristList.Services.Abstractions;
 

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using FristList.Data.Models;
+using FristList.Models;
 
 namespace FristList.Services.Abstractions;
 

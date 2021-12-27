@@ -1,4 +1,4 @@
-using FristList.Data.Models;
+using FristList.Models;
 using MediatR;
 
 namespace FristList.WebApi.Notifications.Task;

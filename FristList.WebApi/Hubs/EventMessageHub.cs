@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using FristList.Models;
 using FristList.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -32,10 +33,10 @@ public interface IEventMessage
 [Authorize]
 public class EventMessageHub : Hub<IEventMessage>
 {
-    private readonly IUserStore<Data.Models.AppUser> _userStore;
+    private readonly IUserStore<AppUser> _userStore;
     private readonly IRealTimeClientsService _realTimeClientsService;
 
-    public EventMessageHub(IRealTimeClientsService realTimeClientsService, IUserStore<Data.Models.AppUser> userStore)
+    public EventMessageHub(IRealTimeClientsService realTimeClientsService, IUserStore<AppUser> userStore)
     {
         _realTimeClientsService = realTimeClientsService;
         _userStore = userStore;

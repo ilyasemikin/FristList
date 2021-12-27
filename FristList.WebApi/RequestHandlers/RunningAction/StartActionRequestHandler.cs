@@ -3,8 +3,8 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using FristList.Data.Models;
 using FristList.Data.Responses;
+using FristList.Models;
 using FristList.Services.Abstractions;
 using FristList.WebApi.Notifications.RunningAction;
 using FristList.WebApi.Requests.RunningAction;
@@ -34,7 +34,7 @@ public class StartActionRequestHandler : IRequestHandler<StartActionRequest, IRe
         if (request.Query.CategoryIds != null)
             categoryIds = request.Query.CategoryIds.ToList();
 
-        var action = new Data.Models.RunningAction
+        var action = new Models.RunningAction
         {
             TaskId = request.Query.TaskId,
             CategoryIds = categoryIds,

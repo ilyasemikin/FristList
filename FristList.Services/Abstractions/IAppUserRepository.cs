@@ -1,4 +1,4 @@
-using FristList.Data.Models;
+using FristList.Models;
 using Microsoft.AspNetCore.Identity;
 
 namespace FristList.Services.Abstractions;

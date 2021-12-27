@@ -3,8 +3,8 @@ using System.Net;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using FristList.Data.Models;
 using FristList.Data.Responses;
+using FristList.Models;
 using FristList.Services.Abstractions;
 using FristList.WebApi.Notifications.Action;
 using FristList.WebApi.Requests.Action;
@@ -40,7 +40,7 @@ public class CreateActionRequestHandler : IRequestHandler<CreateActionRequest, I
         if (request.Query.StartTime is null || request.Query.EndTime is null)
             return new CustomHttpCodeResponse(HttpStatusCode.BadRequest);
         
-        var action = new Data.Models.Action
+        var action = new Models.Action
         {
             StartTime = request.Query.StartTime.Value,
             EndTime = request.Query.EndTime.Value,

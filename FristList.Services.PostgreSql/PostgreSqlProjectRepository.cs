@@ -1,8 +1,8 @@
 using Dapper;
-using FristList.Data.Models;
+using FristList.Models;
 using FristList.Services.Abstractions;
 using Npgsql;
-using Task = FristList.Data.Models.Task;
+using Task = FristList.Models.Task;
 
 namespace FristList.Services.PostgreSql;
 

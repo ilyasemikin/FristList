@@ -1,7 +1,7 @@
 using FristList.Data.Dto.Base;
-using FristList.Data.Models.Base;
+using FristList.Models.Base;
 
-namespace FristList.Data;
+namespace FristList.Models.Services;
 
 public interface IModelToDtoMapper
 {
