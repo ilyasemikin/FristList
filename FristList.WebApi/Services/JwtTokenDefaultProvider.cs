@@ -1,7 +1,7 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using FristList.Data.Models;
+using FristList.Models;
 using Microsoft.IdentityModel.Tokens;
 
 namespace FristList.WebApi.Services;

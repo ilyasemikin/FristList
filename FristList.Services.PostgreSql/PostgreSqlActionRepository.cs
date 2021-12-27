@@ -1,7 +1,7 @@
 using Dapper;
-using FristList.Data.Models;
+using FristList.Models;
 using Npgsql;
-using Action = FristList.Data.Models.Action;
+using Action = FristList.Models.Action;
 
 namespace FristList.Services.PostgreSql;
 

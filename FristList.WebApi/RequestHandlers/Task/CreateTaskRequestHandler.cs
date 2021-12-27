@@ -4,8 +4,8 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using FristList.Data.Dto.Base;
-using FristList.Data.Models;
 using FristList.Data.Responses;
+using FristList.Models;
 using FristList.Services.Abstractions;
 using FristList.WebApi.Notifications.Task;
 using FristList.WebApi.Requests.Task;
@@ -31,7 +31,7 @@ public class CreateTaskRequestHandler : IRequestHandler<CreateTaskRequest, IResp
     {
         var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
 
-        var task = new Data.Models.Task
+        var task = new Models.Task
         {
             Name = request.Query.Name,
             UserId = user.Id,

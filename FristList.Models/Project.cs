@@ -1,6 +1,6 @@
-using FristList.Data.Models.Base;
+using FristList.Models.Base;
 
-namespace FristList.Data.Models;
+namespace FristList.Models;
 
 public class Project : ModelObjectBase
 {

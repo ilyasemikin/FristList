@@ -1,9 +1,10 @@
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using FristList.Data.Models;
 using FristList.Data.Responses;
+using FristList.Models;
 using FristList.Services.Abstractions;
+using FristList.WebApi.Notifications.ProjectTask;
 using FristList.WebApi.Requests.ProjectTask;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
@@ -15,12 +16,14 @@ public class DeleteTaskFromProjectRequestHandler : IRequestHandler<DeleteTaskFro
     private readonly IUserStore<AppUser> _userStore;
     private readonly IProjectRepository _projectRepository;
     private readonly ITaskRepository _taskRepository;
+    private readonly IMediator _mediator;
 
-    public DeleteTaskFromProjectRequestHandler(IUserStore<AppUser> userStore, IProjectRepository projectRepository, ITaskRepository taskRepository)
+    public DeleteTaskFromProjectRequestHandler(IUserStore<AppUser> userStore, IProjectRepository projectRepository, ITaskRepository taskRepository, IMediator mediator)
     {
         _userStore = userStore;
         _projectRepository = projectRepository;
         _taskRepository = taskRepository;
+        _mediator = mediator;
     }
 
     public async Task<IResponse> Handle(DeleteTaskFromProjectRequest request, CancellationToken cancellationToken)
@@ -37,6 +40,13 @@ public class DeleteTaskFromProjectRequestHandler : IRequestHandler<DeleteTaskFro
         var result = await _projectRepository.DeleteTaskAsync(project, task);
         if (!result.Succeeded)
             return new CustomHttpCodeResponse(HttpStatusCode.InternalServerError);
+
+        var message = new ProjectTaskOrderChangedNotification
+        {
+            Project = project,
+            User = user
+        };
+        await _mediator.Publish(message, cancellationToken);
         
         return new DataResponse<object>(new { });
     }

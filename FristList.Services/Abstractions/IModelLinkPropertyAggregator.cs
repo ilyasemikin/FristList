@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using FristList.Data.Models.Base;
+using FristList.Models.Base;
 
 namespace FristList.Services.Abstractions;
 

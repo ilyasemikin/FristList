@@ -1,5 +1,5 @@
 using Dapper;
-using FristList.Data.Models;
+using FristList.Models;
 using FristList.Services.Abstractions;
 using Microsoft.AspNetCore.Identity;
 using Npgsql;

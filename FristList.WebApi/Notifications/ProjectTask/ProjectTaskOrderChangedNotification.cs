@@ -1,9 +1,9 @@
 using FristList.Models;
 using MediatR;
 
-namespace FristList.WebApi.Notifications.Project;
+namespace FristList.WebApi.Notifications.ProjectTask;
 
-public class ProjectCreatedNotification : INotification
+public class ProjectTaskOrderChangedNotification : INotification
 {
     public AppUser User { get; init; }
     public Models.Project Project { get; init; }

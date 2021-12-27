@@ -2,8 +2,11 @@ using System;
 using System.Linq;
 using FristList.Data;
 using FristList.Data.Dto.Base;
-using FristList.Data.Models.Base;
+using FristList.Models;
+using FristList.Models.Base;
+using FristList.Models.Services;
 using FristList.Services.Abstractions;
+using Action = FristList.Models.Action;
 
 namespace FristList.WebApi.Services;
 
@@ -16,14 +19,14 @@ public class DefaultMapToDtoMapper : IModelToDtoMapper
         _categoryRepository = categoryRepository;
     }
 
-    private Data.Dto.Category MapCategory(Data.Models.Category category)
+    private Data.Dto.Category MapCategory(Category category)
         => new()
         {
             Id = category.Id,
             Name = category.Name
         };
 
-    private Data.Dto.AppUser MapAppUser(Data.Models.AppUser user)
+    private Data.Dto.AppUser MapAppUser(AppUser user)
         => new()
         {
             Id = user.Id,
@@ -31,7 +34,7 @@ public class DefaultMapToDtoMapper : IModelToDtoMapper
             UserName = user.UserName
         };
 
-    private Data.Dto.Project MapProject(Data.Models.Project project)
+    private Data.Dto.Project MapProject(Project project)
         => new()
         {
             Id = project.Id,
@@ -40,7 +43,7 @@ public class DefaultMapToDtoMapper : IModelToDtoMapper
             IsCompleted = project.IsCompleted
         };
     
-    private Data.Dto.RunningAction MapRunningAction(Data.Models.RunningAction action)
+    private Data.Dto.RunningAction MapRunningAction(RunningAction action)
         => new()
         {
             StartTime = action.StartTime,
@@ -50,7 +53,7 @@ public class DefaultMapToDtoMapper : IModelToDtoMapper
                 .ToArray()
         };
 
-    private Data.Dto.Action MapAction(Data.Models.Action action)
+    private Data.Dto.Action MapAction(Action action)
         => new()
         {
             Id = action.Id,
@@ -62,7 +65,7 @@ public class DefaultMapToDtoMapper : IModelToDtoMapper
                 .ToArray()
         };
 
-    private Data.Dto.Task MapTask(Data.Models.Task task)
+    private Data.Dto.Task MapTask(Task task)
         => new()
         {
             Id = task.Id,
@@ -76,12 +79,12 @@ public class DefaultMapToDtoMapper : IModelToDtoMapper
     public DtoObjectBase Map(ModelObjectBase modelObject)
         => modelObject switch
         {
-            Data.Models.Category c => MapCategory(c),
-            Data.Models.AppUser u => MapAppUser(u),
-            Data.Models.Action a => MapAction(a),
-            Data.Models.RunningAction a => MapRunningAction(a),
-            Data.Models.Task t => MapTask(t),
-            Data.Models.Project p => MapProject(p),
+            Category c => MapCategory(c),
+            AppUser u => MapAppUser(u),
+            Action a => MapAction(a),
+            RunningAction a => MapRunningAction(a),
+            Task t => MapTask(t),
+            Project p => MapProject(p),
             _ => throw new ArgumentException("Unknown type not supported")
         };
 }

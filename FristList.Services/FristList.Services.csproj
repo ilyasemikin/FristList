@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FristList.Data\FristList.Data.csproj" />
+    <ProjectReference Include="..\FristList.Models\FristList.Models.csproj" />
   </ItemGroup>
 
   <ItemGroup>

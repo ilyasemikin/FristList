@@ -1,9 +1,10 @@
+using FristList.Models;
 using MediatR;
 
 namespace FristList.WebApi.Notifications.Category;
 
 public class CategoryCreatedNotification : INotification
 {
-    public Data.Models.AppUser User { get; init; }
-    public Data.Models.Category Category { get; init; }
+    public AppUser User { get; init; }
+    public Models.Category Category { get; init; }
 }

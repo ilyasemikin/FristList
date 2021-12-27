@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
-using FristList.Data.Models;
-using FristList.Data.Models.Base;
+using FristList.Models;
+using FristList.Models.Base;
 using FristList.Services.Abstractions;
 using Task = System.Threading.Tasks.Task;
 

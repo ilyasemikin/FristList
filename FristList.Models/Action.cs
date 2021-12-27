@@ -1,23 +1,23 @@
-using FristList.Data.Models.Base;
+using FristList.Models.Base;
 
-namespace FristList.Data.Models;
+namespace FristList.Models;
 
-public class RunningAction : ModelObjectBase
+public class Action : ModelObjectBase
 {
     public int Id { get; set; }
     
-    public DateTime StartTime { get; init; }
-
+    public DateTime StartTime { get; set; }
+    public DateTime EndTime { get; set; }
+    
+    public string? Description { get; set; }
+    
     public int UserId { get; set; }
     public AppUser? User { get; set; }
-    
-    public int? TaskId { get; set; }
-    public Task? Task { get; set; }
     
     public IList<int> CategoryIds { get; set; }
     public IList<Category> Categories { get; set; }
 
-    public RunningAction()
+    public Action()
     {
         CategoryIds = new List<int>();
         Categories = new List<Category>();

@@ -1,6 +1,7 @@
 using System.Text;
 using FristList.Data;
-using FristList.Data.Models;
+using FristList.Models;
+using FristList.Models.Services;
 using FristList.Services;
 using FristList.Services.Abstractions;
 using FristList.Services.PostgreSql.DependencyInjection;
