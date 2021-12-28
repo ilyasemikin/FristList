@@ -1,8 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using FristList.Data.Queries.Category;
+using FristList.Data.Queries.RunningAction;
 using FristList.Models;
 using FristList.Services;
+using FristList.WebApi.Requests.Category;
+using FristList.WebApi.Requests.RunningAction;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
@@ -35,11 +40,44 @@ public class EventMessageHub : Hub<IEventMessage>
 {
     private readonly IUserStore<AppUser> _userStore;
     private readonly IRealTimeClientsService _realTimeClientsService;
+    private readonly IMediator _mediator;
 
-    public EventMessageHub(IRealTimeClientsService realTimeClientsService, IUserStore<AppUser> userStore)
+    public EventMessageHub(IRealTimeClientsService realTimeClientsService, IUserStore<AppUser> userStore, IMediator mediator)
     {
         _realTimeClientsService = realTimeClientsService;
         _userStore = userStore;
+        _mediator = mediator;
+    }
+
+    public async Task StartAction(StartActionQuery query)
+    {
+        var request = new StartRunningActionRequest
+        {
+            Query = query,
+            UserName = Context.User!.Identity!.Name
+        };
+
+        await _mediator.Send(request);
+    }
+
+    public async Task StopAction()
+    {
+        var request = new StopRunningActionRequest
+        {
+            UserName = Context.User!.Identity!.Name
+        };
+
+        await _mediator.Send(request);
+    }
+
+    public async Task DeleteCurrentAction()
+    {
+        var request = new DeleteRunningActionRequest
+        {
+            UserName = Context.User!.Identity!.Name
+        };
+
+        await _mediator.Send(request);
     }
 
     public override async Task OnConnectedAsync()

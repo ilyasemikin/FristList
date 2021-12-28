@@ -4,7 +4,7 @@ using MediatR;
 
 namespace FristList.WebApi.Requests.RunningAction;
 
-public class DeleteActionRequest : IRequest<IResponse>
+public class DeleteRunningActionRequest : IRequest<IResponse>
 {
     public string UserName { get; init; }
 }

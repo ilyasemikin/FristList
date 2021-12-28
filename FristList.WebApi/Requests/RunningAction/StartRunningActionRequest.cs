@@ -4,7 +4,7 @@ using MediatR;
 
 namespace FristList.WebApi.Requests.RunningAction;
 
-public class StartActionRequest : IRequest<IResponse>
+public class StartRunningActionRequest : IRequest<IResponse>
 {
     public StartActionQuery Query { get; init; }
     public string UserName { get; init; }

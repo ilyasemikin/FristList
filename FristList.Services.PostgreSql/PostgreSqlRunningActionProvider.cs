@@ -33,7 +33,20 @@ public class PostgreSqlRunningActionProvider : IRunningActionProvider
         else
             await connection.ExecuteAsync("SELECT * FROM start_action(@UserId, @Categories)",
                 new {UserId = action.UserId, Categories = action.CategoryIds.ToArray()});
-        
+
+        // TODO: try refactor this
+        var result = await GetCurrentRunningAsync(action.UserId);
+        if (result is not null)
+        {
+            action.StartTime = result.StartTime;
+            action.CategoryIds = result.CategoryIds;
+            action.Categories = result.Categories;
+            action.UserId = result.UserId;
+            action.User = result.User;
+            action.TaskId = result.TaskId;
+            action.Task = action.Task;
+        }
+
         return RepositoryResult.Success;
     }
 
@@ -52,7 +65,7 @@ public class PostgreSqlRunningActionProvider : IRunningActionProvider
         return RepositoryResult.Success;
     }
 
-    public async Task<RunningAction?> GetCurrentRunningAsync(AppUser user)
+    public async Task<RunningAction?> GetCurrentRunningAsync(int userId)
     {
         var connection = new NpgsqlConnection(_connectionString);
 
@@ -71,8 +84,11 @@ public class PostgreSqlRunningActionProvider : IRunningActionProvider
                 }
 
                 return answer;
-            }, new { UserId = user.Id }, splitOn: "CategoryId");
+            }, new { UserId = userId }, splitOn: "CategoryId");
 
         return answer;
     }
+
+    public Task<RunningAction?> GetCurrentRunningAsync(AppUser user)
+        => GetCurrentRunningAsync(user.Id);
 }

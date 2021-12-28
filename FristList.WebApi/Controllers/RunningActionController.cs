@@ -20,7 +20,7 @@ public class RunningActionController : ApiController
     [HttpPost("start")]
     public async Task<IActionResult> StartAction(StartActionQuery query)
     {
-        var request = new StartActionRequest
+        var request = new StartRunningActionRequest
         {
             Query = query,
             UserName = User.Identity!.Name
@@ -32,7 +32,7 @@ public class RunningActionController : ApiController
     [HttpPost("stop")]
     public async Task<IActionResult> StopAction()
     {
-        var request = new StopActionRequest
+        var request = new StopRunningActionRequest
         {
             UserName = User.Identity!.Name
         };
@@ -43,7 +43,7 @@ public class RunningActionController : ApiController
     [HttpDelete]
     public async Task<IActionResult> DeleteAction()
     {
-        var request = new DeleteActionRequest
+        var request = new DeleteRunningActionRequest
         {
             UserName = User.Identity!.Name
         };

@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace FristList.WebApi.RequestHandlers.RunningAction;
 
-public class StartActionRequestHandler : IRequestHandler<StartActionRequest, IResponse>
+public class StartActionRequestHandler : IRequestHandler<StartRunningActionRequest, IResponse>
 {
     private readonly IUserStore<AppUser> _userStore;
     private readonly IRunningActionProvider _runningActionProvider;
@@ -26,7 +26,7 @@ public class StartActionRequestHandler : IRequestHandler<StartActionRequest, IRe
         _mediator = mediator;
     }
 
-    public async Task<IResponse> Handle(StartActionRequest request, CancellationToken cancellationToken)
+    public async Task<IResponse> Handle(StartRunningActionRequest request, CancellationToken cancellationToken)
     {
         var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
 
@@ -44,7 +44,7 @@ public class StartActionRequestHandler : IRequestHandler<StartActionRequest, IRe
 
         if (await _runningActionProvider.GetCurrentRunningAsync(user) is not null)
         {
-            var saveRequest = new StopActionRequest
+            var saveRequest = new StopRunningActionRequest
             {
                 UserName = user.UserName
             };

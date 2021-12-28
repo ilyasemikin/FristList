@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace FristList.WebApi.RequestHandlers.RunningAction;
 
-public class DeleteActionRequestHandler : IRequestHandler<DeleteActionRequest, IResponse>
+public class DeleteActionRequestHandler : IRequestHandler<DeleteRunningActionRequest, IResponse>
 {
     private readonly IUserStore<AppUser> _userStore;
     private readonly IRunningActionProvider _runningActionProvider;
@@ -24,7 +24,7 @@ public class DeleteActionRequestHandler : IRequestHandler<DeleteActionRequest, I
         _mediator = mediator;
     }
 
-    public async Task<IResponse> Handle(DeleteActionRequest request, CancellationToken cancellationToken)
+    public async Task<IResponse> Handle(DeleteRunningActionRequest request, CancellationToken cancellationToken)
     {
         var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
 

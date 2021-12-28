@@ -7,7 +7,7 @@ public class RunningAction : ModelObjectBase
 {
     public int Id { get; set; }
     
-    public DateTime StartTime { get; init; }
+    public DateTime StartTime { get; set; }
 
     public int UserId { get; set; }
     public AppUser? User { get; set; }
