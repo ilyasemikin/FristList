@@ -2,8 +2,8 @@ using System;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using FristList.Data.Models;
 using FristList.Data.Responses;
+using FristList.Models;
 using FristList.Services.Abstractions;
 using FristList.WebApi.Requests.Task.Time;
 using MediatR;
@@ -27,7 +27,7 @@ public class SummaryTaskTimeRequestHandler : IRequestHandler<SummaryTimeRequest,
         var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
         var task = await _taskRepository.FindByIdAsync(request.TaskId);
 
-        if (task is null || task.UserId != user.Id)
+        if (task is null || task.AuthorId != user.Id)
             return new CustomHttpCodeResponse(HttpStatusCode.NotFound);
 
         var time = await _taskRepository.GetSummaryTimeAsync(task, request.FromTime, request.ToTime);

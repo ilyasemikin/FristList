@@ -1,8 +1,8 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using FristList.Data.Models;
 using FristList.Data.Responses;
+using FristList.Models;
 using FristList.Services.Abstractions;
 using FristList.WebApi.Requests.Category.Time;
 using MediatR;
