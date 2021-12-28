@@ -80,6 +80,14 @@ public class PostgreSqlTaskRepository : ITaskRepository
         return RepositoryResult.Success;
     }
 
+    public async Task<TimeSpan> GetSummaryTimeAsync(Task task, DateTime @from, DateTime to)
+    {
+        await using var connection = new NpgsqlConnection(_connectionString);
+        return await connection.QuerySingleOrDefaultAsync<TimeSpan>(
+            "SELECT * FROM get_task_summary_time(@TaskId, @FromTime AT TIME ZONE 'UTC', @ToTime AT TIME ZONE 'UTC')",
+            new { TaskId = task.Id, FromTime = from, ToTime = to });
+    }
+
     public async Task<int> CountAllByUser(AppUser user)
     {
         var connection = new NpgsqlConnection(_connectionString);

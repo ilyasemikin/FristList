@@ -542,7 +542,111 @@ $$ LANGUAGE plpgsql;
 
 -- End project tasks functions
 
--- Start action statistics
+-- Start time statistics
+
+CREATE OR REPLACE FUNCTION timestamp_to_str(t TIMESTAMP WITHOUT TIME ZONE)
+    RETURNS TEXT
+AS $$
+BEGIN
+    RETURN FORMAT('(TIMESTAMP ''%s'')', t);
+END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_intervals(intervals TSRANGE[])
+    RETURNS TABLE (
+        "StartTime"         TIMESTAMP WITHOUT TIME ZONE,
+        "EndTime"           TIMESTAMP WITHOUT TIME ZONE
+    )
+AS $$
+BEGIN
+    RETURN QUERY
+        WITH t1 AS (
+            SELECT LOWER("During") AS s, UPPER("During") AS e,
+                   COALESCE(
+                       LOWER("During") > MAX(UPPER("During"))
+                            OVER(ORDER BY LOWER("During"), UPPER("During")
+                                ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING), TRUE
+                   ) AS ns
+              FROM unnest(intervals) "During"
+        ), t2 AS (
+            SELECT t1.s, t1.e, SUM(ns::INTEGER) OVER(ORDER BY t1.s, t1.e) AS grp
+            FROM t1
+        )
+        SELECT MIN(a.s), MAX(a.e)
+          FROM t2 a
+      GROUP BY a.grp
+      ORDER BY MIN(a.s);
+END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_summary_time(query_text TEXT)
+    RETURNS INTERVAL
+AS $$
+DECLARE 
+    durings         TSRANGE[];
+    summary_time    INTERVAL;
+BEGIN
+    EXECUTE FORMAT('SELECT ARRAY(%s)', query_text) INTO durings;
+    SELECT SUM("EndTime" - "StartTime") FROM get_intervals(durings) INTO summary_time;
+    RETURN JUSTIFY_INTERVAL(COALESCE(summary_time, INTERVAL '0'));
+END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_user_summary_time(user_id INTEGER, from_time TIMESTAMP WITHOUT TIME ZONE, to_time TIMESTAMP WITHOUT TIME ZONE)
+    RETURNS INTERVAL
+AS $$
+BEGIN
+    RETURN get_summary_time(
+            FORMAT('SELECT a."During" FROM action a WHERE a."UserId"=%s AND LOWER(a."During") > %L AND UPPER(a."During") < %L',
+                   user_id, from_time, to_time));
+END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_category_summary_time(category_id INTEGER, from_time TIMESTAMP WITHOUT TIME ZONE, to_time TIMESTAMP WITHOUT TIME ZONE)
+    RETURNS INTERVAL
+AS $$
+BEGIN
+    RETURN get_summary_time(
+        FORMAT('SELECT a."During" FROM action a JOIN action_categories ac ON a."Id"=ac."CategoryId" WHERE ac."CategoryId"=%s AND LOWER(a."During") > %L AND UPPER(a."During") < %L', 
+            category_id, from_time, to_time));
+END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_task_summary_time(task_id INTEGER, from_time TIMESTAMP WITHOUT TIME ZONE, to_time TIMESTAMP WITHOUT TIME ZONE)
+    RETURNS INTERVAL
+AS $$
+BEGIN
+    RETURN get_summary_time(
+            FORMAT('SELECT a."During" FROM action a JOIN task_actions tc ON a."Id"=tc."ActionId" WHERE tc."TaskId"=%s AND LOWER(a."During") > %L AND UPPER(a."During") < %L',
+                   task_id, from_time, to_time));
+END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_task_summary_time(user_id INTEGER, task_id INTEGER, from_time TIMESTAMP WITHOUT TIME ZONE, to_time TIMESTAMP WITHOUT TIME ZONE)
+    RETURNS INTERVAL
+AS $$
+BEGIN
+    RAISE EXCEPTION 'Not implemented yet';
+END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_project_summary_time(project_id INTEGER, from_time TIMESTAMP WITHOUT TIME ZONE, to_time TIMESTAMP WITHOUT TIME ZONE)
+    RETURNS INTERVAL
+AS $$
+BEGIN
+    RETURN get_summary_time(
+            FORMAT('SELECT a."During" FROM action a JOIN task_actions tc ON a."Id"=tc."ActionId" LEFT JOIN project_tasks pt ON tc."TaskId"=pt."TaskId" WHERE pt."ProjectId"=%s AND LOWER(a."During") > %L AND UPPER(a."During") < %L',
+                   project_id, from_time, to_time));
+END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_project_summary_time(user_id INTEGER, project_id INTEGER, from_time TIMESTAMP WITHOUT TIME ZONE, to_time TIMESTAMP WITHOUT TIME ZONE)
+    RETURNS INTERVAL
+AS $$
+BEGIN
+    RAISE EXCEPTION 'Not implemented yet';
+END
+$$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION get_user_action_intervals(
     user_id         INTEGER,
@@ -674,7 +778,7 @@ BEGIN
 END
 $$ LANGUAGE plpgsql;
 
--- End action statistics
+-- End time statistics
 
 -- Start running action with categories
 
