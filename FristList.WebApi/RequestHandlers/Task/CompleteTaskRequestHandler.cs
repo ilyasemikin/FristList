@@ -26,7 +26,7 @@ public class CompleteTaskRequestHandler : IRequestHandler<CompleteTaskRequest, I
         var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
 
         var task = await _taskRepository.FindByIdAsync(request.TaskId);
-        if (task is null || task.UserId != user.Id)
+        if (task is null || task.AuthorId != user.Id)
             return new CustomHttpCodeResponse(HttpStatusCode.NotFound);
 
         await _taskRepository.CompleteAsync(task);

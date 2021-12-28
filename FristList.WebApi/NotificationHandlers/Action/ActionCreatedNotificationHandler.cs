@@ -28,6 +28,6 @@ public class ActionCreatedNotificationHandler : INotificationHandler<ActionCreat
         var action = _mapper.Map<Data.Dto.Action>(notification.Action);
         var ids = await _realTimeClientsService.GetUserConnectionIdsAsync(notification.User)
             .ToArrayAsync(cancellationToken);
-        await _hubContext.Clients.Clients(ids).AddActionMessage(action);
+        await _hubContext.Clients.Clients(ids).ActionAddedMessage(action);
     }
 }

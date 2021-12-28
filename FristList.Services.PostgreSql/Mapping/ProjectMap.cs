@@ -11,6 +11,6 @@ internal class ProjectMap : EntityMap<Project>
         Map(p => p.Name).ToColumn("ProjectName");
         Map(p => p.Description).ToColumn("ProjectDescription");
         Map(p => p.IsCompleted).ToColumn("ProjectIsCompleted");
-        Map(p => p.UserId).ToColumn("ProjectUserId");
+        Map(p => p.AuthorId).ToColumn("ProjectUserId");
     }
 }

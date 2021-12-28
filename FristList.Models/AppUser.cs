@@ -14,6 +14,9 @@ public class AppUser : ModelObjectBase, IEquatable<AppUser>
     public bool PhoneNumberConfirmed { get; set; }
     public string PasswordHash { get; set; }
     public bool TwoFactorEnable { get; set; }
+    
+    public DateTime CreatedAt { get; set; }
+    public DateTime EditedAt { get; set; }
 
     public AppUser()
     {

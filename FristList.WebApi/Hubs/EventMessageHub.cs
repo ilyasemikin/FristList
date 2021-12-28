@@ -12,22 +12,22 @@ namespace FristList.WebApi.Hubs;
 
 public interface IEventMessage
 {
-    public Task AddCategoryMessage(Data.Dto.Category category);
-    public Task DeleteCategoryMessage(int id);
+    public Task CategoryAddedMessage(Data.Dto.Category category);
+    public Task CategoryDeletedMessage(int id);
     
-    public Task AddRunningActionMessage(Data.Dto.RunningAction action);
-    public Task DeleteRunningActionMessage();
+    public Task RunningActionAddedMessage(Data.Dto.RunningAction action);
+    public Task RunningActionDeletedMessage();
 
-    public Task AddActionMessage(Data.Dto.Action action);
-    public Task DeleteActionMessage(int id);
+    public Task ActionAddedMessage(Data.Dto.Action action);
+    public Task ActionDeletedMessage(int id);
 
-    public Task AddTaskMessage(Data.Dto.Task task);
-    public Task DeleteTaskMessage(int id);
+    public Task TaskAddedMessage(Data.Dto.Task task);
+    public Task TaskDeletedMessage(int id);
 
-    public Task AddProjectMessage(Data.Dto.Project project);
-    public Task DeleteProjectMessage(int id);
+    public Task ProjectAddedMessage(Data.Dto.Project project);
+    public Task ProjectDeletedMessage(int id);
 
-    public Task ChangeProjectTaskOrder(Data.Dto.Project project,  IEnumerable<int> taskIds);
+    public Task ProjectTaskOrderChangedMessage(Data.Dto.Project project,  IEnumerable<int> taskIds);
 }
 
 [Authorize]

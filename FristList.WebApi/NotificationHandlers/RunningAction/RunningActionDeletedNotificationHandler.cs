@@ -24,6 +24,6 @@ public class RunningActionDeletedNotificationHandler : INotificationHandler<Runn
         var ids = await _realTimeClientsService.GetUserConnectionIdsAsync(notification.User)
             .ToArrayAsync(cancellationToken);
         await _hubContext.Clients.Clients(ids)
-            .DeleteRunningActionMessage();
+            .RunningActionDeletedMessage();
     }
 }

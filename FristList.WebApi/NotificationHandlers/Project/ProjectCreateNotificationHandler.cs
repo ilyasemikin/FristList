@@ -29,6 +29,6 @@ public class ProjectCreateNotificationHandler : INotificationHandler<ProjectCrea
         var ids = await _realTimeClientsService.GetUserConnectionIdsAsync(notification.User)
             .ToArrayAsync(cancellationToken);
         await _hubContext.Clients.Clients(ids)
-            .AddProjectMessage(project);
+            .ProjectAddedMessage(project);
     }
 }

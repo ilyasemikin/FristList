@@ -30,7 +30,7 @@ public class GetProjectRequestHandler : IRequestHandler<GetProjectRequest, IResp
         var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
 
         var project = await _projectRepository.FindByIdAsync(request.ProjectId);
-        if (project is null || project.UserId != user.Id)
+        if (project is null || project.AuthorId != user.Id)
             return new CustomHttpCodeResponse(HttpStatusCode.NotFound);
 
         return new DataResponse<Data.Dto.Project>((Data.Dto.Project)_mapper.Map(project));

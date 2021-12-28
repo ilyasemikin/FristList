@@ -11,6 +11,6 @@ internal class TaskMap : EntityMap<Task>
         Map(t => t.Name).ToColumn("TaskName");
         Map(t => t.IsCompleted).ToColumn("TaskIsCompleted");
         Map(t => t.ProjectId).ToColumn("TaskProjectId");
-        Map(t => t.UserId).ToColumn("TaskUserId");
+        Map(t => t.AuthorId).ToColumn("TaskUserId");
     }
 }

@@ -32,8 +32,8 @@ public class CreateProjectRequestHandler : IRequestHandler<CreateProjectRequest,
         {
             Name = request.Query.Name,
             Description = request.Query.Description,
-            UserId = user.Id,
-            User = user
+            AuthorId = user.Id,
+            Author = user
         };
 
         var result = await _projectRepository.CreateAsync(project);

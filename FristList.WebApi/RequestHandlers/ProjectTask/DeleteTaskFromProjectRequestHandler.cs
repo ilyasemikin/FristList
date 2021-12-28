@@ -33,7 +33,7 @@ public class DeleteTaskFromProjectRequestHandler : IRequestHandler<DeleteTaskFro
         var project = await _projectRepository.FindByIdAsync(request.ProjectId);
         var task = await _taskRepository.FindByIdAsync(request.TaskId);
 
-        if (task is null || project is null || task.UserId != user.Id || project.UserId != user.Id ||
+        if (task is null || project is null || task.AuthorId != user.Id || project.AuthorId != user.Id ||
             task.ProjectId != project.Id)
             return new CustomHttpCodeResponse(HttpStatusCode.NotFound);
 

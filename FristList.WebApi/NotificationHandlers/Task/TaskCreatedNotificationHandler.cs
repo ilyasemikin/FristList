@@ -30,6 +30,6 @@ public class TaskCreatedNotificationHandler : INotificationHandler<TaskCreatedNo
         var ids = await _realTimeClientsService.GetUserConnectionIdsAsync(notification.User)
             .ToArrayAsync(cancellationToken);
         await _hubContext.Clients.Clients(ids)
-            .AddTaskMessage(task);
+            .TaskAddedMessage(task);
     }
 }

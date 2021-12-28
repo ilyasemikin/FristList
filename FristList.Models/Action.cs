@@ -16,6 +16,9 @@ public class Action : ModelObjectBase
     
     public IList<int> CategoryIds { get; set; }
     public IList<Category> Categories { get; set; }
+    
+    public DateTime CreatedAt { get; set; }
+    public DateTime EditedAt { get; set; }
 
     public Action()
     {

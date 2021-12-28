@@ -27,7 +27,7 @@ public class PostgreSqlProjectRepository : IProjectRepository
                 {
                     Name = project.Name, 
                     Description = project.Description, 
-                    UserId = project.UserId,
+                    UserId = project.AuthorId,
                     IsCompleted = project.IsCompleted
                 });
         }

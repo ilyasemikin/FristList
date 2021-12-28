@@ -26,7 +26,7 @@ public class CompleteProjectRequestHandler : IRequestHandler<CompleteProjectRequ
         var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
         var project = await _projectRepository.FindByIdAsync(request.ProjectId);
 
-        if (project is null || project.UserId != user.Id)
+        if (project is null || project.AuthorId != user.Id)
             return new CustomHttpCodeResponse(HttpStatusCode.NotFound);
 
         var result = await _projectRepository.CompleteAsync(project);

@@ -17,6 +17,8 @@ public class RunningAction : ModelObjectBase
     
     public IList<int> CategoryIds { get; set; }
     public IList<Category> Categories { get; set; }
+    
+    public DateTime CreatedAt { get; set; }
 
     public RunningAction()
     {

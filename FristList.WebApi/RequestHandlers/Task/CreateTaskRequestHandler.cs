@@ -34,8 +34,8 @@ public class CreateTaskRequestHandler : IRequestHandler<CreateTaskRequest, IResp
         var task = new Models.Task
         {
             Name = request.Query.Name,
-            UserId = user.Id,
-            User = user,
+            AuthorId = user.Id,
+            Author = user,
             CategoryIds = request.Query.CategoryIds.ToList(),
             IsCompleted = false
         };

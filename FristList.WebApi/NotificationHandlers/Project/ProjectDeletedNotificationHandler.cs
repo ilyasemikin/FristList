@@ -25,6 +25,6 @@ public class ProjectDeletedNotificationHandler : INotificationHandler<ProjectDel
             .ToArrayAsync(cancellationToken);
 
         await _hubContext.Clients.Clients(ids)
-            .DeleteProjectMessage(notification.Id);
+            .ProjectDeletedMessage(notification.Id);
     }
 }

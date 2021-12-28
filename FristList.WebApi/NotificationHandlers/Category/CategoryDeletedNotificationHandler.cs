@@ -24,6 +24,6 @@ public class CategoryDeletedNotificationHandler : INotificationHandler<CategoryD
         var ids = await _realTimeClientsService.GetUserConnectionIdsAsync(notification.User)
             .ToArrayAsync(cancellationToken);
         await _hubContext.Clients.Clients(ids)
-            .DeleteCategoryMessage(notification.Id);
+            .CategoryDeletedMessage(notification.Id);
     }
 }

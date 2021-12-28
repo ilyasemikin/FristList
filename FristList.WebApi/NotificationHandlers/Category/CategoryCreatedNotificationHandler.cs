@@ -29,6 +29,6 @@ public class CategoryCreatedNotificationHandler : INotificationHandler<CategoryC
         var ids = await _realTimeClientsService.GetUserConnectionIdsAsync(notification.User)
             .ToArrayAsync(cancellationToken);
         await _hubContext.Clients.Clients(ids)
-            .AddCategoryMessage(category);
+            .CategoryAddedMessage(category);
     }
 }

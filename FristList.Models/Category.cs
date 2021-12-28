@@ -5,12 +5,15 @@ namespace FristList.Models;
 public class Category : ModelObjectBase
 {
     public int Id { get; set; }
+
+    public string Name { get; set; }
     
     public int UserId { get; set; }
     public AppUser? User { get; set; }
     
-    public string Name { get; set; }
-
+    public DateTime CreateAt { get; set; }
+    public DateTime EditedAt { get; set; }
+    
     public Category()
     {
         Name = string.Empty;

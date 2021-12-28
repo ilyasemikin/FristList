@@ -23,7 +23,7 @@ public class PostgreSqlTaskRepository : ITaskRepository
         {
             task.Id = await connection.ExecuteScalarAsync<int>(
                 "SELECT * FROM add_task(@Name, @UserId, @Categories)",
-                new {Name = task.Name, UserId = task.UserId, Categories = task.CategoryIds.ToArray()});
+                new {Name = task.Name, UserId = task.AuthorId, Categories = task.CategoryIds.ToArray()});
         }
         catch (Exception e)
         {

@@ -1,6 +1,5 @@
 using System.Linq;
 using System.Threading;
-using FristList.Data;
 using FristList.Models.Services;
 using FristList.Services;
 using FristList.WebApi.Hubs;
@@ -29,6 +28,6 @@ public class RunningActionCreatedNotificationHandler : INotificationHandler<Runn
         var ids = await _realTimeClientsService.GetUserConnectionIdsAsync(notification.User)
             .ToArrayAsync(cancellationToken);
         await _hubContext.Clients.Clients(ids)
-            .AddRunningActionMessage(action);
+            .RunningActionAddedMessage(action);
     }
 }

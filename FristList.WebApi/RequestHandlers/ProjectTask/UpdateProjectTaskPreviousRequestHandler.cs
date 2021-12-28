@@ -32,19 +32,19 @@ public class UpdateProjectTaskPreviousRequestHandler : IRequestHandler<UpdatePro
         var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
 
         var task = await _taskRepository.FindByIdAsync(request.TaskId);
-        if (task is null || task.UserId != user.Id || task.ProjectId is null)
+        if (task is null || task.AuthorId != user.Id || task.ProjectId is null)
             return new CustomHttpCodeResponse(HttpStatusCode.NotFound);
 
         Models.Task? previousTask = null;
         if (request.PreviousTaskId is not null)
         {
             previousTask = await _taskRepository.FindByIdAsync(request.PreviousTaskId.Value);
-            if (previousTask is null || previousTask.UserId != user.Id || previousTask.ProjectId != task.ProjectId)
+            if (previousTask is null || previousTask.AuthorId != user.Id || previousTask.ProjectId != task.ProjectId)
                 return new CustomHttpCodeResponse(HttpStatusCode.NotFound);
         }
 
         var project = await _projectRepository.FindByIdAsync(task.ProjectId.Value);
-        if (project is null || project.UserId != user.Id)
+        if (project is null || project.AuthorId != user.Id)
             return new CustomHttpCodeResponse(HttpStatusCode.NotFound);
 
         var result = await _projectRepository.UpdateTaskPositionAsync(project, task, previousTask);

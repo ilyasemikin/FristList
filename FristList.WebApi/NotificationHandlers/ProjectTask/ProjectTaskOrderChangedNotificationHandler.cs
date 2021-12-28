@@ -34,6 +34,6 @@ public class ProjectTaskOrderChangedNotificationHandler : INotificationHandler<P
             .ToEnumerable();
         var connectionIds = await _realTimeClientsService.GetUserConnectionIdsAsync(notification.User)
             .ToArrayAsync(cancellationToken);
-        await _hubContext.Clients.Clients(connectionIds).ChangeProjectTaskOrder(project, ids);
+        await _hubContext.Clients.Clients(connectionIds).ProjectTaskOrderChangedMessage(project, ids);
     }
 }

@@ -33,7 +33,7 @@ public class GetAllProjectTasksRequestHandler : IRequestHandler<GetAllProjectTas
 
         var project = await _projectRepository.FindByIdAsync(request.ProjectId);
 
-        if (project is null || project.UserId != user.Id)
+        if (project is null || project.AuthorId != user.Id)
             return new CustomHttpCodeResponse(HttpStatusCode.NotFound);
 
         var tasks = _projectRepository.FindAllTaskAsync(project)

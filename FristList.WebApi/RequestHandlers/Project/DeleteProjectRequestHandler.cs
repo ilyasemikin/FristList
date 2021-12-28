@@ -32,7 +32,7 @@ public class DeleteProjectRequestHandler : IRequestHandler<DeleteProjectRequest,
         var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
         
         var project = await _projectRepository.FindByIdAsync(request.Query.Id.Value);
-        if (project is null || project.UserId != user.Id)
+        if (project is null || project.AuthorId != user.Id)
             return new CustomHttpCodeResponse(HttpStatusCode.NotFound);
 
         var result = await _projectRepository.DeleteAsync(project);
