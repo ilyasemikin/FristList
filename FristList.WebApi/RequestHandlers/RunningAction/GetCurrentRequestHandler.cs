@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace FristList.WebApi.RequestHandlers.RunningAction;
 
-public class GetCurrentRequestHandler : IRequestHandler<GetCurrentActionRequest, IResponse>
+public class GetCurrentRequestHandler : IRequestHandler<GetCurrentActionRequest, Data.Dto.RunningAction?>
 {
     private readonly IUserStore<AppUser> _userStore;
     private readonly IRunningActionProvider _runningActionProvider;
@@ -27,15 +27,15 @@ public class GetCurrentRequestHandler : IRequestHandler<GetCurrentActionRequest,
         _mapper = mapper;
     }
 
-    public async Task<IResponse> Handle(GetCurrentActionRequest request, CancellationToken cancellationToken)
+    public async Task<Data.Dto.RunningAction?> Handle(GetCurrentActionRequest request, CancellationToken cancellationToken)
     {
         var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
         var action = await _runningActionProvider.GetCurrentRunningAsync(user);
 
         if (action is null)
-            return new CustomHttpCodeResponse(HttpStatusCode.NoContent);
+            return null;
 
         await _linkPropertyAggregator.FillPropertiesAsync(action);
-        return new DataResponse<Data.Dto.RunningAction>((Data.Dto.RunningAction) _mapper.Map(action));
+        return _mapper.Map<Data.Dto.RunningAction>(action);
     }
 }

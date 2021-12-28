@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -14,7 +15,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace FristList.WebApi.RequestHandlers.ProjectTask;
 
-public class GetAllProjectTasksRequestHandler : IRequestHandler<GetAllProjectTasksRequest, IResponse>
+public class GetAllProjectTasksRequestHandler : IRequestHandler<GetAllProjectTasksRequest, IEnumerable<Data.Dto.Task>>
 {
     private readonly IUserStore<AppUser> _userStore;
     private readonly IProjectRepository _projectRepository;
@@ -27,19 +28,19 @@ public class GetAllProjectTasksRequestHandler : IRequestHandler<GetAllProjectTas
         _mapper = mapper;
     }
 
-    public async Task<IResponse> Handle(GetAllProjectTasksRequest request, CancellationToken cancellationToken)
+    public async Task<IEnumerable<Data.Dto.Task>> Handle(GetAllProjectTasksRequest request, CancellationToken cancellationToken)
     {
         var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
 
         var project = await _projectRepository.FindByIdAsync(request.ProjectId);
 
         if (project is null || project.AuthorId != user.Id)
-            return new CustomHttpCodeResponse(HttpStatusCode.NotFound);
+            return Array.Empty<Data.Dto.Task>();
 
         var tasks = _projectRepository.FindAllTaskAsync(project)
             .Select(_mapper.Map<Data.Dto.Task>)
             .ToEnumerable();
 
-        return new DataResponse<IEnumerable<Data.Dto.Task>>(tasks);
+        return tasks;
     }
 }

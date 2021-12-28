@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace FristList.Data.Queries.Category;
 
 public class DeleteCategoryQuery

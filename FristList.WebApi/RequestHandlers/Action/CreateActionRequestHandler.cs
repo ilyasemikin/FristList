@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using FristList.Data.Responses;
 using FristList.Models;
 using FristList.Services.Abstractions;
+using FristList.WebApi.Helpers;
 using FristList.WebApi.Notifications.Action;
 using FristList.WebApi.Requests.Action;
 using MediatR;
@@ -13,7 +14,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace FristList.WebApi.RequestHandlers.Action;
 
-public class CreateActionRequestHandler : IRequestHandler<CreateActionRequest, IResponse>
+public class CreateActionRequestHandler : IRequestHandler<CreateActionRequest, RequestResult<Unit>>
 {
     private readonly IUserStore<AppUser> _userStore;
     private readonly IActionRepository _actionRepository;
@@ -28,39 +29,32 @@ public class CreateActionRequestHandler : IRequestHandler<CreateActionRequest, I
         _mediator = mediator;
     }
 
-    public async Task<IResponse> Handle(CreateActionRequest request, CancellationToken cancellationToken)
+    public async Task<RequestResult<Unit>> Handle(CreateActionRequest request, CancellationToken cancellationToken)
     {
-        var user = await _userStore.FindByNameAsync(request.UserName, new CancellationToken());
-        var categories = await _categoryRepository.FindByIdsAsync(request.Query.CategoryIds)
+        var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
+        var categories = await _categoryRepository.FindByIdsAsync(request.CategoryIds)
             .ToListAsync(cancellationToken);
 
-        if (categories.Count != request.Query.CategoryIds.Count)
-            return new CustomHttpCodeResponse(HttpStatusCode.BadRequest);
+        if (categories.Count != request.CategoryIds.Count)
+            return RequestResult<Unit>.Failed();
 
-        if (request.Query.StartTime is null || request.Query.EndTime is null)
-            return new CustomHttpCodeResponse(HttpStatusCode.BadRequest);
-        
         var action = new Models.Action
         {
-            StartTime = request.Query.StartTime.Value,
-            EndTime = request.Query.EndTime.Value,
-            Description = request.Query.Description,
-            CategoryIds = request.Query.CategoryIds.ToList(),
+            StartTime = request.StartTime,
+            EndTime = request.EndTime,
+            Description = request.Description,
+            CategoryIds = request.CategoryIds
+                .ToList(),
             Categories = categories,
             UserId = user.Id
         };
 
         var result = await _actionRepository.CreateAsync(action);
         if (!result.Succeeded)
-            return new CustomHttpCodeResponse(HttpStatusCode.InternalServerError);
+            return RequestResult<Unit>.Failed();
 
-        var message = new ActionCreatedNotification
-        {
-            User = user,
-            Action = action
-        };
-        await _mediator.Publish(message, cancellationToken);
-        
-        return new DataResponse<object>(new { });
+        await _mediator.Publish(new ActionCreatedNotification(user, action), cancellationToken);
+
+        return RequestResult<Unit>.Success(Unit.Value);
     }
 }

@@ -26,6 +26,6 @@ public class TaskDeletedNotificationHandler : INotificationHandler<TaskDeletedNo
         var ids = await _realTimeClientsService.GetUserConnectionIdsAsync(notification.User)
             .ToArrayAsync(cancellationToken);
         await _hubContext.Clients.Clients(ids)
-            .TaskDeletedMessage(notification.Id);
+            .TaskDeletedMessage(notification.TaskId);
     }
 }

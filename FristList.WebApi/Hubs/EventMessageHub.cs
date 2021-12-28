@@ -51,33 +51,18 @@ public class EventMessageHub : Hub<IEventMessage>
 
     public async Task StartAction(StartActionQuery query)
     {
-        var request = new StartRunningActionRequest
-        {
-            Query = query,
-            UserName = Context.User!.Identity!.Name
-        };
-
-        await _mediator.Send(request);
+        await _mediator.Send(new StartRunningActionRequest(query.TaskId, query.CategoryIds,
+            Context.User!.Identity!.Name!));
     }
 
     public async Task StopAction()
     {
-        var request = new StopRunningActionRequest
-        {
-            UserName = Context.User!.Identity!.Name
-        };
-
-        await _mediator.Send(request);
+        await _mediator.Send(new StopRunningActionRequest(Context.User!.Identity!.Name!));
     }
 
     public async Task DeleteCurrentAction()
     {
-        var request = new DeleteRunningActionRequest
-        {
-            UserName = Context.User!.Identity!.Name
-        };
-
-        await _mediator.Send(request);
+        await _mediator.Send(new DeleteRunningActionRequest(Context.User!.Identity!.Name!));
     }
 
     public override async Task OnConnectedAsync()

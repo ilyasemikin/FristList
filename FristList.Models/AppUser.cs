@@ -7,7 +7,7 @@ public class AppUser : ModelObjectBase, IEquatable<AppUser>
     public int Id { get; set; }
     public string UserName { get; set; }
     public string NormalizedUserName { get; set; }
-    public string? Email { get; set; }
+    public string Email { get; set; }
     public string? NormalizedEmail { get; set; }
     public bool EmailConfirmed { get; set; }
     public string? PhoneNumber { get; set; }
@@ -20,7 +20,7 @@ public class AppUser : ModelObjectBase, IEquatable<AppUser>
 
     public AppUser()
     {
-        UserName = NormalizedUserName = PasswordHash = string.Empty;
+        UserName = NormalizedUserName = PasswordHash = Email = string.Empty;
     }
 
     public bool Equals(AppUser? other)

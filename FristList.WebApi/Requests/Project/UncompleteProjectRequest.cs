@@ -1,10 +1,6 @@
-using FristList.Data.Responses;
+using FristList.WebApi.Helpers;
 using MediatR;
 
 namespace FristList.WebApi.Requests.Project;
 
-public class UncompleteProjectRequest : IRequest<IResponse>
-{
-    public int ProjectId { get; init; }
-    public string UserName { get; init; }
-}
+public record UncompleteProjectRequest(int ProjectId, string UserName) : IRequest<RequestResult<Unit>>;

@@ -4,13 +4,14 @@ using System.Threading.Tasks;
 using FristList.Data.Responses;
 using FristList.Models;
 using FristList.Services.Abstractions;
+using FristList.WebApi.Helpers;
 using FristList.WebApi.Requests.Task;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 
 namespace FristList.WebApi.RequestHandlers.Task;
 
-public class DeleteTaskRequestHandler : IRequestHandler<DeleteTaskRequest, IResponse>
+public class DeleteTaskRequestHandler : IRequestHandler<DeleteTaskRequest, RequestResult<Unit>>
 {
     private readonly IUserStore<AppUser> _userStore;
     private readonly ITaskRepository _taskRepository;
@@ -21,18 +22,18 @@ public class DeleteTaskRequestHandler : IRequestHandler<DeleteTaskRequest, IResp
         _taskRepository = taskRepository;
     }
 
-    public async Task<IResponse> Handle(DeleteTaskRequest request, CancellationToken cancellationToken)
+    public async Task<RequestResult<Unit>> Handle(DeleteTaskRequest request, CancellationToken cancellationToken)
     {
         var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
-        var task = await _taskRepository.FindByIdAsync(request.Query.Id!.Value);
+        var task = await _taskRepository.FindByIdAsync(request.TaskId);
 
         if (task is null || task.AuthorId != user.Id)
-            return new CustomHttpCodeResponse(HttpStatusCode.NotFound);
+            return RequestResult<Unit>.Failed();
 
         var result = await _taskRepository.DeleteAsync(task);
         if (!result.Succeeded)
-            return new CustomHttpCodeResponse(HttpStatusCode.InternalServerError);
+            return RequestResult<Unit>.Failed();
 
-        return new DataResponse<object>(new { });
+        return RequestResult<Unit>.Success(Unit.Value);
     }
 }

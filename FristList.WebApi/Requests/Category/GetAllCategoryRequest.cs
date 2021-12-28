@@ -4,8 +4,5 @@ using MediatR;
 
 namespace FristList.WebApi.Requests.Category;
 
-public class GetAllCategoryRequest : IRequest<IResponse>
-{
-    public PagedQuery Query { get; init; }
-    public string UserName { get; init; }
-}
+public record GetAllCategoryRequest(int Page, int PageSize, string UserName) 
+    : IRequest<PagedDataResponse<Data.Dto.Category>>;

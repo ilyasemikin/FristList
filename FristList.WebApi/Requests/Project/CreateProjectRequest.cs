@@ -1,11 +1,6 @@
-using FristList.Data.Queries.Project;
-using FristList.Data.Responses;
+using FristList.WebApi.Helpers;
 using MediatR;
 
 namespace FristList.WebApi.Requests.Project;
 
-public class CreateProjectRequest : IRequest<IResponse>
-{
-    public CreateProjectQuery Query { get; init; }
-    public string UserName { get; init; }
-}
+public record CreateProjectRequest(string Name, string? Description, string UserName) : IRequest<RequestResult<Unit>>;

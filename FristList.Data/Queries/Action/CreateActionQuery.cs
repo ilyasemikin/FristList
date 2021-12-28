@@ -12,10 +12,5 @@ public class CreateActionQuery
     public DateTime? EndTime { get; init; }
     
     public string? Description { get; init; }
-    public IReadOnlyList<int> CategoryIds { get; init; }
-
-    public CreateActionQuery()
-    {
-        CategoryIds = Array.Empty<int>();
-    }
+    public IReadOnlyList<int> CategoryIds { get; init; } = Array.Empty<int>();
 }

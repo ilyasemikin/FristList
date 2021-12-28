@@ -3,8 +3,4 @@ using MediatR;
 
 namespace FristList.WebApi.Notifications.Action;
 
-public class ActionCreatedNotification : INotification
-{
-    public AppUser User { get; init; }
-    public Models.Action Action { get; init; }
-}
+public record ActionCreatedNotification(AppUser User, Models.Action Action) : INotification;

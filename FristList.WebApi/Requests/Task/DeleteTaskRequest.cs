@@ -1,11 +1,8 @@
 using FristList.Data.Queries.Task;
 using FristList.Data.Responses;
+using FristList.WebApi.Helpers;
 using MediatR;
 
 namespace FristList.WebApi.Requests.Task;
 
-public class DeleteTaskRequest : IRequest<IResponse>
-{
-    public DeleteTaskQuery Query { get; init; }
-    public string UserName { get; init; }
-}
+public record DeleteTaskRequest(int TaskId, string UserName) : IRequest<RequestResult<Unit>>;

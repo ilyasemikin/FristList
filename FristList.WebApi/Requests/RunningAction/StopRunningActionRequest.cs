@@ -1,9 +1,7 @@
 using FristList.Data.Responses;
+using FristList.WebApi.Helpers;
 using MediatR;
 
 namespace FristList.WebApi.Requests.RunningAction;
 
-public class StopRunningActionRequest : IRequest<IResponse>
-{
-    public string UserName { get; init; }
-}
+public record StopRunningActionRequest(string UserName) : IRequest<RequestResult<Unit>>;

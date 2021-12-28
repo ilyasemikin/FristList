@@ -1,10 +1,7 @@
-using FristList.Data.Queries.Account;
-using FristList.Data.Responses;
+using FristList.Data.Dto;
+using FristList.WebApi.Helpers;
 using MediatR;
 
 namespace FristList.WebApi.Requests.Account;
 
-public class RefreshTokenRequest : IRequest<IResponse>
-{
-    public RefreshTokenQuery Query { get; init; }
-}
+public record RefreshTokenRequest(string Token) : IRequest<RequestResult<Tokens>>;

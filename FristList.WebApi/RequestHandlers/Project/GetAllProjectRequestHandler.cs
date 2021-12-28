@@ -31,10 +31,10 @@ public class GetAllProjectRequestHandler : IRequestHandler<GetAllProjectRequest,
 
         var count = await _projectRepository.CountByUserAsync(user);
         var projects = _projectRepository
-            .FindAllByUserAsync(user, (request.Query.Page - 1) * request.Query.PageSize, request.Query.PageSize)
+            .FindAllByUserAsync(user, (request.Page - 1) * request.PageSize, request.PageSize)
             .Select(_mapper.Map<Data.Dto.Project>)
             .ToEnumerable();
 
-        return PagedDataResponse<Data.Dto.Project>.Create(projects, request.Query.Page, request.Query.PageSize, count);
+        return PagedDataResponse<Data.Dto.Project>.Create(projects, request.Page, request.PageSize, count);
     }
 }

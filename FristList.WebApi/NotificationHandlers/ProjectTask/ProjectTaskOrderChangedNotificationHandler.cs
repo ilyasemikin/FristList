@@ -19,11 +19,12 @@ public class ProjectTaskOrderChangedNotificationHandler : INotificationHandler<P
     private readonly IProjectRepository _projectRepository;
     private readonly IRealTimeClientsService _realTimeClientsService;
 
-    public ProjectTaskOrderChangedNotificationHandler(IHubContext<EventMessageHub, IEventMessage> hubContext, IProjectRepository projectRepository, IRealTimeClientsService realTimeClientsService)
+    public ProjectTaskOrderChangedNotificationHandler(IHubContext<EventMessageHub, IEventMessage> hubContext, IProjectRepository projectRepository, IRealTimeClientsService realTimeClientsService, IModelToDtoMapper mapper)
     {
         _hubContext = hubContext;
         _projectRepository = projectRepository;
         _realTimeClientsService = realTimeClientsService;
+        _mapper = mapper;
     }
 
     public async System.Threading.Tasks.Task Handle(ProjectTaskOrderChangedNotification notification, CancellationToken cancellationToken)

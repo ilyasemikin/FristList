@@ -4,8 +4,4 @@ using MediatR;
 
 namespace FristList.WebApi.Requests.Task;
 
-public class GetAllTaskRequest : IRequest<IResponse>
-{
-    public PagedQuery Query { get; init; }
-    public string UserName { get; init; }
-}
+public record GetAllTaskRequest(int Page, int PageSize, string UserName) : IRequest<PagedDataResponse<Data.Dto.Task>>;

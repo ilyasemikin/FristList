@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace FristList.WebApi.RequestHandlers.Category.Time;
 
-public class SummaryAllCategoryTimeRequestHandler : IRequestHandler<SummaryAllCategoryTimeRequest, IResponse>
+public class SummaryAllCategoryTimeRequestHandler : IRequestHandler<SummaryAllCategoryTimeRequest, TimeSpan>
 {
     private readonly IUserStore<AppUser> _userStore;
     private readonly IActionRepository _actionRepository;
@@ -21,11 +21,9 @@ public class SummaryAllCategoryTimeRequestHandler : IRequestHandler<SummaryAllCa
         _actionRepository = actionRepository;
     }
 
-    public async Task<IResponse> Handle(SummaryAllCategoryTimeRequest request, CancellationToken cancellationToken)
+    public async Task<TimeSpan> Handle(SummaryAllCategoryTimeRequest request, CancellationToken cancellationToken)
     {
         var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
-
-        var time = await _actionRepository.GetSummaryTimeAsync(user, request.FromTime, request.ToTime);
-        return new DataResponse<TimeSpan>(time);
+        return await _actionRepository.GetSummaryTimeAsync(user, request.FromTime, request.ToTime);
     }
 }

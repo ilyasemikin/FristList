@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using FristList.Data.Responses;
 using FristList.Models;
 using FristList.Services.Abstractions;
+using FristList.WebApi.Helpers;
 using FristList.WebApi.Notifications.Category;
 using FristList.WebApi.Requests.Category;
 using MediatR;
@@ -12,7 +13,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace FristList.WebApi.RequestHandlers.Category;
 
-public class CreateCategoryRequestHandler : IRequestHandler<CreateCategoryRequest, IResponse>
+public class CreateCategoryRequestHandler : IRequestHandler<CreateCategoryRequest, RequestResult<Unit>>
 {
     private readonly IUserStore<AppUser> _userStore;
     private readonly ICategoryRepository _categoryRepository;
@@ -25,29 +26,21 @@ public class CreateCategoryRequestHandler : IRequestHandler<CreateCategoryReques
         _mediator = mediator;
     }
 
-    public async Task<IResponse> Handle(CreateCategoryRequest request, CancellationToken cancellationToken)
+    public async Task<RequestResult<Unit>> Handle(CreateCategoryRequest request, CancellationToken cancellationToken)
     {
         var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
         var category = new Models.Category
         {
-            Name = request.Query.Name,
+            Name = request.Name,
             UserId = user.Id
         };
 
         var result = await _categoryRepository.CreateAsync(category);
         if (!result.Succeeded)
-            return new CustomHttpCodeResponse(HttpStatusCode.InternalServerError)
-            {
-                Message = string.Join("|", result.Errors.Select(x => x.Description))
-            };
+            return RequestResult<Unit>.Failed();
 
-        var message = new CategoryCreatedNotification
-        {
-            User = user,
-            Category = category
-        };
-        await _mediator.Publish(message, cancellationToken);
+        await _mediator.Publish(new CategoryCreatedNotification(user, category), cancellationToken);
 
-        return new DataResponse<object>(new {});
+        return RequestResult<Unit>.Success(Unit.Value);
     }
 }

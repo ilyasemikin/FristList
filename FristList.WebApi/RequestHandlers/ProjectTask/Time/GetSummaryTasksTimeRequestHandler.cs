@@ -2,35 +2,33 @@ using System;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using FristList.Data.Responses;
 using FristList.Models;
 using FristList.Services.Abstractions;
 using FristList.WebApi.Requests.ProjectTask.Time;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 
-namespace FristList.WebApi.RequestHandlers.Project.Time;
+namespace FristList.WebApi.RequestHandlers.ProjectTask.Time;
 
-public class SummaryTasksTimeRequestHandler : IRequestHandler<SummaryTasksTimeRequest, IResponse>
+public class GetSummaryTasksTimeRequestHandler : IRequestHandler<GetSummaryTasksTimeRequest, TimeSpan?>
 {
     private readonly IUserStore<AppUser> _userStore;
     private readonly IProjectRepository _projectRepository;
 
-    public SummaryTasksTimeRequestHandler(IUserStore<AppUser> userStore, IProjectRepository projectRepository)
+    public GetSummaryTasksTimeRequestHandler(IUserStore<AppUser> userStore, IProjectRepository projectRepository)
     {
         _userStore = userStore;
         _projectRepository = projectRepository;
     }
 
-    public async Task<IResponse> Handle(SummaryTasksTimeRequest request, CancellationToken cancellationToken)
+    public async Task<TimeSpan?> Handle(GetSummaryTasksTimeRequest request, CancellationToken cancellationToken)
     {
         var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
         var project = await _projectRepository.FindByIdAsync(request.ProjectId);
 
         if (project is null || project.AuthorId != user.Id)
-            return new CustomHttpCodeResponse(HttpStatusCode.NotFound);
+            return null;
 
-        var time = await _projectRepository.GetSummaryTimeAsync(project, request.FromTime, request.ToTime);
-        return new DataResponse<TimeSpan>(time);
+        return await _projectRepository.GetSummaryTimeAsync(project, request.FromTime, request.ToTime);
     }
 }

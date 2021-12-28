@@ -1,10 +1,7 @@
-using FristList.Data.Queries.Account;
-using FristList.Data.Responses;
+using FristList.Data.Dto;
+using FristList.WebApi.Helpers;
 using MediatR;
 
 namespace FristList.WebApi.Requests.Account;
 
-public class LoginRequest : IRequest<IResponse>
-{
-    public LoginQuery Query { get; set; }
-}
+public record LoginRequest(string Login, string Password) : IRequest<RequestResult<Tokens>>;

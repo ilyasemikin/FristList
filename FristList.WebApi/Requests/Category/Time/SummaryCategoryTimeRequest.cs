@@ -1,13 +1,9 @@
 using System;
 using FristList.Data.Responses;
+using FristList.WebApi.Helpers;
 using MediatR;
 
 namespace FristList.WebApi.Requests.Category.Time;
 
-public class SummaryCategoryTimeRequest : IRequest<IResponse>
-{
-    public int CategoryId { get; init; }
-    public DateTime FromTime { get; init; }
-    public DateTime ToTime { get; init; }
-    public string UserName { get; init; }
-}
+public record SummaryCategoryTimeRequest(int CategoryId, DateTime FromTime, DateTime ToTime, string UserName) 
+    : IRequest<RequestResult<TimeSpan>>;

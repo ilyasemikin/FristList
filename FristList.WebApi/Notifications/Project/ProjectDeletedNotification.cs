@@ -3,8 +3,4 @@ using MediatR;
 
 namespace FristList.WebApi.Notifications.Project;
 
-public class ProjectDeletedNotification : INotification
-{
-    public AppUser User { get; init; }
-    public int Id { get; init; }
-}
+public record ProjectDeletedNotification(AppUser User, int ProjectId) : INotification;

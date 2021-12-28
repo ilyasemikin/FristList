@@ -38,6 +38,7 @@ public class InMemoryRealTimeClientsService : IRealTimeClientsService
         return Task.FromResult(true);
     }
 
+#pragma warning disable CS1998
     public async IAsyncEnumerable<string> GetUserConnectionIdsAsync(AppUser user)
     {
         if (!_connections.ContainsKey(user))
@@ -46,4 +47,5 @@ public class InMemoryRealTimeClientsService : IRealTimeClientsService
         foreach (var connectionId in _connections[user])
             yield return connectionId;
     }
+#pragma warning restore CS1998
 }

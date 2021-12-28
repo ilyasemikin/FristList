@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace FristList.WebApi.RequestHandlers.Action;
 
-public class GetAllActionRequestHandler : IRequestHandler<GetAllActionRequest, IResponse>
+public class GetAllActionRequestHandler : IRequestHandler<GetAllActionRequest, PagedDataResponse<Data.Dto.Action>>
 {
     private readonly IUserStore<AppUser> _userStore;
     private readonly IActionRepository _actionRepository;
@@ -25,15 +25,15 @@ public class GetAllActionRequestHandler : IRequestHandler<GetAllActionRequest, I
         _mapper = mapper;
     }
 
-    public async Task<IResponse> Handle(GetAllActionRequest request, CancellationToken cancellationToken)
+    public async Task<PagedDataResponse<Data.Dto.Action>> Handle(GetAllActionRequest request, CancellationToken cancellationToken)
     {
         var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
         var count = await _actionRepository.CountByUserAsync(user);
         var actions = _actionRepository
-            .FindAllByUserAsync(user, (request.Query.Page - 1) * request.Query.PageSize, request.Query.PageSize)
+            .FindAllByUserAsync(user, (request.Page - 1) * request.PageSize, request.PageSize)
             .Select( a => (Data.Dto.Action)_mapper.Map(a))
             .ToEnumerable();
 
-        return PagedDataResponse<Data.Dto.Action>.Create(actions, request.Query.Page, request.Query.PageSize, count);
+        return PagedDataResponse<Data.Dto.Action>.Create(actions, request.Page, request.PageSize, count);
     }
 }

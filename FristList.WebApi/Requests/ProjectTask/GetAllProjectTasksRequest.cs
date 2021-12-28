@@ -1,10 +1,6 @@
-using FristList.Data.Responses;
+using System.Collections.Generic;
 using MediatR;
 
 namespace FristList.WebApi.Requests.ProjectTask;
 
-public class GetAllProjectTasksRequest : IRequest<IResponse>
-{
-    public int ProjectId { get; init; }
-    public string UserName { get; init; }
-}
+public record GetAllProjectTasksRequest(int ProjectId, string UserName) : IRequest<IEnumerable<Data.Dto.Task>>;

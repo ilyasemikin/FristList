@@ -5,4 +5,4 @@ using MediatR;
 
 namespace FristList.WebApi.Requests.Category;
 
-public record GetCategoryRequest(int CategoryId, string UserName) : IRequest<Data.Dto.Category?>;
+public record DeleteCategoryByIdRequest(int CategoryId, string UserName) : IRequest<RequestResult<Unit>>;

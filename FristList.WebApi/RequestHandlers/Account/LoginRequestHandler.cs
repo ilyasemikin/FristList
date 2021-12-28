@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using FristList.Data.Dto;
 using FristList.Data.Responses;
 using FristList.Services.Abstractions;
+using FristList.WebApi.Helpers;
 using FristList.WebApi.Requests.Account;
 using FristList.WebApi.Services;
 using MediatR;
@@ -12,7 +13,7 @@ using AppUser = FristList.Models.AppUser;
 
 namespace FristList.WebApi.RequestHandlers.Account;
 
-public class LoginRequestHandler : IRequestHandler<LoginRequest, IResponse>
+public class LoginRequestHandler : IRequestHandler<LoginRequest, RequestResult<Tokens>>
 {
     private readonly UserManager<AppUser> _userManager;
     private readonly IJwtTokenProvider _jwtTokenProvider;
@@ -25,24 +26,24 @@ public class LoginRequestHandler : IRequestHandler<LoginRequest, IResponse>
         _refreshTokenProvider = refreshTokenProvider;
     }
 
-    public async Task<IResponse> Handle(LoginRequest request, CancellationToken cancellationToken)
+    public async Task<RequestResult<Tokens>> Handle(LoginRequest request, CancellationToken cancellationToken)
     {
         AppUser user;
-        if (request.Query.Login.Contains("@"))
-            user = await _userManager.FindByEmailAsync(request.Query.Login);
+        if (request.Login.Contains("@"))
+            user = await _userManager.FindByEmailAsync(request.Login);
         else
-            user = await _userManager.FindByNameAsync(request.Query.Login);
+            user = await _userManager.FindByNameAsync(request.Login);
 
         if (user is null)
-            return new CustomHttpCodeResponse(HttpStatusCode.NotFound);
+            return RequestResult<Tokens>.Failed();
             
-        var success = await _userManager.CheckPasswordAsync(user, request.Query.Password);
+        var success = await _userManager.CheckPasswordAsync(user, request.Password);
         if (!success)
-            return new CustomHttpCodeResponse(HttpStatusCode.Unauthorized);
+            return RequestResult<Tokens>.Failed();
 
         var refreshToken = await _refreshTokenProvider.CreateAsync(user);
         if (refreshToken is null)
-            return new CustomHttpCodeResponse(HttpStatusCode.InternalServerError);
+            return RequestResult<Tokens>.Failed();
         
         var tokens = new Tokens
         {
@@ -50,6 +51,6 @@ public class LoginRequestHandler : IRequestHandler<LoginRequest, IResponse>
             RefreshToken = refreshToken.Token
         };
             
-        return new DataResponse<Tokens>(tokens);
+        return RequestResult<Tokens>.Success(tokens);
     }
 }

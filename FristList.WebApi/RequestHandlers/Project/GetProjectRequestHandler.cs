@@ -1,3 +1,4 @@
+using System;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,7 +13,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace FristList.WebApi.RequestHandlers.Project;
 
-public class GetProjectRequestHandler : IRequestHandler<GetProjectRequest, IResponse>
+public class GetProjectRequestHandler : IRequestHandler<GetProjectRequest, Data.Dto.Project?>
 {
     private readonly IUserStore<AppUser> _userStore;
     private readonly IProjectRepository _projectRepository;
@@ -25,14 +26,14 @@ public class GetProjectRequestHandler : IRequestHandler<GetProjectRequest, IResp
         _mapper = mapper;
     }
 
-    public async Task<IResponse> Handle(GetProjectRequest request, CancellationToken cancellationToken)
+    public async Task<Data.Dto.Project?> Handle(GetProjectRequest request, CancellationToken cancellationToken)
     {
         var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
 
         var project = await _projectRepository.FindByIdAsync(request.ProjectId);
         if (project is null || project.AuthorId != user.Id)
-            return new CustomHttpCodeResponse(HttpStatusCode.NotFound);
+            return null;
 
-        return new DataResponse<Data.Dto.Project>((Data.Dto.Project)_mapper.Map(project));
+        return _mapper.Map<Data.Dto.Project>(project);
     }
 }

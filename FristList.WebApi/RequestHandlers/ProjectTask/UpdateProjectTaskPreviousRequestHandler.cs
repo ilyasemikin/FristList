@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using FristList.Data.Responses;
 using FristList.Models;
 using FristList.Services.Abstractions;
+using FristList.WebApi.Helpers;
 using FristList.WebApi.Notifications.ProjectTask;
 using FristList.WebApi.Requests.ProjectTask;
 using MediatR;
@@ -12,7 +13,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace FristList.WebApi.RequestHandlers.ProjectTask;
 
-public class UpdateProjectTaskPreviousRequestHandler : IRequestHandler<UpdateProjectTaskPreviousRequest, IResponse>
+public class UpdateProjectTaskPreviousRequestHandler : IRequestHandler<UpdateProjectTaskPreviousRequest, RequestResult<Unit>>
 {
     private readonly IUserStore<AppUser> _userStore;
     private readonly ITaskRepository _taskRepository;
@@ -27,38 +28,33 @@ public class UpdateProjectTaskPreviousRequestHandler : IRequestHandler<UpdatePro
         _mediator = mediator;
     }
 
-    public async Task<IResponse> Handle(UpdateProjectTaskPreviousRequest request, CancellationToken cancellationToken)
+    public async Task<RequestResult<Unit>> Handle(UpdateProjectTaskPreviousRequest request, CancellationToken cancellationToken)
     {
         var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
 
         var task = await _taskRepository.FindByIdAsync(request.TaskId);
         if (task is null || task.AuthorId != user.Id || task.ProjectId is null)
-            return new CustomHttpCodeResponse(HttpStatusCode.NotFound);
+            return RequestResult<Unit>.Failed();
 
         Models.Task? previousTask = null;
         if (request.PreviousTaskId is not null)
         {
             previousTask = await _taskRepository.FindByIdAsync(request.PreviousTaskId.Value);
             if (previousTask is null || previousTask.AuthorId != user.Id || previousTask.ProjectId != task.ProjectId)
-                return new CustomHttpCodeResponse(HttpStatusCode.NotFound);
+                return RequestResult<Unit>.Failed();
         }
 
         var project = await _projectRepository.FindByIdAsync(task.ProjectId.Value);
         if (project is null || project.AuthorId != user.Id)
-            return new CustomHttpCodeResponse(HttpStatusCode.NotFound);
+            return RequestResult<Unit>.Failed();
 
         var result = await _projectRepository.UpdateTaskPositionAsync(project, task, previousTask);
 
         if (!result.Succeeded)
-            return new CustomHttpCodeResponse(HttpStatusCode.InternalServerError);
+            return RequestResult<Unit>.Failed();
 
-        var message = new ProjectTaskOrderChangedNotification
-        {
-            Project = project,
-            User = user
-        };
-        await _mediator.Publish(message, cancellationToken);
+        await _mediator.Publish(new ProjectTaskOrderChangedNotification(user, project), cancellationToken);
         
-        return new DataResponse<object>(new { });
+        return RequestResult<Unit>.Success(Unit.Value);
     }
 }

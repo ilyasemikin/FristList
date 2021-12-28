@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace FristList.WebApi.RequestHandlers.Task;
 
-public class GetTaskRequestHandler : IRequestHandler<GetTaskRequest, IResponse>
+public class GetTaskRequestHandler : IRequestHandler<GetTaskRequest, Data.Dto.Task?>
 {
     private readonly IUserStore<AppUser> _userStore;
     private readonly ITaskRepository _taskRepository;
@@ -25,14 +25,14 @@ public class GetTaskRequestHandler : IRequestHandler<GetTaskRequest, IResponse>
         _mapper = mapper;
     }
 
-    public async Task<IResponse> Handle(GetTaskRequest request, CancellationToken cancellationToken)
+    public async Task<Data.Dto.Task?> Handle(GetTaskRequest request, CancellationToken cancellationToken)
     {
         var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
         var task = await _taskRepository.FindByIdAsync(request.TaskId);
 
         if (task is null || task.AuthorId != user.Id)
-            return new CustomHttpCodeResponse(HttpStatusCode.NotFound);
+            return null;
 
-        return new DataResponse<Data.Dto.Task>((Data.Dto.Task) _mapper.Map(task));
+        return _mapper.Map<Data.Dto.Task>(task);
     }
 }

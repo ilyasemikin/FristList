@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using FristList.Data.Responses;
 using FristList.Models;
 using FristList.Services.Abstractions;
+using FristList.WebApi.Helpers;
 using FristList.WebApi.Notifications.Project;
 using FristList.WebApi.Requests.Project;
 using MediatR;
@@ -11,7 +12,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace FristList.WebApi.RequestHandlers.Project;
 
-public class DeleteProjectRequestHandler : IRequestHandler<DeleteProjectRequest, IResponse>
+public class DeleteProjectRequestHandler : IRequestHandler<DeleteProjectRequest, RequestResult<Unit>>
 {
     private readonly IUserStore<AppUser> _userStore;
     private readonly IProjectRepository _projectRepository;
@@ -24,28 +25,20 @@ public class DeleteProjectRequestHandler : IRequestHandler<DeleteProjectRequest,
         _mediator = mediator;
     }
 
-    public async Task<IResponse> Handle(DeleteProjectRequest request, CancellationToken cancellationToken)
+    public async Task<RequestResult<Unit>> Handle(DeleteProjectRequest request, CancellationToken cancellationToken)
     {
-        if (request.Query.Id is null)
-            return new CustomHttpCodeResponse(HttpStatusCode.BadRequest);
-     
         var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
         
-        var project = await _projectRepository.FindByIdAsync(request.Query.Id.Value);
+        var project = await _projectRepository.FindByIdAsync(request.ProjectId);
         if (project is null || project.AuthorId != user.Id)
-            return new CustomHttpCodeResponse(HttpStatusCode.NotFound);
+            return RequestResult<Unit>.Failed();
 
         var result = await _projectRepository.DeleteAsync(project);
         if (!result.Succeeded)
-            return new CustomHttpCodeResponse(HttpStatusCode.InternalServerError);
+            return RequestResult<Unit>.Failed();
 
-        var message = new ProjectDeletedNotification
-        {
-            User = user,
-            Id = project.Id
-        };
-        await _mediator.Publish(message, cancellationToken);
-        
-        return new DataResponse<object>(new { });
+        await _mediator.Publish(new ProjectDeletedNotification(user, project.Id), cancellationToken);
+
+        return RequestResult<Unit>.Success(Unit.Value);
     }
 }

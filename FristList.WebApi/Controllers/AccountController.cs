@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FristList.WebApi.Controllers;
 
-[ApiController]
 [AllowAnonymous]
 [Route("api/account")]
 public class AccountController : ApiController
@@ -21,33 +20,27 @@ public class AccountController : ApiController
     [HttpGet("login")]
     public async Task<IActionResult> Login(LoginQuery query)
     {
-        var request = new LoginRequest
-        {
-            Query = query
-        };
-
-        return await SendRequest(request);
+        var response = await Mediator.Send(new LoginRequest(query.Login!, query.Password!));
+        if (!response.IsSuccess)
+            return Problem();
+        return Ok(response.Data);
     }
 
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterQuery query)
     {
-        var request = new RegisterRequest
-        {
-            Query = query
-        };
-
-        return await SendRequest(request);
+        var response = await Mediator.Send(new RegisterRequest(query.UserName!, query.Email!, query.Password!));
+        if (!response.IsSuccess)
+            return Problem(); 
+        return Ok();
     }
 
     [HttpPost("refresh-token")]
     public async Task<IActionResult> RefreshToken(RefreshTokenQuery query)
     {
-        var request = new RefreshTokenRequest
-        {
-            Query = query
-        };
-
-        return await SendRequest(request);
+        var response = await Mediator.Send(new RefreshTokenRequest(query.Token!));
+        if (!response.IsSuccess)
+            return Problem();
+        return Ok();
     }
 }

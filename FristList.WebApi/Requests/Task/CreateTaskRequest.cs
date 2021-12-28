@@ -1,11 +1,8 @@
-using FristList.Data.Queries.Task;
-using FristList.Data.Responses;
+using System.Collections.Generic;
+using FristList.WebApi.Helpers;
 using MediatR;
 
 namespace FristList.WebApi.Requests.Task;
 
-public class CreateTaskRequest : IRequest<IResponse>
-{
-    public CreateTaskQuery Query { get; init; }
-    public string UserName { get; init; }
-}
+public record CreateTaskRequest(string Name, IReadOnlyList<int> CategoryIds, string UserName) 
+    : IRequest<RequestResult<Unit>>;

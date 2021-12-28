@@ -1,7 +1,10 @@
+using FristList.Data.Validations;
+
 namespace FristList.Data.Queries;
 
 public class IntervalQuery
 {
+    [LessThan(nameof(To))]
     public DateTime From { get; init; }
     public DateTime To { get; init; }
 

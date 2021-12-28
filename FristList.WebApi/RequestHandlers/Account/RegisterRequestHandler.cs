@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using FristList.Data.Dto;
 using FristList.Data.Responses;
 using FristList.Services.Abstractions;
+using FristList.WebApi.Helpers;
 using FristList.WebApi.Requests.Account;
 using FristList.WebApi.Services;
 using MediatR;
@@ -12,7 +13,7 @@ using AppUser = FristList.Models.AppUser;
 
 namespace FristList.WebApi.RequestHandlers.Account;
 
-public class RegisterRequestHandler : IRequestHandler<RegisterRequest, IResponse>
+public class RegisterRequestHandler : IRequestHandler<RegisterRequest, RequestResult<Unit>>
 {
     private readonly UserManager<AppUser> _userManager;
 
@@ -21,20 +22,20 @@ public class RegisterRequestHandler : IRequestHandler<RegisterRequest, IResponse
         _userManager = userManager;
     }
 
-    public async Task<IResponse> Handle(RegisterRequest request, CancellationToken cancellationToken)
+    public async Task<RequestResult<Unit>> Handle(RegisterRequest request, CancellationToken cancellationToken)
     {
         var user = new AppUser
         {
-            UserName = request.Query.UserName,
-            Email = request.Query.Email
+            UserName = request.UserName,
+            Email = request.Email
         };
 
-        var registered = await _userManager.CreateAsync(user, request.Query.Password);
+        var registered = await _userManager.CreateAsync(user, request.Password);
         if (!registered.Succeeded)
-            return new CustomHttpCodeResponse(HttpStatusCode.InternalServerError);
+            return RequestResult<Unit>.Failed();
             
-        await _userManager.SetEmailAsync(user, request.Query.Email);
-
-        return new DataResponse<object>(new {});
+        await _userManager.SetEmailAsync(user, request.Email);
+        
+        return RequestResult<Unit>.Success(Unit.Value);
     }
 }

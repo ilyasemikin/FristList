@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using FristList.Data.Responses;
 using FristList.Models;
 using FristList.Services.Abstractions;
+using FristList.WebApi.Helpers;
 using FristList.WebApi.Notifications.ProjectTask;
 using FristList.WebApi.Requests.ProjectTask;
 using MediatR;
@@ -11,7 +12,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace FristList.WebApi.RequestHandlers.ProjectTask;
 
-public class AddTaskToProjectRequestHandler : IRequestHandler<AddTaskToProjectRequest, IResponse>
+public class AddTaskToProjectRequestHandler : IRequestHandler<AddTaskToProjectRequest, RequestResult<Unit>>
 {
     private readonly IUserStore<AppUser> _userStore;
     private readonly IProjectRepository _projectRepository;
@@ -26,7 +27,7 @@ public class AddTaskToProjectRequestHandler : IRequestHandler<AddTaskToProjectRe
         _mediator = mediator;
     }
 
-    public async Task<IResponse> Handle(AddTaskToProjectRequest request, CancellationToken cancellationToken)
+    public async Task<RequestResult<Unit>> Handle(AddTaskToProjectRequest request, CancellationToken cancellationToken)
     {
         var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
 
@@ -34,19 +35,14 @@ public class AddTaskToProjectRequestHandler : IRequestHandler<AddTaskToProjectRe
         var project = await _projectRepository.FindByIdAsync(request.ProjectId);
 
         if (task is null || project is null || task.AuthorId != user.Id || project.AuthorId != user.Id)
-            return new CustomHttpCodeResponse(HttpStatusCode.NotFound);
+            return RequestResult<Unit>.Failed();
 
         var result = await _projectRepository.AddTaskAsync(project, task);
         if (!result.Succeeded)
-            return new CustomHttpCodeResponse(HttpStatusCode.InternalServerError);
+            return RequestResult<Unit>.Failed();
 
-        var message = new ProjectTaskOrderChangedNotification
-        {
-            Project = project,
-            User = user
-        };
-        await _mediator.Publish(message, cancellationToken);
+        await _mediator.Publish(new ProjectTaskOrderChangedNotification(user, project), cancellationToken);
 
-        return new DataResponse<object>(new { });
+        return RequestResult<Unit>.Success(Unit.Value);
     }
 }

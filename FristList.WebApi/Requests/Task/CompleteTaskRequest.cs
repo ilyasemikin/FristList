@@ -1,10 +1,7 @@
 using FristList.Data.Responses;
+using FristList.WebApi.Helpers;
 using MediatR;
 
 namespace FristList.WebApi.Requests.Task;
 
-public class CompleteTaskRequest : IRequest<IResponse>
-{
-    public int TaskId { get; init; }
-    public string UserName { get; init; }
-}
+public record CompleteTaskRequest(int TaskId, string UserName) : IRequest<RequestResult<Unit>>;

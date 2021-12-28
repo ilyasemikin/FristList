@@ -1,4 +1,7 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Net;
 using System.Threading.Tasks;
 using FristList.Data.Queries;
 using FristList.Data.Queries.ProjectTask;
@@ -12,7 +15,6 @@ using Microsoft.AspNetCore.Mvc;
 namespace FristList.WebApi.Controllers;
 
 [Authorize]
-[ApiController]
 [Route("api/project/{id:int}/tasks")]
 public class ProjectTaskController : ApiController
 {
@@ -23,68 +25,46 @@ public class ProjectTaskController : ApiController
     [HttpPost("{taskId:int}")]
     public async Task<IActionResult> AddTaskToProject([FromRoute]int id, [FromRoute]int taskId)
     {
-        var request = new AddTaskToProjectRequest
-        {
-            ProjectId = id,
-            TaskId = taskId,
-            UserName = User.Identity!.Name
-        };
-
-        return await SendRequest(request);
+        var response = await Mediator.Send(new AddTaskToProjectRequest(id, taskId, User.Identity!.Name!));
+        if (!response.IsSuccess)
+            return Problem();
+        return Ok();
     }
 
     [HttpPatch("{taskId:int}")]
     public async Task<IActionResult> UpdatePreviousTask([FromRoute]int id, UpdatePreviousTaskQuery query)
     {
-        var request = new UpdateProjectTaskPreviousRequest
-        {
-            TaskId = id,
-            PreviousTaskId = query.PreviousTaskId,
-            UserName = User.Identity!.Name
-        };
-
-        return await SendRequest(request);
+        var response =
+            await Mediator.Send(new UpdateProjectTaskPreviousRequest(id, query.PreviousTaskId, User.Identity!.Name!));
+        if (!response.IsSuccess)
+            return Problem();
+        return Ok();
     }
 
     [HttpDelete("{taskId:int}")]
     public async Task<IActionResult> DeleteTaskFromProject([FromRoute]int id, [FromRoute]int taskId)
     {
-        var request = new DeleteTaskFromProjectRequest
-        {
-            ProjectId = id,
-            TaskId = taskId,
-            UserName = User.Identity!.Name
-        };
-
-        return await SendRequest(request);
+        var response = await Mediator.Send(new DeleteTaskFromProjectRequest(id, taskId, User.Identity!.Name!));
+        if (!response.IsSuccess)
+            return Problem();
+        return Ok();
     }
         
     [HttpGet("all")]
+    [ProducesResponseType(typeof(IEnumerable<Data.Dto.Task>), (int)HttpStatusCode.OK)]
     public async Task<IActionResult> GetAllProjectTasks([FromRoute]int id)
     {
-        var request = new GetAllProjectTasksRequest
-        {
-            ProjectId = id,
-            UserName = User.Identity!.Name
-        };
-
-        return await SendRequest(request);
+        var response = await Mediator.Send(new GetAllProjectTasksRequest(id, User.Identity!.Name!));
+        return Ok(response);
     }
 
     [HttpGet("time")]
     public async Task<IActionResult> GetSummaryTime([FromRoute]int id, [FromQuery][FromBody]IntervalQuery query)
     {
-        if (query.From > DateTime.UtcNow)
+        var response =
+            await Mediator.Send(new GetSummaryTasksTimeRequest(id, query.From, query.To, User.Identity!.Name!));
+        if (response is null)
             return NoContent();
-        
-        var request = new SummaryTasksTimeRequest
-        {
-            ProjectId = id,
-            FromTime = query.From,
-            ToTime = query.To,
-            UserName = User.Identity!.Name
-        };
-
-        return await SendRequest(request);
+        return Ok(response);
     }
 }

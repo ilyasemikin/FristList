@@ -1,11 +1,7 @@
-using FristList.Data.Queries.RunningAction;
-using FristList.Data.Responses;
+using System.Collections.Generic;
+using FristList.WebApi.Helpers;
 using MediatR;
 
 namespace FristList.WebApi.Requests.RunningAction;
 
-public class StartRunningActionRequest : IRequest<IResponse>
-{
-    public StartActionQuery Query { get; init; }
-    public string UserName { get; init; }
-}
+public record StartRunningActionRequest(int? TaskId, IReadOnlyList<int> CategoryIds, string UserName) : IRequest<RequestResult<Unit>>;

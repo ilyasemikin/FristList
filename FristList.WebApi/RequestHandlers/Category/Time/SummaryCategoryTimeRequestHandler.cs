@@ -5,13 +5,14 @@ using System.Threading.Tasks;
 using FristList.Data.Responses;
 using FristList.Models;
 using FristList.Services.Abstractions;
+using FristList.WebApi.Helpers;
 using FristList.WebApi.Requests.Category.Time;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 
 namespace FristList.WebApi.RequestHandlers.Category.Time;
 
-public class SummaryCategoryTimeRequestHandler : IRequestHandler<SummaryCategoryTimeRequest, IResponse>
+public class SummaryCategoryTimeRequestHandler : IRequestHandler<SummaryCategoryTimeRequest, RequestResult<TimeSpan>>
 {
     private readonly IUserStore<AppUser> _userStore;
     private readonly ICategoryRepository _categoryRepository;
@@ -22,15 +23,15 @@ public class SummaryCategoryTimeRequestHandler : IRequestHandler<SummaryCategory
         _categoryRepository = categoryRepository;
     }
 
-    public async Task<IResponse> Handle(SummaryCategoryTimeRequest request, CancellationToken cancellationToken)
+    public async Task<RequestResult<TimeSpan>> Handle(SummaryCategoryTimeRequest request, CancellationToken cancellationToken)
     {
         var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
         var category = await _categoryRepository.FindByIdAsync(request.CategoryId);
 
         if (category is null || category.UserId != user.Id)
-            return new CustomHttpCodeResponse(HttpStatusCode.NotFound);
+            return RequestResult<TimeSpan>.Failed();
 
         var time = await _categoryRepository.GetSummaryTimeAsync(category, request.FromTime, request.ToTime);
-        return new DataResponse<TimeSpan>(time);
+        return RequestResult<TimeSpan>.Success(time);
     }
 }

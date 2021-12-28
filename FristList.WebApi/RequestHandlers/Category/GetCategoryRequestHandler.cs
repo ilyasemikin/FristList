@@ -6,13 +6,14 @@ using FristList.Data.Responses;
 using FristList.Models;
 using FristList.Models.Services;
 using FristList.Services.Abstractions;
+using FristList.WebApi.Helpers;
 using FristList.WebApi.Requests.Category;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 
 namespace FristList.WebApi.RequestHandlers.Category;
 
-public class GetCategoryRequestHandler : IRequestHandler<GetCategoryRequest, IResponse>
+public class GetCategoryRequestHandler : IRequestHandler<GetCategoryRequest, Data.Dto.Category?>
 {
     private readonly IUserStore<AppUser> _userStore;
     private readonly ICategoryRepository _categoryRepository;
@@ -25,14 +26,14 @@ public class GetCategoryRequestHandler : IRequestHandler<GetCategoryRequest, IRe
         _mapper = mapper;
     }
 
-    public async Task<IResponse> Handle(GetCategoryRequest request, CancellationToken cancellationToken)
+    public async Task<Data.Dto.Category?> Handle(GetCategoryRequest request, CancellationToken cancellationToken)
     {
         var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
         var category = await _categoryRepository.FindByIdAsync(request.CategoryId);
 
         if (category is null || category.UserId != user.Id)
-            return new CustomHttpCodeResponse(HttpStatusCode.NotFound);
-        
-        return new DataResponse<Data.Dto.Category>((Data.Dto.Category) _mapper.Map(category));
+            return null;
+
+        return _mapper.Map<Data.Dto.Category>(category);
     }
 }

@@ -3,7 +3,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using FristList.Data.Dto;
 using FristList.Data.Responses;
+using FristList.Services;
 using FristList.Services.Abstractions;
+using FristList.WebApi.Helpers;
 using FristList.WebApi.Requests.Account;
 using FristList.WebApi.Services;
 using MediatR;
@@ -12,7 +14,7 @@ using AppUser = FristList.Models.AppUser;
 
 namespace FristList.WebApi.RequestHandlers.Account;
 
-public class RefreshTokenRequestHandler : IRequestHandler<RefreshTokenRequest, IResponse>
+public class RefreshTokenRequestHandler : IRequestHandler<RefreshTokenRequest, RequestResult<Tokens>>
 {
     private readonly IJwtTokenProvider _jwtTokenProvider;
     private readonly IRefreshTokenProvider _refreshTokenProvider;
@@ -25,25 +27,25 @@ public class RefreshTokenRequestHandler : IRequestHandler<RefreshTokenRequest, I
         _userManager = userManager;
     }
 
-    public async Task<IResponse> Handle(RefreshTokenRequest request, CancellationToken cancellationToken)
+    public async Task<RequestResult<Tokens>> Handle(RefreshTokenRequest request, CancellationToken cancellationToken)
     {
-        var refreshToken = await _refreshTokenProvider.FindAsync(request.Query.Token);
+        var refreshToken = await _refreshTokenProvider.FindAsync(request.Token);
         if (refreshToken is null)
-            return new CustomHttpCodeResponse(HttpStatusCode.InternalServerError);
+            return RequestResult<Tokens>.Failed();
                 
         var newRefreshToken = await _refreshTokenProvider.RefreshAsync(refreshToken);
 
         if (newRefreshToken is null)
-            return new CustomHttpCodeResponse(HttpStatusCode.InternalServerError);
+            return RequestResult<Tokens>.Failed();
             
         var user = await _userManager.FindByIdAsync(newRefreshToken.UserId.ToString());
         var jwtAccessToken = _jwtTokenProvider.CreateToken(user);
 
-        var response = new Tokens
+        var tokens = new Tokens
         {
             AccessToken = jwtAccessToken,
             RefreshToken = newRefreshToken.Token
         };
-        return new DataResponse<Tokens>(response);
+        return RequestResult<Tokens>.Success(tokens);
     }
 }

@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace FristList.WebApi.RequestHandlers.Task;
 
-public class GetAllNonProjectRequestHandler : IRequestHandler<GetAllNonProjectTaskRequest, IResponse>
+public class GetAllNonProjectRequestHandler : IRequestHandler<GetAllNonProjectTaskRequest, PagedDataResponse<Data.Dto.Task>>
 {
     private readonly IUserStore<AppUser> _userStore;
     private readonly ITaskRepository _taskRepository;
@@ -26,16 +26,16 @@ public class GetAllNonProjectRequestHandler : IRequestHandler<GetAllNonProjectTa
         _mapper = mapper;
     }
 
-    public async Task<IResponse> Handle(GetAllNonProjectTaskRequest request, CancellationToken cancellationToken)
+    public async Task<PagedDataResponse<Data.Dto.Task>> Handle(GetAllNonProjectTaskRequest request, CancellationToken cancellationToken)
     {
         var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
 
         var tasks = _taskRepository.FindAllNonProjectByUserAsync(user,
-            (request.Query.Page - 1) * request.Query.PageSize, request.Query.PageSize)
+            (request.Page - 1) * request.PageSize, request.PageSize)
             .Select(_mapper.Map<Data.Dto.Task>)
             .ToEnumerable();
         
-        // TODO: Add page response
-        return new DataResponse<IEnumerable<Data.Dto.Task>>(tasks);
+        // TODO: Add correct total count
+        return PagedDataResponse<Data.Dto.Task>.Create(tasks, request.Page, request.PageSize, 0);
     }
 }

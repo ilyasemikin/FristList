@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using FristList.Data.Responses;
 using FristList.Models;
 using FristList.Services.Abstractions;
+using FristList.WebApi.Helpers;
 using FristList.WebApi.Notifications.RunningAction;
 using FristList.WebApi.Requests.RunningAction;
 using MediatR;
@@ -13,41 +14,44 @@ using Microsoft.AspNetCore.Identity;
 
 namespace FristList.WebApi.RequestHandlers.RunningAction;
 
-public class StartActionRequestHandler : IRequestHandler<StartRunningActionRequest, IResponse>
+public class StartActionRequestHandler : IRequestHandler<StartRunningActionRequest, RequestResult<Unit>>
 {
     private readonly IUserStore<AppUser> _userStore;
     private readonly IRunningActionProvider _runningActionProvider;
+    private readonly ICategoryRepository _categoryRepository;
     private readonly IMediator _mediator;
 
-    public StartActionRequestHandler(IUserStore<AppUser> userStore, IRunningActionProvider runningActionProvider, IMediator mediator)
+    public StartActionRequestHandler(IUserStore<AppUser> userStore, IRunningActionProvider runningActionProvider, ICategoryRepository categoryRepository, IMediator mediator)
     {
         _userStore = userStore;
         _runningActionProvider = runningActionProvider;
+        _categoryRepository = categoryRepository;
         _mediator = mediator;
     }
 
-    public async Task<IResponse> Handle(StartRunningActionRequest request, CancellationToken cancellationToken)
+    public async Task<RequestResult<Unit>> Handle(StartRunningActionRequest request, CancellationToken cancellationToken)
     {
         var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
 
-        IList<int> categoryIds = new List<int>();
-        if (request.Query.CategoryIds != null)
-            categoryIds = request.Query.CategoryIds.ToList();
+        var categories = await _categoryRepository.FindByIdsAsync(request.CategoryIds)
+            .ToListAsync(cancellationToken);
 
+        if (categories.Count != request.CategoryIds.Count)
+            return RequestResult<Unit>.Failed();
+        
         var action = new Models.RunningAction
         {
-            TaskId = request.Query.TaskId,
-            CategoryIds = categoryIds,
+            TaskId = request.TaskId,
+            CategoryIds = categories.Select(c => c.Id)
+                .ToList(),
+            Categories = categories,
             User = user,
             UserId = user.Id
         };
 
         if (await _runningActionProvider.GetCurrentRunningAsync(user) is not null)
         {
-            var saveRequest = new StopRunningActionRequest
-            {
-                UserName = user.UserName
-            };
+            var saveRequest = new StopRunningActionRequest(user.UserName);
 
             var resp = await _mediator.Send(saveRequest, cancellationToken);
             if (!resp.IsSuccess)
@@ -56,16 +60,10 @@ public class StartActionRequestHandler : IRequestHandler<StartRunningActionReque
         
         var result = await _runningActionProvider.CreateRunningAsync(action);
         if (!result.Succeeded)
-            return new CustomHttpCodeResponse(HttpStatusCode.InternalServerError);
+            return RequestResult<Unit>.Failed();
 
-        var message = new RunningActionCreatedNotification
-        {
-            User = user,
-            RunningAction = action
-        };
+        await _mediator.Publish(new RunningActionCreatedNotification(user, action), cancellationToken);
 
-        await _mediator.Publish(message, cancellationToken);
-        
-        return new DataResponse<object>(new {});
+        return RequestResult<Unit>.Success(Unit.Value);
     }
 }

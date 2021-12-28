@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using FristList.Data.Responses;
 using FristList.Models;
 using FristList.Services.Abstractions;
+using FristList.WebApi.Helpers;
 using FristList.WebApi.Notifications.Action;
 using FristList.WebApi.Requests.Action;
 using MediatR;
@@ -11,7 +12,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace FristList.WebApi.RequestHandlers.Action;
 
-public class DeleteActionRequestHandler : IRequestHandler<DeleteActionRequest, IResponse>
+public class DeleteActionRequestHandler : IRequestHandler<DeleteActionRequest, RequestResult<Unit>>
 {
     private readonly IUserStore<AppUser> _userStore;
     private readonly IActionRepository _actionRepository;
@@ -24,29 +25,21 @@ public class DeleteActionRequestHandler : IRequestHandler<DeleteActionRequest, I
         _mediator = mediator;
     }
 
-    public async Task<IResponse> Handle(DeleteActionRequest request, CancellationToken cancellationToken)
+    public async Task<RequestResult<Unit>> Handle(DeleteActionRequest request, CancellationToken cancellationToken)
     {
         var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
 
-        if (request.Query.Id is null)
-            return new CustomHttpCodeResponse(HttpStatusCode.BadRequest);
-        
-        var action = await _actionRepository.FindByIdAsync(request.Query.Id.Value);
+        var action = await _actionRepository.FindByIdAsync(request.ActionId);
 
         if (action is null || action.UserId != user.Id)
-            return new CustomHttpCodeResponse(HttpStatusCode.NotFound);
+            return RequestResult<Unit>.Failed();
 
         var result = await _actionRepository.DeleteAsync(action);
         if (!result.Succeeded)
-            return new CustomHttpCodeResponse(HttpStatusCode.InternalServerError);
+            return RequestResult<Unit>.Failed();
+        
+        await _mediator.Publish(new ActionDeletedNotification(user, action.Id), cancellationToken);
 
-        var message = new ActionDeletedNotification
-        {
-            Id = action.Id,
-            User = user
-        };
-        await _mediator.Publish(message, cancellationToken);
-
-        return new DataResponse<object>(new {});
+        return RequestResult<Unit>.Success(Unit.Value);
     }
 }

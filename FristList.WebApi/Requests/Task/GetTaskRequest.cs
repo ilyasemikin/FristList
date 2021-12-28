@@ -4,8 +4,4 @@ using MediatR;
 
 namespace FristList.WebApi.Requests.Task;
 
-public class GetTaskRequest : IRequest<IResponse>
-{
-    public int TaskId { get; init; }
-    public string UserName { get; init; }
-}
+public record GetTaskRequest(int TaskId, string UserName) : IRequest<Data.Dto.Task?>;
