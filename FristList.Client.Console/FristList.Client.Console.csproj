@@ -8,11 +8,12 @@
   <ItemGroup>
     <PackageReference Include="CsvHelper" Version="27.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="6.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\FristList.Client\FristList.Client.csproj" />
     <ProjectReference Include="..\FristList.Data\FristList.Data.csproj" />
   </ItemGroup>
 

@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FristList.Data", "FristList
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FristList.Models", "FristList.Models\FristList.Models.csproj", "{6B716260-4AC0-4EB6-AD8B-A69EA31098E4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FristList.Client", "FristList.Client\FristList.Client.csproj", "{4E92DE6D-0281-449F-B87C-3E86C31ADBC3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -100,5 +102,17 @@ Global
 		{6B716260-4AC0-4EB6-AD8B-A69EA31098E4}.Release|x64.Build.0 = Release|Any CPU
 		{6B716260-4AC0-4EB6-AD8B-A69EA31098E4}.Release|x86.ActiveCfg = Release|Any CPU
 		{6B716260-4AC0-4EB6-AD8B-A69EA31098E4}.Release|x86.Build.0 = Release|Any CPU
+		{4E92DE6D-0281-449F-B87C-3E86C31ADBC3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E92DE6D-0281-449F-B87C-3E86C31ADBC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E92DE6D-0281-449F-B87C-3E86C31ADBC3}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4E92DE6D-0281-449F-B87C-3E86C31ADBC3}.Debug|x64.Build.0 = Debug|Any CPU
+		{4E92DE6D-0281-449F-B87C-3E86C31ADBC3}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4E92DE6D-0281-449F-B87C-3E86C31ADBC3}.Debug|x86.Build.0 = Debug|Any CPU
+		{4E92DE6D-0281-449F-B87C-3E86C31ADBC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E92DE6D-0281-449F-B87C-3E86C31ADBC3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E92DE6D-0281-449F-B87C-3E86C31ADBC3}.Release|x64.ActiveCfg = Release|Any CPU
+		{4E92DE6D-0281-449F-B87C-3E86C31ADBC3}.Release|x64.Build.0 = Release|Any CPU
+		{4E92DE6D-0281-449F-B87C-3E86C31ADBC3}.Release|x86.ActiveCfg = Release|Any CPU
+		{4E92DE6D-0281-449F-B87C-3E86C31ADBC3}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

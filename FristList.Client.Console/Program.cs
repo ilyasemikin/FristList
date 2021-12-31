@@ -13,54 +13,17 @@ namespace FristList.Client.Console
     {
         static async Task Main(string[] args)
         {
-            var services = new ServiceCollection();
-            RegisterServices(services);
-
-            var provider = services.BuildServiceProvider();
-
-            var connection = new HubConnectionBuilder()
-                .WithUrl("http://localhost:5001/api/events", c =>
+            var client = new FristListClient();
+            
+            var hub = new HubConnectionBuilder()
+                .WithUrl("http://localhost:5001/api/events", options =>
                 {
-                    c.AccessTokenProvider = () => Task.FromResult(
-                        "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoidXNlcjEiLCJleHAiOjE2NDA2NjM3MDl9.yVTXkltNRw-5_geDb8GnRApHZXX5dzx8M9Mf2KFbyKzAJi1gKVF3tdHCGsjNbICoNs_3MvmtOKKQw-asOauoOQ");
+                    options.AccessTokenProvider = () => client.AuthorizeService.GetAccessTokenAsync();
                 })
                 .Build();
 
-            connection.Closed += async (error) =>
-            {
-                await connection.StartAsync();
-            };
-
-            connection.On<Data.Dto.RunningAction>("RunningActionAddedMessage", action => System.Console.WriteLine($"Running action started: {action.StartTime}"));
-            connection.On("RunningActionDeletedMessage", () => System.Console.WriteLine("Running action deleted"));
-            
-            try
-            {
-                await connection.StartAsync();
-                System.Console.WriteLine($"Connection started");
-
-                await connection.SendAsync("StartAction", new StartActionQuery
-                {
-
-                });
-                
-                while (true)
-                {
-                    System.Console.WriteLine($"Time {DateTime.UtcNow}");
-                    
-                    await Task.Delay(10000);
-                }
-            }
-            catch (Exception e)
-            {
-                System.Console.WriteLine($"Exception {e.Message}");
-
-                while (e.InnerException is not null)
-                {
-                    System.Console.WriteLine($"Inner exception {e.InnerException.Message}");
-                    e = e.InnerException;
-                }
-            }
+            await client.AuthorizeAsync("user1", "123isis123");
+            var categories = await client.GetAllCategoryAsync();
         }
 
         static void RegisterServices(ServiceCollection services)
