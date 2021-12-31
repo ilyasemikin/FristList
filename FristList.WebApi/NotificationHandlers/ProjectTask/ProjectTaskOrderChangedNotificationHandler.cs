@@ -5,6 +5,7 @@ using FristList.Data;
 using FristList.Models.Services;
 using FristList.Services;
 using FristList.Services.Abstractions;
+using FristList.Services.Abstractions.Repositories;
 using FristList.WebApi.Hubs;
 using FristList.WebApi.Notifications.ProjectTask;
 using MediatR;

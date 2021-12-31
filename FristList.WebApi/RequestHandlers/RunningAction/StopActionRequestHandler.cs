@@ -1,9 +1,11 @@
+using System;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using FristList.Data.Responses;
 using FristList.Models;
 using FristList.Services.Abstractions;
+using FristList.Services.Abstractions.Repositories;
 using FristList.WebApi.Helpers;
 using FristList.WebApi.Notifications.Action;
 using FristList.WebApi.Notifications.RunningAction;
@@ -16,14 +18,14 @@ namespace FristList.WebApi.RequestHandlers.RunningAction;
 public class StopActionRequestHandler : IRequestHandler<StopRunningActionRequest, RequestResult<Unit>>
 {
     private readonly IUserStore<AppUser> _userStore;
-    private readonly IRunningActionProvider _runningActionProvider;
+    private readonly IRunningActionRepository _runningActionRepository;
     private readonly IActionRepository _actionRepository;
     private readonly IMediator _mediator;
 
-    public StopActionRequestHandler(IUserStore<AppUser> userStore, IRunningActionProvider runningActionProvider, IActionRepository actionRepository, IMediator mediator)
+    public StopActionRequestHandler(IUserStore<AppUser> userStore, IRunningActionRepository runningActionRepository, IActionRepository actionRepository, IMediator mediator)
     {
         _userStore = userStore;
-        _runningActionProvider = runningActionProvider;
+        _runningActionRepository = runningActionRepository;
         _actionRepository = actionRepository;
         _mediator = mediator;
     }
@@ -31,19 +33,26 @@ public class StopActionRequestHandler : IRequestHandler<StopRunningActionRequest
     public async Task<RequestResult<Unit>> Handle(StopRunningActionRequest request, CancellationToken cancellationToken)
     {
         var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
-        var runningAction = await _runningActionProvider.GetCurrentRunningAsync(user);
+        var runningAction = await _runningActionRepository.FindByUserAsync(user);
 
         if (runningAction is null)
             return RequestResult<Unit>.Failed();
 
-        var actionId = await _runningActionProvider.SaveRunningAsync(runningAction);
-        if (actionId is null)
+        var action = new Models.Action
+        {
+            UserId = user.Id,
+            User = user,
+            CategoryIds = runningAction.CategoryIds,
+            Categories = runningAction.Categories,
+            StartTime = runningAction.StartTime,
+            EndTime = DateTime.UtcNow
+        };
+        var result = await _actionRepository.CreateAsync(action);
+        if (!result.Succeeded)
             return RequestResult<Unit>.Failed();
 
         await _mediator.Publish(new RunningActionDeletedNotification(user), cancellationToken);
-
-        var action = await _actionRepository.FindByIdAsync(actionId.Value);
-        await _mediator.Publish(new ActionCreatedNotification(user, action!), cancellationToken);
+        await _mediator.Publish(new ActionCreatedNotification(user, action), cancellationToken);
 
         return RequestResult<Unit>.Success(Unit.Value);
     }

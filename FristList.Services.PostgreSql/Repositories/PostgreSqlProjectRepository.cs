@@ -1,23 +1,23 @@
 using Dapper;
 using FristList.Models;
 using FristList.Services.Abstractions;
-using Npgsql;
+using FristList.Services.Abstractions.Repositories;
 using Task = FristList.Models.Task;
 
-namespace FristList.Services.PostgreSql;
+namespace FristList.Services.PostgreSql.Repositories;
 
 public class PostgreSqlProjectRepository : IProjectRepository
 {
-    private readonly string _connectionString;
+    private readonly IDatabaseConnectionFactory _connectionFactory;
 
-    public PostgreSqlProjectRepository(IDatabaseConfiguration configuration)
+    public PostgreSqlProjectRepository(IDatabaseConnectionFactory connectionFactory)
     {
-        _connectionString = configuration.GetConnectionString();
+        _connectionFactory = connectionFactory;
     }
     
     public async Task<RepositoryResult> CreateAsync(Project project)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
 
         try
         {
@@ -47,7 +47,7 @@ public class PostgreSqlProjectRepository : IProjectRepository
 
     public async Task<RepositoryResult> DeleteAsync(Project project)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
 
         var deleted = await connection.ExecuteScalarAsync<bool>(
             "SELECT * FROM delete_project(@Id)", 
@@ -60,7 +60,7 @@ public class PostgreSqlProjectRepository : IProjectRepository
 
     public async Task<RepositoryResult> CompleteAsync(Project project)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
         var success = await connection.ExecuteScalarAsync<bool>(
             "SELECT * FROM complete_task(@Id)", new { Id = project.Id });
         if (!success)
@@ -70,7 +70,7 @@ public class PostgreSqlProjectRepository : IProjectRepository
 
     public async Task<RepositoryResult> UncompleteAsync(Project project)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
         var success = await connection.ExecuteScalarAsync<bool>(
             "SELECT * FROM uncomplete_project(@Id)", new { Id = project.Id });
         if (!success)
@@ -80,7 +80,7 @@ public class PostgreSqlProjectRepository : IProjectRepository
 
     public async Task<TimeSpan> GetSummaryTimeAsync(Project project, DateTime from, DateTime to)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
         return await connection.QuerySingleOrDefaultAsync<TimeSpan>(
             "SELECT * FROM get_project_summary_time(@ProjectId, @FromTime AT TIME ZONE 'UTC', @ToTime AT TIME ZONE 'UTC')",
             new { ProjectId = project.Id, FromTime = from, ToTime = to });
@@ -88,7 +88,7 @@ public class PostgreSqlProjectRepository : IProjectRepository
 
     public async Task<int> CountByUserAsync(AppUser user)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
         return await connection.ExecuteScalarAsync<int>(
             "SELECT \"Count\" FROM user_project_count WHERE \"UserId\"=@UserId",
             new { UserId = user.Id });
@@ -96,13 +96,13 @@ public class PostgreSqlProjectRepository : IProjectRepository
 
     public async Task<Project?> FindByIdAsync(int id)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
         return await connection.QuerySingleOrDefaultAsync<Project>("SELECT * FROM get_project(@Id)", new { Id = id });
     }
 
     public async Task<int> CountTasksAsync(Project project)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
         return await connection.ExecuteScalarAsync<int>(
             "SELECT \"Count\" FROM project_task_count WHERE \"ProjectId\"=@ProjectId", 
             new { ProjectId = project.Id });
@@ -110,7 +110,7 @@ public class PostgreSqlProjectRepository : IProjectRepository
 
     public async Task<RepositoryResult> AddTaskAsync(Project project, Task task, int index = -1)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
 
         bool success;
         if (index == -1)
@@ -129,7 +129,7 @@ public class PostgreSqlProjectRepository : IProjectRepository
 
     public async Task<RepositoryResult> DeleteTaskAsync(Project project, Task task)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
 
         var success = await connection.ExecuteScalarAsync<bool>(
             "SELECT * FROM delete_task_from_project(@TaskId)",
@@ -142,7 +142,7 @@ public class PostgreSqlProjectRepository : IProjectRepository
 
     public async Task<RepositoryResult> UpdateTaskPositionAsync(Project project, Task task, Task? previousTask)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
 
         int? parentTaskId = null;
         if (previousTask is not null)
@@ -159,7 +159,7 @@ public class PostgreSqlProjectRepository : IProjectRepository
 
     public async IAsyncEnumerable<Task> FindAllTaskAsync(Project project)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
 
         var tasks = new Dictionary<int, Task>();
         await connection.QueryAsync<Task, Category, Task>(
@@ -187,7 +187,7 @@ public class PostgreSqlProjectRepository : IProjectRepository
 
     public async IAsyncEnumerable<Project> FindAllByUserAsync(AppUser user, int skip = 0, int count = int.MaxValue)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
         var reader = await connection.ExecuteReaderAsync(
             "SELECT * FROM get_user_projects(@UserId, @Skip, @Count)",
             new { UserId = user.Id, Skip = skip, Count = count });

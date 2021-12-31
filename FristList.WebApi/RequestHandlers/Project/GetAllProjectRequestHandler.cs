@@ -6,6 +6,7 @@ using FristList.Data.Responses;
 using FristList.Models;
 using FristList.Models.Services;
 using FristList.Services.Abstractions;
+using FristList.Services.Abstractions.Repositories;
 using FristList.WebApi.Requests.Project;
 using MediatR;
 using Microsoft.AspNetCore.Identity;

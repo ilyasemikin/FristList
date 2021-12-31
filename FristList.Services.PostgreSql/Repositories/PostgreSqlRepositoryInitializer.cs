@@ -2,7 +2,7 @@ using Dapper.FluentMap;
 using FristList.Services.Abstractions;
 using FristList.Services.PostgreSql.Mapping;
 
-namespace FristList.Services.PostgreSql;
+namespace FristList.Services.PostgreSql.Repositories;
 
 public class PostgreSqlRepositoryInitializer : IRepositoryInitializer
 {

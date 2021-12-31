@@ -1,22 +1,21 @@
 using Dapper;
 using FristList.Models;
-using Npgsql;
 using Action = FristList.Models.Action;
 
-namespace FristList.Services.PostgreSql;
+namespace FristList.Services.PostgreSql.Repositories;
 
 public class PostgreSqlActionRepository : Abstractions.IActionRepository
 {
-    private readonly string _connectionString;
+    private readonly IDatabaseConnectionFactory _connectionFactory;
 
-    public PostgreSqlActionRepository(IDatabaseConfiguration configuration)
+    public PostgreSqlActionRepository(IDatabaseConnectionFactory connectionFactory)
     {
-        _connectionString = configuration.GetConnectionString();
+        _connectionFactory = connectionFactory;
     }
     
     public async Task<RepositoryResult> CreateAsync(Action action)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
 
         try
         {
@@ -45,7 +44,7 @@ public class PostgreSqlActionRepository : Abstractions.IActionRepository
 
     public async Task<RepositoryResult> DeleteAsync(Action action)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
 
         var deleted = await connection.ExecuteAsync("DELETE FROM action WHERE \"Id\"=@Id", new { Id = action.Id });
 
@@ -57,7 +56,7 @@ public class PostgreSqlActionRepository : Abstractions.IActionRepository
 
     public async Task<TimeSpan> GetSummaryTimeAsync(AppUser user, DateTime from, DateTime to)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
         return await connection.QuerySingleOrDefaultAsync<TimeSpan>(
             "SELECT * FROM get_user_summary_time(@UserId, @FromTime AT TIME ZONE 'UTC', @ToTime AT TIME ZONE 'UTC')",
             new { UserId = user.Id, FromTime = from, ToTime = to });
@@ -65,7 +64,7 @@ public class PostgreSqlActionRepository : Abstractions.IActionRepository
 
     public async Task<int> CountByUserAsync(AppUser user)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
         return await connection.ExecuteScalarAsync<int>(
             "SELECT \"Count\" FROM user_action_count WHERE \"UserId\"=@UserId", 
             new { UserId = user.Id });
@@ -73,7 +72,7 @@ public class PostgreSqlActionRepository : Abstractions.IActionRepository
 
     public async Task<Action?> FindByIdAsync(int id)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
         Action? answer = null;
 
         await connection.QueryAsync<Action, Category, Action>(
@@ -95,7 +94,7 @@ public class PostgreSqlActionRepository : Abstractions.IActionRepository
 
     public async IAsyncEnumerable<Action> FindAllByUserAsync(AppUser user, int skip = 0, int count = Int32.MaxValue)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
 
         var actions = new Dictionary<int, Action>();
         await connection.QueryAsync<Action, Category, Action>(

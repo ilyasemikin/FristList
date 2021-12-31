@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using FristList.Data.Dto;
 using FristList.Data.Responses;
 using FristList.Services.Abstractions;
+using FristList.Services.Abstractions.Repositories;
 using FristList.WebApi.Helpers;
 using FristList.WebApi.Requests.Account;
 using FristList.WebApi.Services;
@@ -16,14 +17,12 @@ namespace FristList.WebApi.RequestHandlers.Account;
 public class LoginRequestHandler : IRequestHandler<LoginRequest, RequestResult<Tokens>>
 {
     private readonly UserManager<AppUser> _userManager;
-    private readonly IJwtTokenProvider _jwtTokenProvider;
-    private readonly IRefreshTokenProvider _refreshTokenProvider;
+    private readonly TokenService _tokenService;
 
-    public LoginRequestHandler(UserManager<AppUser> userManager, IJwtTokenProvider jwtTokenProvider, IRefreshTokenProvider refreshTokenProvider)
+    public LoginRequestHandler(UserManager<AppUser> userManager, TokenService tokenService)
     {
         _userManager = userManager;
-        _jwtTokenProvider = jwtTokenProvider;
-        _refreshTokenProvider = refreshTokenProvider;
+        _tokenService = tokenService;
     }
 
     public async Task<RequestResult<Tokens>> Handle(LoginRequest request, CancellationToken cancellationToken)
@@ -41,16 +40,9 @@ public class LoginRequestHandler : IRequestHandler<LoginRequest, RequestResult<T
         if (!success)
             return RequestResult<Tokens>.Failed();
 
-        var refreshToken = await _refreshTokenProvider.CreateAsync(user);
-        if (refreshToken is null)
+        var tokens = await _tokenService.CreateAsync(user);
+        if (tokens is null)
             return RequestResult<Tokens>.Failed();
-        
-        var tokens = new Tokens
-        {
-            AccessToken = _jwtTokenProvider.CreateToken(user),
-            RefreshToken = refreshToken.Token
-        };
-            
         return RequestResult<Tokens>.Success(tokens);
     }
 }

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using FristList.Data.Responses;
 using FristList.Models;
 using FristList.Services.Abstractions;
+using FristList.Services.Abstractions.Repositories;
 using FristList.WebApi.Helpers;
 using FristList.WebApi.Notifications.RunningAction;
 using FristList.WebApi.Requests.RunningAction;
@@ -17,14 +18,14 @@ namespace FristList.WebApi.RequestHandlers.RunningAction;
 public class StartActionRequestHandler : IRequestHandler<StartRunningActionRequest, RequestResult<Unit>>
 {
     private readonly IUserStore<AppUser> _userStore;
-    private readonly IRunningActionProvider _runningActionProvider;
+    private readonly IRunningActionRepository _runningActionRepository;
     private readonly ICategoryRepository _categoryRepository;
     private readonly IMediator _mediator;
 
-    public StartActionRequestHandler(IUserStore<AppUser> userStore, IRunningActionProvider runningActionProvider, ICategoryRepository categoryRepository, IMediator mediator)
+    public StartActionRequestHandler(IUserStore<AppUser> userStore, IRunningActionRepository runningActionRepository, ICategoryRepository categoryRepository, IMediator mediator)
     {
         _userStore = userStore;
-        _runningActionProvider = runningActionProvider;
+        _runningActionRepository = runningActionRepository;
         _categoryRepository = categoryRepository;
         _mediator = mediator;
     }
@@ -49,7 +50,7 @@ public class StartActionRequestHandler : IRequestHandler<StartRunningActionReque
             UserId = user.Id
         };
 
-        if (await _runningActionProvider.GetCurrentRunningAsync(user) is not null)
+        if (await _runningActionRepository.FindByUserAsync(user) is not null)
         {
             var saveRequest = new StopRunningActionRequest(user.UserName);
 
@@ -58,7 +59,7 @@ public class StartActionRequestHandler : IRequestHandler<StartRunningActionReque
                 return resp;
         }
         
-        var result = await _runningActionProvider.CreateRunningAsync(action);
+        var result = await _runningActionRepository.CreateRunningAsync(action);
         if (!result.Succeeded)
             return RequestResult<Unit>.Failed();
 

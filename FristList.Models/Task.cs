@@ -16,9 +16,6 @@ public class Task : ModelObjectBase
     
     public int? ProjectId { get; set; }
     public Project? Project { get; set; }
-    
-    public DateTime CreatedAt { get; set; }
-    public DateTime EditedAt { get; set; }
 
     public Task()
     {

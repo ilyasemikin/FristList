@@ -64,8 +64,8 @@ public class CategoryController : ApiController
         return Ok(response.Data);
     }
     
-    [HttpGet("/api/category/time")]
-    [ProducesResponseType(typeof(DateTime), (int)HttpStatusCode.OK)]
+    [HttpGet("time")]
+    [ProducesResponseType(typeof(TimeSpan), (int)HttpStatusCode.OK)]
     public async Task<IActionResult> SummaryAllCategoryTime([FromQuery][FromBody]IntervalQuery query)
     {
         var response =

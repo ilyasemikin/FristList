@@ -270,6 +270,11 @@ CREATE CONSTRAINT TRIGGER check_project_task_owner AFTER INSERT OR UPDATE ON pro
     FOR EACH ROW
     EXECUTE PROCEDURE check_project_task();
 
+CREATE VIEW user_refresh_token_count AS
+     SELECT "UserId", COUNT("Token") AS "Count"
+       FROM user_refresh_token
+   GROUP BY "UserId";
+
 CREATE VIEW project_task_count AS
     SELECT p."Id" AS "ProjectId", COUNT(pt."TaskId") AS "Count" 
       FROM project p 

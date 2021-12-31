@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using FristList.Data.Responses;
 using FristList.Models;
 using FristList.Services.Abstractions;
+using FristList.Services.Abstractions.Repositories;
 using FristList.WebApi.Helpers;
 using FristList.WebApi.Notifications.RunningAction;
 using FristList.WebApi.Requests.RunningAction;
@@ -15,13 +16,13 @@ namespace FristList.WebApi.RequestHandlers.RunningAction;
 public class DeleteActionRequestHandler : IRequestHandler<DeleteRunningActionRequest, RequestResult<Unit>>
 {
     private readonly IUserStore<AppUser> _userStore;
-    private readonly IRunningActionProvider _runningActionProvider;
+    private readonly IRunningActionRepository _runningActionRepository;
     private readonly IMediator _mediator;
 
-    public DeleteActionRequestHandler(IUserStore<AppUser> userStore, IRunningActionProvider runningActionProvider, IMediator mediator)
+    public DeleteActionRequestHandler(IUserStore<AppUser> userStore, IRunningActionRepository runningActionRepository, IMediator mediator)
     {
         _userStore = userStore;
-        _runningActionProvider = runningActionProvider;
+        _runningActionRepository = runningActionRepository;
         _mediator = mediator;
     }
 
@@ -29,11 +30,11 @@ public class DeleteActionRequestHandler : IRequestHandler<DeleteRunningActionReq
     {
         var user = await _userStore.FindByNameAsync(request.UserName, cancellationToken);
 
-        var action = await _runningActionProvider.GetCurrentRunningAsync(user);
+        var action = await _runningActionRepository.FindByUserAsync(user);
         if (action is null)
             return RequestResult<Unit>.Failed();
 
-        var result = await _runningActionProvider.DeleteRunningAsync(action);
+        var result = await _runningActionRepository.DeleteRunningAsync(action);
         if (!result.Succeeded)
             return RequestResult<Unit>.Failed();
 

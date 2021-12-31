@@ -10,10 +10,7 @@ public class Category : ModelObjectBase
     
     public int UserId { get; set; }
     public AppUser? User { get; set; }
-    
-    public DateTime CreateAt { get; set; }
-    public DateTime EditedAt { get; set; }
-    
+
     public Category()
     {
         Name = string.Empty;

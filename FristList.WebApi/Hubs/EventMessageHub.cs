@@ -33,6 +33,8 @@ public interface IEventMessage
     public Task ProjectDeletedMessage(int id);
 
     public Task ProjectTaskOrderChangedMessage(Data.Dto.Project project,  IEnumerable<int> taskIds);
+
+    public Task ErrorOccuredMessage(string method, IEnumerable<string> messages);
 }
 
 [Authorize]
@@ -49,20 +51,33 @@ public class EventMessageHub : Hub<IEventMessage>
         _mediator = mediator;
     }
 
-    public async Task StartAction(StartActionQuery query)
+    public async Task CreateCategory(CreateCategoryQuery query)
     {
-        await _mediator.Send(new StartRunningActionRequest(query.TaskId, query.CategoryIds,
+        var result = await _mediator.Send(new CreateCategoryRequest(query.Name!, Context.User!.Identity!.Name!));
+        if (!result.IsSuccess)
+            await Clients.Caller.ErrorOccuredMessage(nameof(CreateCategory), result.Errors);
+    }
+
+    public async Task StartRunningAction(StartActionQuery query)
+    {
+        var result = await _mediator.Send(new StartRunningActionRequest(query.TaskId, query.CategoryIds,
             Context.User!.Identity!.Name!));
+        if (!result.IsSuccess)
+            await Clients.Caller.ErrorOccuredMessage(nameof(StartRunningAction), result.Errors);
     }
 
-    public async Task StopAction()
+    public async Task StopRunningAction()
     {
-        await _mediator.Send(new StopRunningActionRequest(Context.User!.Identity!.Name!));
+        var result = await _mediator.Send(new StopRunningActionRequest(Context.User!.Identity!.Name!));
+        if (!result.IsSuccess)
+            await Clients.Caller.ErrorOccuredMessage(nameof(StopRunningAction), result.Errors);
     }
 
-    public async Task DeleteCurrentAction()
+    public async Task DeleteRunningAction()
     {
-        await _mediator.Send(new DeleteRunningActionRequest(Context.User!.Identity!.Name!));
+        var result = await _mediator.Send(new DeleteRunningActionRequest(Context.User!.Identity!.Name!));
+        if (!result.IsSuccess)
+            await Clients.Caller.ErrorOccuredMessage(nameof(DeleteRunningAction), result.Errors);
     }
 
     public override async Task OnConnectedAsync()

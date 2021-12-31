@@ -1,23 +1,23 @@
 using Dapper;
 using FristList.Models;
 using FristList.Services.Abstractions;
-using Npgsql;
+using FristList.Services.Abstractions.Repositories;
 using Task = FristList.Models.Task;
 
-namespace FristList.Services.PostgreSql;
+namespace FristList.Services.PostgreSql.Repositories;
 
 public class PostgreSqlTaskRepository : ITaskRepository
 {
-    private readonly string _connectionString;
+    private readonly IDatabaseConnectionFactory _connectionFactory;
 
-    public PostgreSqlTaskRepository(IDatabaseConfiguration configuration)
+    public PostgreSqlTaskRepository(IDatabaseConnectionFactory connectionFactory)
     {
-        _connectionString = configuration.GetConnectionString();
+        _connectionFactory = connectionFactory;
     }
     
     public async Task<RepositoryResult> CreateAsync(Task task)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
 
         try
         {
@@ -41,7 +41,7 @@ public class PostgreSqlTaskRepository : ITaskRepository
 
     public async Task<RepositoryResult> DeleteAsync(Task task)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
 
         var deleted = await connection.ExecuteScalarAsync<bool>("SELECT * FROM delete_task(@Id)", new {Id = task.Id});
         if (!deleted)
@@ -52,7 +52,7 @@ public class PostgreSqlTaskRepository : ITaskRepository
 
     public async Task<RepositoryResult> CompleteAsync(Task task)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
 
         var success = await connection.ExecuteScalarAsync<bool>(
             "SELECT * FROM complete_task(@Id)", 
@@ -67,7 +67,7 @@ public class PostgreSqlTaskRepository : ITaskRepository
 
     public async Task<RepositoryResult> UncompleteAsync(Task task)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
         
         var success = await connection.ExecuteScalarAsync<bool>(
             "SELECT * FROM uncomplete_task(@Id)", 
@@ -82,7 +82,7 @@ public class PostgreSqlTaskRepository : ITaskRepository
 
     public async Task<TimeSpan> GetSummaryTimeAsync(Task task, DateTime @from, DateTime to)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
         return await connection.QuerySingleOrDefaultAsync<TimeSpan>(
             "SELECT * FROM get_task_summary_time(@TaskId, @FromTime AT TIME ZONE 'UTC', @ToTime AT TIME ZONE 'UTC')",
             new { TaskId = task.Id, FromTime = from, ToTime = to });
@@ -90,7 +90,7 @@ public class PostgreSqlTaskRepository : ITaskRepository
 
     public async Task<int> CountAllByUser(AppUser user)
     {
-        var connection = new NpgsqlConnection(_connectionString);
+        var connection = _connectionFactory.CreateConnection();
         return await connection.QuerySingleOrDefaultAsync<int>(
             "SELECT \"Count\" FROM user_all_task_count WHERE \"UserId\"=@UserId", 
             new {UserId = user.Id});
@@ -98,7 +98,7 @@ public class PostgreSqlTaskRepository : ITaskRepository
 
     public async Task<Task?> FindByIdAsync(int id)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
 
         Task? answer = null;
         await connection.QueryAsync<Task, Category, Task>(
@@ -120,7 +120,7 @@ public class PostgreSqlTaskRepository : ITaskRepository
 
     public async IAsyncEnumerable<Task> FindAllByUserAsync(AppUser user, int skip = 0, int count = int.MaxValue)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
 
         var tasks = new Dictionary<int, Task>();
         await connection.QueryAsync<Task, Category, Task>(
@@ -149,7 +149,7 @@ public class PostgreSqlTaskRepository : ITaskRepository
 
     public async IAsyncEnumerable<Task> FindAllNonProjectByUserAsync(AppUser user, int skip = 0, int count = Int32.MaxValue)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
 
         var tasks = new Dictionary<int, Task>();
         await connection.QueryAsync<Task, Category, Task>(

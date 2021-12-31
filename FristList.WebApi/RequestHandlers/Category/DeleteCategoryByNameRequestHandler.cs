@@ -2,6 +2,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using FristList.Models;
 using FristList.Services.Abstractions;
+using FristList.Services.Abstractions.Repositories;
 using FristList.WebApi.Helpers;
 using FristList.WebApi.Requests.Category;
 using MediatR;

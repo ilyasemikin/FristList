@@ -6,6 +6,7 @@ using FristList.Models;
 using FristList.Models.Base;
 using FristList.Models.Services;
 using FristList.Services.Abstractions;
+using FristList.Services.Abstractions.Repositories;
 using Action = FristList.Models.Action;
 
 namespace FristList.WebApi.Services;

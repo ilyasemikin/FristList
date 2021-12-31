@@ -2,6 +2,29 @@
 
 -- Refresh token functions
 
+CREATE OR REPLACE FUNCTION add_refresh_token(token TEXT, user_id INTEGER, expires TIMESTAMP WITHOUT TIME ZONE)
+    RETURNS INTEGER
+AS $$
+DECLARE
+    refresh_token_id    INTEGER;
+BEGIN
+       INSERT INTO user_refresh_token ("Token", "Expires", "UserId") 
+            VALUES (token, expires, user_id)
+    RETURNING "Id" INTO refresh_token_id;
+       
+    RETURN refresh_token_id;
+END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION delete_refresh_token(token TEXT)
+    RETURNS BOOL
+AS $$
+BEGIN
+    DELETE FROM user_refresh_token WHERE "Token"=token;
+    RETURN TRUE;
+END
+$$ LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION get_refresh_token(token TEXT)
     RETURNS TABLE (
         "RefreshTokenId"        INTEGER,
@@ -15,6 +38,22 @@ BEGIN
         SELECT "Id", "Token"::TEXT, "Expires", "UserId"
           FROM user_refresh_token
          WHERE "Token"=token;
+END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_user_refresh_tokens(user_id INTEGER)
+    RETURNS TABLE (
+        "RefreshTokenId"        INTEGER,
+        "RefreshTokenValue"     TEXT,
+        "RefreshTokenExpires"   TIMESTAMP WITHOUT TIME ZONE,
+        "RefreshTokenUserId"    INTEGER
+    )
+AS $$
+BEGIN
+    RETURN QUERY
+        SELECT "Id", "Token"::TEXT, "Expires", "UserId"
+          FROM user_refresh_token
+         WHERE "UserId"=user_id;
 END
 $$ LANGUAGE plpgsql;
 

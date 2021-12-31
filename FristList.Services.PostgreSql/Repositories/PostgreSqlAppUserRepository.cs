@@ -1,19 +1,19 @@
 using Dapper;
 using FristList.Models;
 using FristList.Services.Abstractions;
+using FristList.Services.Abstractions.Repositories;
 using Microsoft.AspNetCore.Identity;
-using Npgsql;
 using Task = System.Threading.Tasks.Task;
 
-namespace FristList.Services.PostgreSql;
+namespace FristList.Services.PostgreSql.Repositories;
 
 public class PostgreSqlAppUserRepository : IAppUserRepository
 {
-    private readonly string _connectionString;
+    private readonly IDatabaseConnectionFactory _connectionFactory;
 
-    public PostgreSqlAppUserRepository(IDatabaseConfiguration databaseConfiguration)
+    public PostgreSqlAppUserRepository(IDatabaseConnectionFactory connectionFactory)
     {
-        _connectionString = databaseConfiguration.GetConnectionString();
+        _connectionFactory = connectionFactory;
     }
     
     public void Dispose()
@@ -25,7 +25,7 @@ public class PostgreSqlAppUserRepository : IAppUserRepository
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
         try
         {
             user.Id = await connection.ExecuteScalarAsync<int>(
@@ -55,7 +55,7 @@ public class PostgreSqlAppUserRepository : IAppUserRepository
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
         var deleted = await connection.ExecuteAsync(
             "DELETE FROM app_user WHERE \"Id\"=@Id",
             new { Id = user.Id });
@@ -68,7 +68,7 @@ public class PostgreSqlAppUserRepository : IAppUserRepository
 
     public async Task<IdentityResult> UpdateAsync(AppUser user, CancellationToken cancellationToken)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
 
         var affected = await connection.ExecuteAsync(
             "UPDATE app_user SET \"UserName\"=@UserName, \"NormalizedUserName\"=@NormalizedUserName, \"Email\"=@Email, \"NormalizedEmail\"=@NormalizedEmail, \"PasswordHash\"=@PasswordHash WHERE \"Id\"=@Id",
@@ -91,7 +91,7 @@ public class PostgreSqlAppUserRepository : IAppUserRepository
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
         return await connection.QuerySingleOrDefaultAsync<AppUser>(
             "SELECT * FROM app_user WHERE \"Id\"=@Id",
             new { Id = int.Parse(userId) });
@@ -101,7 +101,7 @@ public class PostgreSqlAppUserRepository : IAppUserRepository
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
         return await connection.QuerySingleOrDefaultAsync<AppUser>(
             "SELECT * FROM app_user WHERE \"NormalizedUserName\"=@NormalizedUserName",
             new { NormalizedUserName = normalizedUserName.ToUpper() });
@@ -120,7 +120,7 @@ public class PostgreSqlAppUserRepository : IAppUserRepository
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
         await connection.ExecuteAsync(
             "UPDATE app_user SET \"UserName\"=@UserName WHERE \"Id\"=@Id",
             new { UserName = userName, Id = user.Id });
@@ -132,7 +132,7 @@ public class PostgreSqlAppUserRepository : IAppUserRepository
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
         await connection.ExecuteAsync(
             "UPDATE app_user SET \"NormalizedUserName\"=@NormalizedUserName WHERE \"Id\"=@Id",
             new { NormalizedUserName = normalizedName, Id = user.Id });
@@ -144,7 +144,7 @@ public class PostgreSqlAppUserRepository : IAppUserRepository
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
         return await connection.QuerySingleOrDefaultAsync<AppUser>(
             "SELECT * FROM app_user WHERE \"NormalizedEmail\"=@NormalizedEmail",
             new { NormalizedEmail = normalizedEmail });
@@ -163,7 +163,7 @@ public class PostgreSqlAppUserRepository : IAppUserRepository
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
         await connection.ExecuteAsync(
             "UPDATE app_user SET \"Email\"=@Email WHERE \"Id\"=@Id",
             new { Email = email, Id = user.Id });
@@ -175,7 +175,7 @@ public class PostgreSqlAppUserRepository : IAppUserRepository
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
         await connection.ExecuteAsync(
             "UPDATE app_user SET \"NormalizedEmail\"=@NormalizedEmail WHERE \"Id\"=@Id",
             new { NormalizedEmail = normalizedEmail, Id = user.Id });
@@ -187,7 +187,7 @@ public class PostgreSqlAppUserRepository : IAppUserRepository
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
         await connection.ExecuteAsync(
             "UPDATE app_user SET \"EmailConfirmed\"=@EmailConfirmed WHERE \"Id\"=@Id",
             new { EmailConfirmed = confirmed, Id = user.Id });
@@ -202,7 +202,7 @@ public class PostgreSqlAppUserRepository : IAppUserRepository
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
         await connection.ExecuteAsync(
             "UPDATE app_user SET \"PasswordHash\"=@PasswordHash WHERE \"Id\"=@Id",
             new { PasswordHash = passwordHash, Id = user.Id });

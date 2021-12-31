@@ -1,21 +1,21 @@
 using Dapper;
 using FristList.Models;
-using Npgsql;
+using FristList.Services.Abstractions.Repositories;
 
-namespace FristList.Services.PostgreSql;
+namespace FristList.Services.PostgreSql.Repositories;
 
-public class PostgreSqlCategoryRepository : Abstractions.ICategoryRepository
+public class PostgreSqlCategoryRepository : ICategoryRepository
 {
-    private readonly string _connectionString;
+    private readonly IDatabaseConnectionFactory _connectionFactory;
 
-    public PostgreSqlCategoryRepository(IDatabaseConfiguration configuration)
+    public PostgreSqlCategoryRepository(IDatabaseConnectionFactory connectionFactory)
     {
-        _connectionString = configuration.GetConnectionString();
+        _connectionFactory = connectionFactory;
     }
     
     public async Task<RepositoryResult> CreateAsync(Category category)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
         try
         {
             category.Id = await connection.ExecuteScalarAsync<int>(
@@ -36,7 +36,7 @@ public class PostgreSqlCategoryRepository : Abstractions.ICategoryRepository
 
     public async Task<RepositoryResult> DeleteAsync(Category category)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
         var deleted = await connection.ExecuteAsync(
             "DELETE FROM category WHERE \"Id\"=@Id",
             new { Id = category.Id });
@@ -49,7 +49,7 @@ public class PostgreSqlCategoryRepository : Abstractions.ICategoryRepository
 
     public async Task<TimeSpan> GetSummaryTimeAsync(Category category, DateTime from, DateTime to)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
         return await connection.QuerySingleOrDefaultAsync<TimeSpan>(
             "SELECT * FROM get_category_summary_time(@CategoryId, @FromTime AT TIME ZONE 'UTC', @ToTime AT TIME ZONE 'UTC')",
             new { CategoryId = category.Id, FromTime = from, ToTime = to });
@@ -57,7 +57,7 @@ public class PostgreSqlCategoryRepository : Abstractions.ICategoryRepository
 
     public async Task<int> CountByUserAsync(AppUser user)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
         return await connection.QuerySingleAsync<int>(
             "SELECT \"Count\" FROM user_category_count WHERE \"UserId\"=@UserId",
             new { UserId = user.Id });
@@ -65,13 +65,13 @@ public class PostgreSqlCategoryRepository : Abstractions.ICategoryRepository
 
     public async Task<Category?> FindByIdAsync(int id)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
         return await connection.QuerySingleOrDefaultAsync<Category>("SELECT * FROM get_category(@Id)", new { Id = id });
     }
 
     public async Task<Category?> FindByNameAsync(AppUser user, string name)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
         return await connection.QuerySingleOrDefaultAsync<Category>(
             "SELECT * FROM get_category(@Name, @UserId)",
             new { Name = name, UserId = user.Id });
@@ -83,7 +83,7 @@ public class PostgreSqlCategoryRepository : Abstractions.ICategoryRepository
         if (idsArray.Length == 0)
             yield break;
 
-        var connection = new NpgsqlConnection(_connectionString);
+        var connection = _connectionFactory.CreateConnection();
         var reader = await connection.ExecuteReaderAsync(
             "SELECT * FROM get_categories(@CategoryIds)",
             new {CategoryIds = idsArray});
@@ -94,7 +94,7 @@ public class PostgreSqlCategoryRepository : Abstractions.ICategoryRepository
 
     public async IAsyncEnumerable<Category> FindAllByUser(AppUser user, int skip = 0, int count = int.MaxValue)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
+        await using var connection = _connectionFactory.CreateConnection();
         var reader = await connection.ExecuteReaderAsync(
             "SELECT * FROM get_user_categories(@UserId, @Skip, @Count)",
             new { UserId = user.Id, Skip = skip, Count = count });

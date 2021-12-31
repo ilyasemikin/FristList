@@ -1,17 +1,17 @@
 using Dapper;
 using FristList.Models;
 using FristList.Services.Abstractions;
-using Npgsql;
+using FristList.Services.Abstractions.Repositories;
 
-namespace FristList.Services.PostgreSql;
+namespace FristList.Services.PostgreSql.Repositories;
 
-public class PostgreSqlRunningActionProvider : IRunningActionProvider
+public class PostgreSqlRunningActionRepository : IRunningActionRepository
 {
-    private readonly string _connectionString;
+    private readonly IDatabaseConnectionFactory _connectionFactory;
 
-    public PostgreSqlRunningActionProvider(IDatabaseConfiguration configuration)
+    public PostgreSqlRunningActionRepository(IDatabaseConnectionFactory connectionFactory)
     {
-        _connectionString = configuration.GetConnectionString();
+        _connectionFactory = connectionFactory;
     }
     
     public async Task<RepositoryResult> CreateRunningAsync(RunningAction action)
@@ -25,7 +25,7 @@ public class PostgreSqlRunningActionProvider : IRunningActionProvider
                 }
             });
 
-        var connection = new NpgsqlConnection(_connectionString);
+        var connection = _connectionFactory.CreateConnection();
 
         if (action.TaskId is not null)
             await connection.ExecuteAsync("SELECT * FROM start_task_action(@UserId, @TaskId)",
@@ -35,7 +35,7 @@ public class PostgreSqlRunningActionProvider : IRunningActionProvider
                 new {UserId = action.UserId, Categories = action.CategoryIds.ToArray()});
 
         // TODO: try refactor this
-        var result = await GetCurrentRunningAsync(action.UserId);
+        var result = await FindByUserAsync(action.UserId);
         if (result is not null)
         {
             action.StartTime = result.StartTime;
@@ -50,24 +50,20 @@ public class PostgreSqlRunningActionProvider : IRunningActionProvider
         return RepositoryResult.Success;
     }
 
-    public async Task<int?> SaveRunningAsync(RunningAction action)
-    {
-        var connection = new NpgsqlConnection(_connectionString);
-
-        return await connection.ExecuteScalarAsync<int?>("SELECT * FROM save_running_action(@UserId)", new {UserId = action.UserId});
-    }
-
     public async Task<RepositoryResult> DeleteRunningAsync(RunningAction action)
     {   
-        var connection = new NpgsqlConnection(_connectionString);
+        var connection = _connectionFactory.CreateConnection();
         
         await connection.ExecuteAsync("SELECT * FROM delete_running_action(@UserId)", new {UserId = action.UserId});
         return RepositoryResult.Success;
     }
 
-    public async Task<RunningAction?> GetCurrentRunningAsync(int userId)
+    public async Task<RunningAction?> FindByUserAsync(AppUser user)
+        => await FindByUserAsync(user.Id);
+
+    public async Task<RunningAction?> FindByUserAsync(int userId)
     {
-        var connection = new NpgsqlConnection(_connectionString);
+        var connection = _connectionFactory.CreateConnection();
 
         RunningAction? answer = null;
 
@@ -88,7 +84,4 @@ public class PostgreSqlRunningActionProvider : IRunningActionProvider
 
         return answer;
     }
-
-    public Task<RunningAction?> GetCurrentRunningAsync(AppUser user)
-        => GetCurrentRunningAsync(user.Id);
 }

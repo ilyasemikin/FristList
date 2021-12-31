@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using FristList.Models;
 
-namespace FristList.Services.Abstractions;
+namespace FristList.Services.Abstractions.Repositories;
 
 public interface ICategoryRepository
 {

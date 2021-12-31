@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using FristList.Models;
 using Task = FristList.Models.Task;
 
-namespace FristList.Services.Abstractions;
+namespace FristList.Services.Abstractions.Repositories;
 
 public interface IProjectRepository
 {
