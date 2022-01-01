@@ -9,7 +9,9 @@ public class AuthorizeService
     private string? _accessToken;
     private string? _refreshToken;
 
-    private Func<HttpClient> _clientFactory;
+    private readonly Func<HttpClient> _clientFactory;
+
+    public bool IsAuthorized => _refreshToken is not null;
     
     public AuthorizeService(Func<HttpClient> clientFactory)
     {
