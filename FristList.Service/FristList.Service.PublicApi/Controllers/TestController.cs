@@ -1,11 +1,12 @@
+using FristList.Service.PublicApi.Controllers.Base;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FristList.Service.PublicApi.Controllers;
 
 [AllowAnonymous]
-[Route("api/v1/info")]
-public class InfoController : BaseController
+[Route("api/v1/test")]
+public class TestController : BaseController
 {
     [HttpGet("summary")]
     [ProducesResponseType(StatusCodes.Status200OK)]

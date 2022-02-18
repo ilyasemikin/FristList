@@ -1,11 +1,11 @@
 using FluentValidation;
 using FristList.Service.PublicApi.Models.Account;
 
-namespace FristList.Service.PublicApi.Validators.Account;
+namespace FristList.Service.PublicApi.Validators.Authorize;
 
-public class LoginModelValidator : AbstractValidator<LoginModel>
+public class AuthorizeModelValidator : AbstractValidator<AuthorizeModel>
 {
-    public LoginModelValidator()
+    public AuthorizeModelValidator()
     {
         RuleFor(m => m.Login)
             .NotNull()

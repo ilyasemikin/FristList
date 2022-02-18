@@ -39,39 +39,50 @@ public class UserTokensManager : IUserTokensManager
         return new UserTokens(accessTokenValue, refreshTokenValue);
     }
 
-    public async Task<UserTokens?> RefreshAsync(string token)
+    public async Task<UserTokens> RefreshAsync(RefreshToken refreshToken)
     {
-        var refreshToken = await _dbContext.RefreshTokens.Where(t => t.Token == token)
-            .FirstOrDefaultAsync();
-        if (refreshToken is null)
-            return null;
         _dbContext.RefreshTokens.Remove(refreshToken);
         await _dbContext.SaveChangesAsync();
         return await GenerateAsync(refreshToken.User);
     }
 
-    public async Task<bool> RevokeAsync(string token)
+    public async Task<UserTokens?> RefreshAsync(string refreshTokenValue)
     {
-        var refreshToken = await _dbContext.RefreshTokens.Where(t => t.Token == token)
-            .FirstOrDefaultAsync();
-        
-        if (refreshToken is not null)
-        {
-            _dbContext.RefreshTokens.Remove(refreshToken);
-            await _dbContext.SaveChangesAsync();
-        }
-        
-        return refreshToken is not null;
+        var refreshToken = await FindRefreshTokenAsync(refreshTokenValue);
+        if (refreshToken is null)
+            return null;
+        return await RefreshAsync(refreshToken);
     }
 
-    public async Task<IEnumerable<RefreshToken>> GetRefreshTokens(Guid userId)
+    public async Task<bool> RevokeAsync(RefreshToken refreshToken)
+    {
+        _dbContext.RefreshTokens.Remove(refreshToken);
+        await _dbContext.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> RevokeAsync(string refreshTokenValue)
+    {
+        var refreshToken = await FindRefreshTokenAsync(refreshTokenValue);
+        if (refreshToken is null)
+            return false;
+        return await RevokeAsync(refreshToken);
+    }
+
+    public async Task<RefreshToken?> FindRefreshTokenAsync(string refreshTokenValue)
+    {
+        return await _dbContext.RefreshTokens.Where(t => t.Token == refreshTokenValue)
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<IEnumerable<RefreshToken>> GetRefreshTokensAsync(Guid userId)
     {
         return await _dbContext.RefreshTokens.Where(t => t.User.Id == userId)
             .ToListAsync();
     }
 
-    public Task<IEnumerable<RefreshToken>> GetRefreshTokens(User user)
+    public Task<IEnumerable<RefreshToken>> GetRefreshTokensAsync(User user)
     {
-        return GetRefreshTokens(user.Id);
+        return GetRefreshTokensAsync(user.Id);
     }
 }
