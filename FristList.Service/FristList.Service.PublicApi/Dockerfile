@@ -15,7 +15,7 @@ COPY ./FristList.Service.Data/ ./FristList.Service.Data/
 COPY ./FristList.Service.PublicApi/ ./FristList.Service.PublicApi/
 
 WORKDIR /app/FristList.Service.PublicApi
-RUN dotnet build -c Debug -o out
+RUN dotnet publish -o out
 
 FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS runtime
 WORKDIR /app

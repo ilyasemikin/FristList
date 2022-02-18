@@ -15,8 +15,6 @@ services:
     build: 
       context: ./FristList.Service/
       dockerfile: ./FristList.Service.PublicApi/Dockerfile
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
     networks:
       - main-network
 

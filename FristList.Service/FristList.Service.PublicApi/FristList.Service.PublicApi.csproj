@@ -7,15 +7,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Models" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\FristList.Service.Data\FristList.Service.Data.csproj" />
+    <ProjectReference Include="..\FristList.Service.PostgreSqlMigrations\FristList.Service.PostgreSqlMigrations.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.2">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.2.3" />
   </ItemGroup>
 
 </Project>
