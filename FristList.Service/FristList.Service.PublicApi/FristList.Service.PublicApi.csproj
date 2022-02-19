@@ -8,10 +8,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FristList.Service.Data\FristList.Service.Data.csproj" />
-    <ProjectReference Include="..\FristList.Service.PostgreSqlMigrations\FristList.Service.PostgreSqlMigrations.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="11.0.1" />
+    <PackageReference Include="JetBrains.Annotations" Version="2021.3.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.2">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

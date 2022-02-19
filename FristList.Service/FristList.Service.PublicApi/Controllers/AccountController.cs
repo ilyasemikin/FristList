@@ -5,6 +5,7 @@ using FristList.Service.PublicApi.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace FristList.Service.PublicApi.Controllers;
 
@@ -20,6 +21,8 @@ public class AccountController : BaseController
     }
 
     [HttpPost("register")]
+    [SwaggerResponse(Http204)]
+    [SwaggerResponse(Http500, Type = typeof(ApiError))]
     public async Task<IActionResult> RegisterAsync([FromBody] RegisterModel model)
     {
         var user = new User
@@ -35,6 +38,6 @@ public class AccountController : BaseController
             return new ObjectResult(response) {StatusCode = StatusCodes.Status500InternalServerError};
         }
 
-        return Ok();
+        return NoContent();
     }
 }

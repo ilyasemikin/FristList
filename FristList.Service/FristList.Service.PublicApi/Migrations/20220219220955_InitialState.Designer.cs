@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FristList.Service.PublicApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20220216211821_UserAndRefreshTokenAdded")]
-    partial class UserAndRefreshTokenAdded
+    [Migration("20220219220955_InitialState")]
+    partial class InitialState
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -104,6 +104,71 @@ namespace FristList.Service.PublicApi.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("FristList.Service.Data.Models.Activities.Activity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("BeginAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("EndAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Activities");
+                });
+
+            modelBuilder.Entity("FristList.Service.Data.Models.Activities.ActivityCategory", b =>
+                {
+                    b.Property<Guid>("ActivityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CategoryId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("ActivityId", "CategoryId");
+
+                    b.HasIndex("CategoryId");
+
+                    b.ToTable("ActivityCategory");
+                });
+
+            modelBuilder.Entity("FristList.Service.Data.Models.Categories.Base.BaseCategory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Discriminator")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Categories", (string)null);
+
+                    b.HasDiscriminator<string>("Discriminator").HasValue("BaseCategory");
+                });
+
+            modelBuilder.Entity("FristList.Service.Data.Models.Categories.PersonalCategory", b =>
+                {
+                    b.HasBaseType("FristList.Service.Data.Models.Categories.Base.BaseCategory");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid");
+
+                    b.HasIndex("OwnerId");
+
+                    b.HasDiscriminator().HasValue("PersonalCategory");
+                });
+
             modelBuilder.Entity("FristList.Service.Data.Models.Account.RefreshToken", b =>
                 {
                     b.HasOne("FristList.Service.Data.Models.Account.User", "User")
@@ -113,6 +178,41 @@ namespace FristList.Service.PublicApi.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("FristList.Service.Data.Models.Activities.ActivityCategory", b =>
+                {
+                    b.HasOne("FristList.Service.Data.Models.Activities.Activity", "Activity")
+                        .WithMany("Categories")
+                        .HasForeignKey("ActivityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FristList.Service.Data.Models.Categories.Base.BaseCategory", "Category")
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Activity");
+
+                    b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("FristList.Service.Data.Models.Categories.PersonalCategory", b =>
+                {
+                    b.HasOne("FristList.Service.Data.Models.Account.User", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Owner");
+                });
+
+            modelBuilder.Entity("FristList.Service.Data.Models.Activities.Activity", b =>
+                {
+                    b.Navigation("Categories");
                 });
 #pragma warning restore 612, 618
         }

@@ -8,10 +8,10 @@ namespace FristList.Service.PublicApi.Controllers;
 [Route("api/v1/test")]
 public class TestController : BaseController
 {
-    [HttpGet("summary")]
+    [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public IActionResult SummaryServiceInfo()
     {
-        return Ok("An Web API for managing time and tasks");
+        return Ok();
     }
 }
