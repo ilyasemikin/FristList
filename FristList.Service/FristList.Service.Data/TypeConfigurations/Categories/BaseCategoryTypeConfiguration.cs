@@ -8,6 +8,8 @@ public class BaseCategoryTypeConfiguration : IEntityTypeConfiguration<BaseCatego
 {
     public void Configure(EntityTypeBuilder<BaseCategory> builder)
     {
+        builder.HasKey(c => c.Id);
+        
         builder.Property(c => c.Name)
             .IsRequired();
     }

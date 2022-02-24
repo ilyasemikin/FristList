@@ -10,6 +10,7 @@ public class PersonalCategoryTypeConfiguration : IEntityTypeConfiguration<Person
     public void Configure(EntityTypeBuilder<PersonalCategory> builder)
     {
         builder.HasBaseType<BaseCategory>();
+
         builder.HasOne(c => c.Owner)
             .WithMany()
             .IsRequired();

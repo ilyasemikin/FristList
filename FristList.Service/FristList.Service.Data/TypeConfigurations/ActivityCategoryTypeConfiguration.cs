@@ -13,7 +13,7 @@ public class ActivityCategoryTypeConfiguration : IEntityTypeConfiguration<Activi
             .HasForeignKey(ac => ac.ActivityId);
 
         builder.HasOne(ac => ac.Category)
-            .WithMany()
+            .WithMany("Activities")
             .HasForeignKey(ac => ac.CategoryId);
 
         builder.HasKey(ac => new { ac.ActivityId, ac.CategoryId });

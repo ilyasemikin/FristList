@@ -1,13 +1,19 @@
 using AutoMapper;
 using FristList.Service.Data;
+using FristList.Service.Data.Models.Account;
 using FristList.Service.Data.Models.Activities;
-using FristList.Service.Data.Models.Categories.Base;
+using FristList.Service.PublicApi.Context;
 using FristList.Service.PublicApi.Controllers.Base;
 using FristList.Service.PublicApi.Data.Activities;
+using FristList.Service.PublicApi.Filters;
 using FristList.Service.PublicApi.Models.Activities;
+using FristList.Service.PublicApi.Services;
+using FristList.Service.PublicApi.Services.Abstractions.Activities;
+using FristList.Service.PublicApi.Services.Abstractions.Categories;
+using FristList.Service.PublicApi.Services.Models.Activities;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace FristList.Service.PublicApi.Controllers;
@@ -17,70 +23,77 @@ namespace FristList.Service.PublicApi.Controllers;
 [SwaggerResponse(Http401)]
 public class ActivityController : BaseController
 {
-    private readonly AppDbContext _dbContext;
+    private readonly IActivityService _activityService;
+    private readonly ICategoryService _categoryService;
+    private readonly IUserStore<User> _userStore;
     private readonly IMapper _mapper;
 
-    public ActivityController(AppDbContext dbContext, IMapper mapper)
+    public ActivityController(IActivityService activityService, ICategoryService categoryService, IUserStore<User> userStore, IMapper mapper)
     {
-        _dbContext = dbContext;
+        _activityService = activityService;
+        _categoryService = categoryService;
+        _userStore = userStore;
         _mapper = mapper;
     }
 
     [HttpPost]
     [SwaggerResponse(Http201, Type = typeof(Guid))]
-    [SwaggerResponse(Http404)]
     public async Task<IActionResult> AddActivityAsync([FromBody] AddActivityModel model)
     {
-        var categoryIdsSet = model.CategoryIds.ToHashSet();
-        var categories = await _dbContext.PersonalCategories.Where(c => categoryIdsSet.Contains(c.Id))
-            .Cast<BaseCategory>()
-            .ToListAsync();
-        if (categories.Count < model.CategoryIds.Count)
-            return NotFound();
-        
         var activity = new Activity
         {
             BeginAt = model.BeginAt,
             EndAt = model.EndAt,
         };
+        await _activityService.AddActivityAsync(activity);
         
-        _dbContext.Activities.Add(activity);
-        activity.Categories = categories
-            .Select(c => new ActivityCategory { ActivityId = activity.Id, CategoryId = c.Id })
-            .ToList();
-        
-        await _dbContext.SaveChangesAsync();
+        var categories = await _categoryService.GetCategoriesAsync(model.CategoryIds);
+        await _activityService.UpdateActivityCategoriesAsync(activity, categories);
 
         return new ObjectResult(activity.Id) { StatusCode = Http201 };
     }
 
     [HttpDelete("{activityId:guid}")]
+    [AuthorizeAccessToActivity]
     [SwaggerResponse(Http204)]
     [SwaggerResponse(Http404)]
     public async Task<IActionResult> DeleteActivityAsync([FromRoute] Guid activityId)
     {
-        var activity = await _dbContext.Activities.FindAsync(activityId);
-        if (activity is null)
-            return NotFound();
-        _dbContext.Activities.Remove(activity);
-        await _dbContext.SaveChangesAsync();
+        await _activityService.DeleteActivityAsync(activityId);
         return NoContent();
     }
 
     [HttpGet("{activityId:guid}")]
+    [AuthorizeAccessToActivity]
     [SwaggerResponse(Http200)]
     [SwaggerResponse(Http404)]
     public async Task<IActionResult> GetActivityAsync([FromRoute] Guid activityId)
     {
-        var activity = await _dbContext.Activities
-            .Include(a => a.Categories)
-            .ThenInclude(c => c.Category)
-            .Where(a => a.Id == activityId)
-            .FirstOrDefaultAsync();
+        var activity = await _activityService.GetActivityAsync(activityId);
         if (activity is null)
             return NotFound();
 
         var apiActivity = _mapper.Map<ApiActivity>(activity);
         return Ok(apiActivity);
+    }
+
+    [HttpGet("all")]
+    [SwaggerResponse(Http200, Type = typeof(IEnumerable<ApiActivity>))]
+    public async Task<IActionResult> FindActivitiesAsync([FromQuery] SearchActivitiesModel model)
+    {
+        var user = await _userStore.FindByIdAsync(RequestContext.Get(RequestContextVariables.UserId));
+        var categories = (await _categoryService.GetCategoriesAsync(model.CategoryIds))
+            .ToList();
+
+        var @params = new ActivitiesSearchParams
+        {
+            Categories = categories
+        };
+        var activities = (await _activityService.GetUserActivitiesAsync(user, @params))
+            .Select(a => _mapper.Map<ApiActivity>(a))
+            .ToList();
+        if (activities.Count == 0)
+            return NoContent();
+        return Ok(activities);
     }
 }

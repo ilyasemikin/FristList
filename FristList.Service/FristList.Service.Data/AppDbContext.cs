@@ -11,9 +11,11 @@ public class AppDbContext : DbContext
     public DbSet<User> Users { get; set; } = null!;
     public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
 
+    public DbSet<BaseCategory> Categories { get; set; } = null!;
     public DbSet<PersonalCategory> PersonalCategories { get; set; } = null!;
 
     public DbSet<Activity> Activities { get; set; } = null!;
+    public DbSet<CurrentActivity> CurrentActivities { get; set; } = null!;
     
     public AppDbContext(DbContextOptions<AppDbContext> options)
         : base(options)
@@ -25,6 +27,8 @@ public class AppDbContext : DbContext
     {
         modelBuilder.Entity<BaseCategory>()
             .ToTable("Categories");
+        modelBuilder.Entity<ActivityCategory>()
+            .ToTable("ActivityCategories");
         
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
     }

@@ -18,7 +18,7 @@ public class JwtTokenGenerator : ITokenGenerator
 
     public string Generate(User user)
     {
-        var claims = new[] {new Claim(ClaimTypes.Name, user.NormalizedUserName)};
+        var claims = new[] { new Claim("UserId", user.Id.ToString()) };
         var credentials = new SigningCredentials(_configuration.SecurityKey, _configuration.SecurityAlgorithm);
         var expires = DateTime.UtcNow.Add(_configuration.ExpiresPeriod);
         
