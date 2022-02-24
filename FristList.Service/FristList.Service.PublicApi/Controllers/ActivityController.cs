@@ -1,5 +1,4 @@
 using AutoMapper;
-using FristList.Service.Data;
 using FristList.Service.Data.Models.Account;
 using FristList.Service.Data.Models.Activities;
 using FristList.Service.PublicApi.Context;
@@ -56,6 +55,7 @@ public class ActivityController : BaseController
     [HttpDelete("{activityId:guid}")]
     [AuthorizeAccessToActivity]
     [SwaggerResponse(Http204)]
+    [SwaggerResponse(Http403)]
     [SwaggerResponse(Http404)]
     public async Task<IActionResult> DeleteActivityAsync([FromRoute] Guid activityId)
     {
@@ -66,6 +66,7 @@ public class ActivityController : BaseController
     [HttpGet("{activityId:guid}")]
     [AuthorizeAccessToActivity]
     [SwaggerResponse(Http200)]
+    [SwaggerResponse(Http403)]
     [SwaggerResponse(Http404)]
     public async Task<IActionResult> GetActivityAsync([FromRoute] Guid activityId)
     {
@@ -79,6 +80,7 @@ public class ActivityController : BaseController
 
     [HttpGet("all")]
     [SwaggerResponse(Http200, Type = typeof(IEnumerable<ApiActivity>))]
+    [SwaggerResponse(Http204)]
     public async Task<IActionResult> FindActivitiesAsync([FromQuery] SearchActivitiesModel model)
     {
         var user = await _userStore.FindByIdAsync(RequestContext.Get(RequestContextVariables.UserId));

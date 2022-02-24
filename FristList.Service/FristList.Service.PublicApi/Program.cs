@@ -10,6 +10,7 @@ using FristList.Service.PublicApi.Data.Activities;
 using FristList.Service.PublicApi.Data.Categories;
 using FristList.Service.PublicApi.Data.Users;
 using FristList.Service.PublicApi.Filters;
+using FristList.Service.PublicApi.Filters.ExceptionFilters;
 using FristList.Service.PublicApi.Services;
 using FristList.Service.PublicApi.Services.Abstractions;
 using FristList.Service.PublicApi.Services.Implementations;
@@ -89,6 +90,8 @@ builder.Services.AddModelServices();
 builder.Services.AddControllers(config =>
     {
         config.Filters.Add<RequestContextActionFilter>();
+        config.Filters.Add<ActivityAccessDeniedExceptionFilter>();
+        config.Filters.Add<CategoryAccessDeniedExceptionFilter>();
     })
     .AddFluentValidation(config =>
     {

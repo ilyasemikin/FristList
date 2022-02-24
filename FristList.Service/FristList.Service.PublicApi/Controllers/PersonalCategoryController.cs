@@ -57,6 +57,7 @@ public class PersonalCategoryController : BaseController
     [HttpGet("{categoryId:guid}")]
     [AuthorizeAccessToCategory]
     [SwaggerResponse(Http200, Type = typeof(ApiCategory))]
+    [SwaggerResponse(Http403)]
     [SwaggerResponse(Http404)]
     public async Task<IActionResult> GetCategoryAsync([FromRoute] Guid categoryId)
     {
@@ -71,6 +72,7 @@ public class PersonalCategoryController : BaseController
     [HttpDelete("{categoryId:guid}")]
     [AuthorizeAccessToCategory]
     [SwaggerResponse(Http204)]
+    [SwaggerResponse(Http403)]
     [SwaggerResponse(Http404)]
     public async Task<IActionResult> DeleteCategoryAsync([FromRoute] Guid categoryId)
     {
