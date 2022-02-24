@@ -1,6 +1,8 @@
 namespace FristList.Service.PublicApi.Services.Models.Activities;
 
-public enum ActivitiesSearchOrder
+public enum ActivitiesSearchSortField
 {
+    Id,
+    BeginAt,
     Unknown
 }

@@ -1,9 +1,11 @@
+using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 using FristList.Service.Data;
 using FristList.Service.Data.Models.Account;
 using FristList.Service.Data.Models.Categories;
 using FristList.Service.Data.Models.Categories.Base;
 using FristList.Service.PublicApi.Services.Abstractions.Categories;
+using FristList.Service.PublicApi.Services.Models;
 using FristList.Service.PublicApi.Services.Models.Categories;
 using Microsoft.EntityFrameworkCore;
 
@@ -79,11 +81,19 @@ public class CategoryService : ICategoryService
         if (@params.NamePattern is not null)
             categories = categories.Where(c => Regex.IsMatch(c.Name, @params.NamePattern));
 
-        categories = @params.Order switch
+        Expression<Func<BaseCategory, dynamic>> orderKeySelector = @params.SortField switch
         {
-            _ => categories
+            CategorySearchSortField.Name => c => c.Name,
+            _ => c => c.Id
         };
-        
+
+        categories = @params.SortOrder switch
+        {
+            SortOrder.Ascending => categories.OrderBy(orderKeySelector),
+            SortOrder.Descending => categories.OrderByDescending(orderKeySelector),
+            _ => throw new IndexOutOfRangeException(nameof(SortOrder))
+        };
+
         return Task.FromResult<IEnumerable<BaseCategory>>(categories);
     }
 

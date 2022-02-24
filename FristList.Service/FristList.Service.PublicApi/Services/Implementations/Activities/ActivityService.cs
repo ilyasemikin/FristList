@@ -1,8 +1,10 @@
+using System.Linq.Expressions;
 using FristList.Service.Data;
 using FristList.Service.Data.Models.Account;
 using FristList.Service.Data.Models.Activities;
 using FristList.Service.Data.Models.Categories.Base;
 using FristList.Service.PublicApi.Services.Abstractions.Activities;
+using FristList.Service.PublicApi.Services.Models;
 using FristList.Service.PublicApi.Services.Models.Activities;
 using Microsoft.EntityFrameworkCore;
 
@@ -68,10 +70,18 @@ public class ActivityService : IActivityService
                 .Where(a => a.Categories.Any(c => categoryIds.Contains(c.CategoryId)));
         }
 
-        activities = @params.Order switch
+        Expression<Func<Activity, dynamic>> orderKeySelector = @params.SortField switch
         {
-            ActivitiesSearchOrder.Unknown => activities,
-            _ => throw new ArgumentOutOfRangeException(nameof(@params.Order))
+            ActivitiesSearchSortField.Id => a => a.Id,
+            ActivitiesSearchSortField.BeginAt => a => a.BeginAt,
+            _ => a => a.Id
+        };
+
+        activities = @params.SortOrder switch
+        {
+            SortOrder.Ascending => activities.OrderBy(orderKeySelector),
+            SortOrder.Descending => activities.OrderByDescending(orderKeySelector),
+            _ => throw new ArgumentOutOfRangeException(nameof(SortOrder))
         };
 
         return Task.FromResult<IEnumerable<Activity>>(activities);

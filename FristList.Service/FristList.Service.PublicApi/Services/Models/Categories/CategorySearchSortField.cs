@@ -1,6 +1,7 @@
 namespace FristList.Service.PublicApi.Services.Models.Categories;
 
-public enum CategorySearchOrder
+public enum CategorySearchSortField
 {
+    Name,
     Unknown
 }

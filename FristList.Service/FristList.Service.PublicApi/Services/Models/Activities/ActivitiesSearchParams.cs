@@ -9,5 +9,7 @@ public class ActivitiesSearchParams
     /// </summary>
     public IList<BaseCategory> Categories { get; set; } = new List<BaseCategory>();
 
-    public ActivitiesSearchOrder Order { get; set; } = ActivitiesSearchOrder.Unknown;
+    public ActivitiesSearchSortField SortField { get; set; } = ActivitiesSearchSortField.Unknown;
+
+    public SortOrder SortOrder { get; set; } = SortOrder.Ascending;
 }

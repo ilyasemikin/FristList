@@ -88,7 +88,7 @@ public class PersonalCategoryController : BaseController
     [SwaggerResponse(Http204)]
     public async Task<IActionResult> SearchCategoriesAsync([FromQuery] SearchPersonalCategoriesModel model)
     {
-        var user = await _userStore.FindByNameAsync(User.Identity!.Name, CancellationToken.None);
+        var user = await _userStore.FindByIdAsync(RequestContext.Get(RequestContextVariables.UserId));
         var categories = (await _categoryService.GetCategoriesAvailableToUserAsync(user))
             .Where(c => c is PersonalCategory)
             .Select(c => _mapper.Map<ApiCategory>(c))
