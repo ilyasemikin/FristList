@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30114.105
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FristList.Service", "FristList.Service", "{B717D451-C79F-47C7-B796-F3E3DB7C7B09}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FristList.Service.PublicApi", "FristList.Service\FristList.Service.PublicApi\FristList.Service.PublicApi.csproj", "{FF98DBD0-DFA8-4C3D-AA36-4CA0A73867D1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FristList.Service.Data", "FristList.Service\FristList.Service.Data\FristList.Service.Data.csproj", "{BCE630B4-3AD9-4883-8FB9-5F48D7F218EB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FF98DBD0-DFA8-4C3D-AA36-4CA0A73867D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF98DBD0-DFA8-4C3D-AA36-4CA0A73867D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF98DBD0-DFA8-4C3D-AA36-4CA0A73867D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF98DBD0-DFA8-4C3D-AA36-4CA0A73867D1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BCE630B4-3AD9-4883-8FB9-5F48D7F218EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BCE630B4-3AD9-4883-8FB9-5F48D7F218EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BCE630B4-3AD9-4883-8FB9-5F48D7F218EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BCE630B4-3AD9-4883-8FB9-5F48D7F218EB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{FF98DBD0-DFA8-4C3D-AA36-4CA0A73867D1} = {B717D451-C79F-47C7-B796-F3E3DB7C7B09}
+		{BCE630B4-3AD9-4883-8FB9-5F48D7F218EB} = {B717D451-C79F-47C7-B796-F3E3DB7C7B09}
+	EndGlobalSection
+EndGlobal
