@@ -1,7 +1,7 @@
 using FristList.Service.Data;
 using FristList.Service.Data.Models.Account;
 using FristList.Service.PublicApi.Configuration;
-using FristList.Service.PublicApi.Data;
+using FristList.Service.PublicApi.Contracts.Models.Data;
 using FristList.Service.PublicApi.Services.Abstractions;
 using Microsoft.EntityFrameworkCore;
 

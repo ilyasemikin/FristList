@@ -1,7 +1,7 @@
 using AutoMapper;
 using FristList.Service.Data;
+using FristList.Service.PublicApi.Contracts.Models.Data.Users;
 using FristList.Service.PublicApi.Controllers.Base;
-using FristList.Service.PublicApi.Data.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

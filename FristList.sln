@@ -9,6 +9,18 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FristList.Service.PublicApi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FristList.Service.Data", "FristList.Service\FristList.Service.Data\FristList.Service.Data.csproj", "{BCE630B4-3AD9-4883-8FB9-5F48D7F218EB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FristList.Service.Common", "FristList.Service\FristList.Service.Common\FristList.Service.Common.csproj", "{D072C19D-2014-4169-B08D-6B3BB3F4E4E5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FristList.ConsoleClient", "FristList.ConsoleClient\FristList.ConsoleClient.csproj", "{879E487A-DF75-4986-9051-1F15D7247DF8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FristList.Service.PublicApi.Contracts", "FristList.Service\FristList.Service.PublicApi.Contracts\FristList.Service.PublicApi.Contracts.csproj", "{22E3D58F-8FDE-415B-B913-A2DBE8EB4A53}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FristList.Common", "FristList.Common\FristList.Common.csproj", "{9EE08F76-ED70-4009-871F-A9D4F725FA6D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{2732ACC4-CCAB-45AC-A9C8-6E758E3E2E0E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FristList.ConsoleClient.Tests", "Tests\FristList.ConsoleClient.Tests\FristList.ConsoleClient.Tests.csproj", "{4B6F1F11-AD64-467B-A747-2E7E62D9C3E1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,9 +38,32 @@ Global
 		{BCE630B4-3AD9-4883-8FB9-5F48D7F218EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BCE630B4-3AD9-4883-8FB9-5F48D7F218EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BCE630B4-3AD9-4883-8FB9-5F48D7F218EB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D072C19D-2014-4169-B08D-6B3BB3F4E4E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D072C19D-2014-4169-B08D-6B3BB3F4E4E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D072C19D-2014-4169-B08D-6B3BB3F4E4E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D072C19D-2014-4169-B08D-6B3BB3F4E4E5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{879E487A-DF75-4986-9051-1F15D7247DF8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{879E487A-DF75-4986-9051-1F15D7247DF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{879E487A-DF75-4986-9051-1F15D7247DF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{879E487A-DF75-4986-9051-1F15D7247DF8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{22E3D58F-8FDE-415B-B913-A2DBE8EB4A53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{22E3D58F-8FDE-415B-B913-A2DBE8EB4A53}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{22E3D58F-8FDE-415B-B913-A2DBE8EB4A53}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{22E3D58F-8FDE-415B-B913-A2DBE8EB4A53}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9EE08F76-ED70-4009-871F-A9D4F725FA6D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9EE08F76-ED70-4009-871F-A9D4F725FA6D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9EE08F76-ED70-4009-871F-A9D4F725FA6D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9EE08F76-ED70-4009-871F-A9D4F725FA6D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4B6F1F11-AD64-467B-A747-2E7E62D9C3E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4B6F1F11-AD64-467B-A747-2E7E62D9C3E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4B6F1F11-AD64-467B-A747-2E7E62D9C3E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4B6F1F11-AD64-467B-A747-2E7E62D9C3E1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{FF98DBD0-DFA8-4C3D-AA36-4CA0A73867D1} = {B717D451-C79F-47C7-B796-F3E3DB7C7B09}
 		{BCE630B4-3AD9-4883-8FB9-5F48D7F218EB} = {B717D451-C79F-47C7-B796-F3E3DB7C7B09}
+		{D072C19D-2014-4169-B08D-6B3BB3F4E4E5} = {B717D451-C79F-47C7-B796-F3E3DB7C7B09}
+		{22E3D58F-8FDE-415B-B913-A2DBE8EB4A53} = {B717D451-C79F-47C7-B796-F3E3DB7C7B09}
+		{4B6F1F11-AD64-467B-A747-2E7E62D9C3E1} = {2732ACC4-CCAB-45AC-A9C8-6E758E3E2E0E}
 	EndGlobalSection
 EndGlobal

@@ -1,4 +1,4 @@
-using FristList.Service.PublicApi.Deserializers;
+using FristList.Common.Deserializers;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
@@ -19,6 +19,15 @@ public abstract class AuthorizeAccessActionFilter : IAsyncActionFilter
             modelState.ValidationState == ModelValidationState.Valid)
             return StringDeserializers.Deserialize<T>(stringValue);
         return default;
+    }
+
+    protected static IEnumerable<T> GetModelStringValues<T>(string name, ModelStateDictionary modelStateDictionary)
+    {
+        if (modelStateDictionary.TryGetValue(name, out var modelState) && modelState.RawValue is IEnumerable<string> stringValues &&
+            modelState.ValidationState == ModelValidationState.Valid)
+            return stringValues.Select(StringDeserializers.Deserialize<T>)
+                .Where(v => v is not null)!;
+        return Enumerable.Empty<T>();
     }
 
     protected abstract Task CheckAccessAsync(ActionExecutingContext context);

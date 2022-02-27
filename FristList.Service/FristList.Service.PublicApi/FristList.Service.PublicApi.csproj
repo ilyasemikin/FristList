@@ -7,7 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\FristList.Common\FristList.Common.csproj" />
     <ProjectReference Include="..\FristList.Service.Data\FristList.Service.Data.csproj" />
+    <ProjectReference Include="..\FristList.Service.PublicApi.Contracts\FristList.Service.PublicApi.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,5 +1,5 @@
+using FristList.Common.Deserializers;
 using FristList.Service.PublicApi.Context;
-using FristList.Service.PublicApi.Deserializers;
 using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace FristList.Service.PublicApi.Filters;

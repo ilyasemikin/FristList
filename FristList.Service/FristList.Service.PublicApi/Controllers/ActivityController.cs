@@ -2,10 +2,10 @@ using AutoMapper;
 using FristList.Service.Data.Models.Account;
 using FristList.Service.Data.Models.Activities;
 using FristList.Service.PublicApi.Context;
+using FristList.Service.PublicApi.Contracts.Models.Data.Activities;
+using FristList.Service.PublicApi.Contracts.RequestModels.Activities;
 using FristList.Service.PublicApi.Controllers.Base;
-using FristList.Service.PublicApi.Data.Activities;
 using FristList.Service.PublicApi.Filters;
-using FristList.Service.PublicApi.Models.Activities;
 using FristList.Service.PublicApi.Services;
 using FristList.Service.PublicApi.Services.Abstractions.Activities;
 using FristList.Service.PublicApi.Services.Abstractions.Categories;
@@ -36,6 +36,7 @@ public class ActivityController : BaseController
     }
 
     [HttpPost]
+    [AuthorizeAccessToCategories]
     [SwaggerResponse(Http201, Type = typeof(Guid))]
     public async Task<IActionResult> AddActivityAsync([FromBody] AddActivityModel model)
     {
@@ -79,6 +80,7 @@ public class ActivityController : BaseController
     }
 
     [HttpGet("all")]
+    [AuthorizeAccessToCategories]
     [SwaggerResponse(Http200, Type = typeof(IEnumerable<ApiActivity>))]
     [SwaggerResponse(Http204)]
     public async Task<IActionResult> FindActivitiesAsync([FromQuery] SearchActivitiesModel model)

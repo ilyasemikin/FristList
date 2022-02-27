@@ -1,5 +1,5 @@
 using FristList.Service.Data.Models.Account;
-using FristList.Service.PublicApi.Data;
+using FristList.Service.PublicApi.Contracts.Models.Data;
 
 namespace FristList.Service.PublicApi.Services.Abstractions;
 

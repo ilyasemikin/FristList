@@ -1,5 +1,5 @@
 using AutoMapper;
-using FristList.Service.PublicApi.Models.Activities;
+using FristList.Service.PublicApi.Contracts.RequestModels.Activities;
 using FristList.Service.PublicApi.Services.Models.Activities;
 
 namespace FristList.Service.PublicApi.Services.Mappers;

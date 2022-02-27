@@ -1,5 +1,5 @@
 using FluentValidation;
-using FristList.Service.PublicApi.Models.Account;
+using FristList.Service.PublicApi.Contracts.RequestModels.Account;
 
 namespace FristList.Service.PublicApi.Validators.Authorize;
 

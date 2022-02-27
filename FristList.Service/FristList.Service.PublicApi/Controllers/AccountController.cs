@@ -1,6 +1,6 @@
 using FristList.Service.Data.Models.Account;
+using FristList.Service.PublicApi.Contracts.RequestModels.Account;
 using FristList.Service.PublicApi.Controllers.Base;
-using FristList.Service.PublicApi.Models.Account;
 using FristList.Service.PublicApi.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
