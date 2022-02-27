@@ -38,6 +38,7 @@ public class ActivityController : BaseController
     [HttpPost]
     [AuthorizeAccessToCategories]
     [SwaggerResponse(Http201, Type = typeof(Guid))]
+    [SwaggerResponse(Http403)]
     public async Task<IActionResult> AddActivityAsync([FromBody] AddActivityModel model)
     {
         var activity = new Activity
@@ -83,6 +84,7 @@ public class ActivityController : BaseController
     [AuthorizeAccessToCategories]
     [SwaggerResponse(Http200, Type = typeof(IEnumerable<ApiActivity>))]
     [SwaggerResponse(Http204)]
+    [SwaggerResponse(Http403)]
     public async Task<IActionResult> FindActivitiesAsync([FromQuery] SearchActivitiesModel model)
     {
         var user = await _userStore.FindByIdAsync(RequestContext.Get(RequestContextVariables.UserId));

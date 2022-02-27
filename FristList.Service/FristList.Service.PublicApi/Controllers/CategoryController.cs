@@ -16,6 +16,7 @@ namespace FristList.Service.PublicApi.Controllers;
 
 [Authorize]
 [Route("api/v1/category")]
+[SwaggerResponse(Http401)]
 public class CategoryController : BaseController
 {
     private readonly IUserStore<User> _userStore;
@@ -32,7 +33,6 @@ public class CategoryController : BaseController
     [HttpGet("{categoryId:guid}")]
     [AuthorizeAccessToCategory]
     [SwaggerResponse(Http200, Type = typeof(ApiCategory))]
-    [SwaggerResponse(Http401)]
     [SwaggerResponse(Http404)]
     public async Task<IActionResult> GetCategoryAsync([FromRoute] Guid categoryId)
     {
@@ -47,7 +47,7 @@ public class CategoryController : BaseController
     [HttpDelete("{categoryId:guid}")]
     [AuthorizeAccessToCategory]
     [SwaggerResponse(Http200)]
-    [SwaggerResponse(Http401)]
+    [SwaggerResponse(Http403)]
     [SwaggerResponse(Http404)]
     public async Task<IActionResult> DeleteCategoryAsync([FromRoute] Guid categoryId)
     {
@@ -62,7 +62,7 @@ public class CategoryController : BaseController
     [AuthorizeAccessToCategories]
     [SwaggerResponse(Http200, Type = typeof(IEnumerable<ApiCategory>))]
     [SwaggerResponse(Http204)]
-    [SwaggerResponse(Http401)]
+    [SwaggerResponse(Http403)]
     public async Task<IActionResult> SearchCategoryAsync([FromQuery] SearchCategoryModel model)
     {
         var user = await _userStore.FindByIdAsync(RequestContext.Get(RequestContextVariables.UserId));

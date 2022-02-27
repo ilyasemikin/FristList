@@ -5,10 +5,10 @@ namespace FristList.Service.PublicApi.Services.Abstractions;
 
 public interface IUserTokensManager
 {
-    Task<UserTokens> GenerateAsync(User user);
+    Task<ApiUserTokens> GenerateAsync(User user);
     
-    Task<UserTokens> RefreshAsync(RefreshToken refreshToken);
-    Task<UserTokens?> RefreshAsync(string refreshTokenValue);
+    Task<ApiUserTokens> RefreshAsync(RefreshToken refreshToken);
+    Task<ApiUserTokens?> RefreshAsync(string refreshTokenValue);
 
     Task<bool> RevokeAsync(RefreshToken refreshToken);
     Task<bool> RevokeAsync(string refreshTokenValue);

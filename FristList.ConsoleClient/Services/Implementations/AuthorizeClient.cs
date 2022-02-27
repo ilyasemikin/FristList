@@ -17,7 +17,7 @@ public class AuthorizeClient : IAuthorizeClient
         _httpRequestClient = httpRequestClient;
     }
 
-    public Task<ApiResponse<UserTokens>> AuthorizeAsync(string login, string password)
+    public Task<ApiResponse<ApiUserTokens>> AuthorizeAsync(string login, string password)
     {
         var model = new AuthorizeModel
         {
@@ -26,6 +26,6 @@ public class AuthorizeClient : IAuthorizeClient
         };
 
         var request = Request.Post(ApiAddress, model);
-        return _httpRequestClient.SendAsync<UserTokens>(request);
+        return _httpRequestClient.SendAsync<ApiUserTokens>(request);
     }
 }

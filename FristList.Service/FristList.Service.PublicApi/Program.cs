@@ -92,6 +92,7 @@ builder.Services.AddControllers(config =>
         config.Filters.Add<RequestContextActionFilter>();
         config.Filters.Add<ActivityAccessDeniedExceptionFilter>();
         config.Filters.Add<CategoryAccessDeniedExceptionFilter>();
+        config.Filters.Add<AccessDeniedErrorsExceptionFilter>();
     })
     .AddFluentValidation(config =>
     {

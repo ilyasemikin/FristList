@@ -22,7 +22,7 @@ public class AuthorizeController : BaseController
     }
 
     [HttpPost]
-    [SwaggerResponse(Http200, Type = typeof(UserTokens))]
+    [SwaggerResponse(Http200, Type = typeof(ApiUserTokens))]
     [SwaggerResponse(Http401)]
     public async Task<IActionResult> AuthorizeAsync([FromBody] AuthorizeModel model)
     {

@@ -22,7 +22,7 @@ public class UserTokensManager : IUserTokensManager
         _refreshTokenGenerator = refreshTokenGenerator;
     }
 
-    public async Task<UserTokens> GenerateAsync(User user)
+    public async Task<ApiUserTokens> GenerateAsync(User user)
     {
         var accessTokenValue = _accessTokenGenerator.Generate(user);
         var refreshTokenValue = _refreshTokenGenerator.Generate(user);
@@ -36,17 +36,17 @@ public class UserTokensManager : IUserTokensManager
         await _dbContext.RefreshTokens.AddAsync(refreshToken);
         await _dbContext.SaveChangesAsync();
 
-        return new UserTokens(accessTokenValue, refreshTokenValue);
+        return new ApiUserTokens(accessTokenValue, refreshTokenValue);
     }
 
-    public async Task<UserTokens> RefreshAsync(RefreshToken refreshToken)
+    public async Task<ApiUserTokens> RefreshAsync(RefreshToken refreshToken)
     {
         _dbContext.RefreshTokens.Remove(refreshToken);
         await _dbContext.SaveChangesAsync();
         return await GenerateAsync(refreshToken.User);
     }
 
-    public async Task<UserTokens?> RefreshAsync(string refreshTokenValue)
+    public async Task<ApiUserTokens?> RefreshAsync(string refreshTokenValue)
     {
         var refreshToken = await FindRefreshTokenAsync(refreshTokenValue);
         if (refreshToken is null)

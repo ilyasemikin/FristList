@@ -5,6 +5,7 @@ using FristList.Service.PublicApi.Context;
 using FristList.Service.PublicApi.Contracts.Models.Data.Activities;
 using FristList.Service.PublicApi.Contracts.RequestModels.Activities;
 using FristList.Service.PublicApi.Controllers.Base;
+using FristList.Service.PublicApi.Filters;
 using FristList.Service.PublicApi.Services;
 using FristList.Service.PublicApi.Services.Abstractions.Activities;
 using FristList.Service.PublicApi.Services.Abstractions.Categories;
@@ -49,7 +50,9 @@ public class CurrentActivityController : BaseController
     }
 
     [HttpPost("start")]
+    [AuthorizeAccessToCategories]
     [SwaggerResponse(Http200)]
+    [SwaggerResponse(Http403)]
     public async Task<IActionResult> StartActivityAsync([FromBody] StartActivityModel model)
     {
         var user = await _userStore.FindByIdAsync(RequestContext.Get(RequestContextVariables.UserId));
