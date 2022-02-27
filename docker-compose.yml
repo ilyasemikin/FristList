@@ -1,0 +1,31 @@
+version: '3.10'
+
+networks:
+  main-network:
+    driver: bridge
+
+services:
+  public-api:
+    image: public-api:latest
+    ports:
+      - "5001:80"
+      - "5002:443"
+    depends_on:
+      - postgres
+    build: 
+      context: ./FristList.Service/
+      dockerfile: ./FristList.Service.PublicApi/Dockerfile
+    networks:
+      - main-network
+
+  postgres:
+    image: postgres:latest
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: nvrN3j
+      POSTGRES_DB: frist-list
+    networks:
+      - main-network
+
